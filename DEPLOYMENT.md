@@ -93,10 +93,14 @@ CREATE POLICY "Allow authenticated delete" ON books
 
 ## 4. 获取 API Key 和 URL
 
-1. 在 Supabase 控制台，点击左侧的 **Project Settings** > **API**。
+1. 在 Supabase 控制台，点击上方的 **Connect**。
+
+  ![](1.png)
+
 2. 记录以下信息：
-   - `Project URL` (例如 `https://xyzcompany.supabase.co`)
-   - `anon public` API key
+
+  ![](2.png)
+
 3. 将这些信息填入项目根目录的 `.env` 文件中：
 
 ```env
