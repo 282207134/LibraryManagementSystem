@@ -24,6 +24,7 @@
 | `description` | TEXT | - | NULL | 图书简介 |
 | `quantity` | INTEGER | - | 1 | 库存总数量 |
 | `available_quantity` | INTEGER | - | 1 | 可借数量 |
+| `cover_image_url` | TEXT | - | NULL | 封面图片 URL |
 | `created_at` | TIMESTAMP WITH TIME ZONE | - | `NOW()` | 记录创建时间 |
 | `updated_at` | TIMESTAMP WITH TIME ZONE | - | `NOW()` | 记录最后更新时间 |
 
@@ -41,6 +42,7 @@ CREATE TABLE books (
   description TEXT,
   quantity INTEGER DEFAULT 1,
   available_quantity INTEGER DEFAULT 1,
+  cover_image_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -175,11 +177,11 @@ CREATE INDEX idx_borrowing_records_status ON borrowing_records(status);
 
 ### 3. 图书封面
 
-添加图书封面图片支持（使用 Supabase Storage）：
+图书封面图片功能已集成到系统中。`cover_image_url` 字段已包含在 books 表中，用于存储图片 URL 地址。
 
-```sql
-ALTER TABLE books ADD COLUMN cover_image_url TEXT;
-```
+如果需要使用 Supabase Storage 存储图片，可以创建存储桶：
+- 在 Supabase Dashboard 中创建 public bucket 名为 `book-covers`
+- 设置为公开访问以便前端直接展示图片
 
 ### 4. 图书评分和评论
 
