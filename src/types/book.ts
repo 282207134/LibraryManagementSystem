@@ -9,6 +9,7 @@ export interface Book {
   description?: string;
   quantity: number;
   available_quantity: number;
+  cover_image_url?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -23,4 +24,5 @@ export interface BookFormData {
   description?: string;
   quantity: number;
   available_quantity: number;
+  cover_image_url?: string | null;
 }

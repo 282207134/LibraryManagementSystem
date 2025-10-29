@@ -13,10 +13,13 @@
 
 ## 功能特性
 
+- ✅ 用户认证（登录/注册）
+- ✅ 用户权限管理
 - ✅ 图书列表展示（表格视图 + 卡片视图）
 - ✅ 添加新图书
 - ✅ 编辑图书信息
 - ✅ 删除图书（带确认）
+- ✅ 图书封面图片支持
 - ✅ 搜索功能（按书名或作者）
 - ✅ 分页加载
 - ✅ 响应式设计（移动端友好）
@@ -31,7 +34,12 @@ src/
 │   ├── BookList.tsx     # 图书列表组件
 │   ├── BookForm.tsx     # 添加/编辑表单组件
 │   ├── BookCard.tsx     # 图书卡片组件
-│   └── SearchBar.tsx    # 搜索栏组件
+│   ├── SearchBar.tsx    # 搜索栏组件
+│   ├── Header.tsx       # 头部导航组件
+│   ├── Login.tsx        # 登录组件
+│   └── Register.tsx     # 注册组件
+├── contexts/            # React Context
+│   └── AuthContext.tsx  # 认证上下文
 ├── hooks/               # 自定义 Hooks
 │   └── useBooks.ts      # 图书 CRUD 操作 Hook
 ├── lib/                 # 工具库
@@ -120,6 +128,18 @@ npm run lint
 
 > **注意**: 所有 Vite 环境变量必须以 `VITE_` 前缀开头才能在客户端代码中访问。
 
+### 用户认证配置
+
+1. 打开 Supabase 项目控制台，进入 **Authentication → Providers**。
+2. 启用 **Email** 登录方式，并根据需要配置邮件模板。
+3. 在 **Authentication → Policies** 中确保匿名访问被禁用，仅允许已认证用户访问 `books` 表。
+
+### 图书封面图片
+
+- 请确保在 `books` 表中添加 `cover_image_url` 字段（详情见 [DATABASE.md](./DATABASE.md)）。
+- 支持直接填写任意公开的图片 URL。
+- 如果希望将图片存储在 Supabase Storage 中，可创建名为 `book-covers` 的公开存储桶，并上传图片后复制公开访问链接。
+
 ## 数据库设计
 
 ### books 表结构
@@ -136,6 +156,7 @@ npm run lint
 | description | TEXT | 图书简介 |
 | quantity | INTEGER | 库存数量 |
 | available_quantity | INTEGER | 可借数量 |
+| cover_image_url | TEXT | 图书封面 URL |
 | created_at | TIMESTAMP | 创建时间 |
 | updated_at | TIMESTAMP | 更新时间 |
 

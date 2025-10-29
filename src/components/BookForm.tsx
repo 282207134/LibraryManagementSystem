@@ -17,11 +17,13 @@ const emptyForm: BookFormData = {
   description: '',
   quantity: 1,
   available_quantity: 1,
+  cover_image_url: '',
 };
 
 export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
   const [formData, setFormData] = useState<BookFormData>({ ...emptyForm });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [previewError, setPreviewError] = useState(false);
 
   useEffect(() => {
     if (book) {
@@ -35,11 +37,18 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
         description: book.description || '',
         quantity: book.quantity,
         available_quantity: book.available_quantity,
+        cover_image_url: book.cover_image_url ?? '',
       });
+      setPreviewError(false);
     } else {
       setFormData({ ...emptyForm });
+      setPreviewError(false);
     }
   }, [book]);
+
+  useEffect(() => {
+    setPreviewError(false);
+  }, [formData.cover_image_url]);
 
   const handleQuantityChange = (value: string) => {
     const parsed = Number.parseInt(value, 10);
@@ -62,6 +71,14 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
     }));
   };
 
+  const handleClearCover = () => {
+    setFormData((prev) => ({
+      ...prev,
+      cover_image_url: '',
+    }));
+    setPreviewError(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -71,13 +88,14 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
     const publisher = formData.publisher?.trim();
     const category = formData.category?.trim();
     const description = formData.description?.trim();
+    const coverImageUrl = formData.cover_image_url?.trim();
 
     if (!title || !author) {
       alert('书名和作者为必填项');
       return;
     }
 
-    if (isbn && !/^\d{10}(\d{3})?$/.test(isbn)) {
+    if (isbn && !/^[0-9]{10}([0-9]{3})?$/.test(isbn)) {
       alert('ISBN 格式不正确（应为 10 位或 13 位数字）');
       return;
     }
@@ -117,6 +135,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
     if (formData.publication_year) payload.publication_year = formData.publication_year;
     if (category) payload.category = category;
     if (description) payload.description = description;
+    payload.cover_image_url = coverImageUrl ? coverImageUrl : null;
 
     setIsSubmitting(true);
     try {
@@ -126,13 +145,13 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
     }
   };
 
+  const previewUrl = formData.cover_image_url?.trim() ? formData.cover_image_url.trim() : '';
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
-          <h2 className="text-2xl font-bold mb-6">
-            {book ? '编辑图书' : '添加图书'}
-          </h2>
+          <h2 className="text-2xl font-bold mb-6">{book ? '编辑图书' : '添加图书'}</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -163,9 +182,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ISBN
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">ISBN</label>
                 <input
                   type="text"
                   value={formData.isbn}
@@ -176,9 +193,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  出版社
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">出版社</label>
                 <input
                   type="text"
                   value={formData.publisher}
@@ -190,9 +205,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  出版年份
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">出版年份</label>
                 <input
                   type="number"
                   value={formData.publication_year ?? ''}
@@ -210,9 +223,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  分类
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">分类</label>
                 <input
                   type="text"
                   value={formData.category}
@@ -223,15 +234,55 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                简介
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">简介</label>
               <textarea
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={4}
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">封面图片 URL</label>
+              <div className="space-y-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <input
+                    type="url"
+                    value={formData.cover_image_url ?? ''}
+                    onChange={(e) => setFormData({ ...formData, cover_image_url: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="https://example.com/cover.jpg"
+                  />
+                  {previewUrl && (
+                    <button
+                      type="button"
+                      onClick={handleClearCover}
+                      className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                    >
+                      清除封面
+                    </button>
+                  )}
+                </div>
+                {previewUrl && !previewError && (
+                  <div className="w-32 h-48 overflow-hidden rounded-lg border border-gray-200">
+                    <img
+                      src={previewUrl}
+                      alt={`封面预览 - ${formData.title || '图书'}`}
+                      className="w-full h-full object-cover"
+                      onError={() => setPreviewError(true)}
+                    />
+                  </div>
+                )}
+                {previewError && (
+                  <div className="text-sm text-red-600">
+                    图片加载失败，请检查链接或尝试其他地址。
+                  </div>
+                )}
+                <p className="text-xs text-gray-500">
+                  支持 http(s) 链接，建议使用公开可访问的高清图像。
+                </p>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

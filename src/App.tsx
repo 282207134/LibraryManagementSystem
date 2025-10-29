@@ -1,11 +1,15 @@
 import { useState } from 'react';
+import { useAuth } from './contexts/AuthContext';
 import { useBooks } from './hooks/useBooks';
 import { BookList } from './components/BookList';
 import { BookForm } from './components/BookForm';
 import { SearchBar } from './components/SearchBar';
+import { Header } from './components/Header';
+import { Login } from './components/Login';
+import { Register } from './components/Register';
 import type { Book, BookFormData } from './types/book';
 
-function App() {
+const BooksDashboard = () => {
   const { books, loading, error, searchBooks, loadMore, hasMore, addBook, updateBook, deleteBook } = useBooks();
   const [showForm, setShowForm] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
@@ -71,12 +75,9 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">图书管理系统</h1>
-          <p className="text-gray-600">管理和查看您的图书收藏</p>
-        </div>
+      <Header />
 
+      <div className="max-w-7xl mx-auto px-4 py-8">
         {notification && (
           <div
             className={`mb-6 p-4 rounded-lg ${
@@ -126,6 +127,28 @@ function App() {
       </div>
     </div>
   );
+};
+
+function App() {
+  const { user, loading: authLoading } = useAuth();
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <p className="text-gray-600">加载中...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    if (authMode === 'login') {
+      return <Login onToggleMode={() => setAuthMode('register')} />;
+    }
+    return <Register onToggleMode={() => setAuthMode('login')} />;
+  }
+
+  return <BooksDashboard />;
 }
 
 export default App;

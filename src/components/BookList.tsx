@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { Book } from '../types/book';
 import { BookCard } from './BookCard';
 
@@ -9,6 +10,27 @@ interface BookListProps {
   onLoadMore: () => void;
   hasMore: boolean;
 }
+
+const CoverThumbnail = ({ coverUrl, title }: { coverUrl?: string | null; title: string }) => {
+  const [failed, setFailed] = useState(false);
+
+  if (!coverUrl || failed) {
+    return (
+      <div className="w-12 h-16 bg-gray-100 border border-gray-200 rounded flex items-center justify-center text-xs text-gray-500">
+        无封面
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={coverUrl}
+      alt={`${title} 封面`}
+      className="w-12 h-16 object-cover rounded border border-gray-200"
+      onError={() => setFailed(true)}
+    />
+  );
+};
 
 export const BookList = ({ books, loading, onEdit, onDelete, onLoadMore, hasMore }: BookListProps) => {
   if (loading && books.length === 0) {
@@ -34,6 +56,9 @@ export const BookList = ({ books, loading, onEdit, onDelete, onLoadMore, hasMore
           <thead className="bg-gray-50">
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                封面
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 书名
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -46,10 +71,10 @@ export const BookList = ({ books, loading, onEdit, onDelete, onLoadMore, hasMore
                 分类
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                库存数量
+                库存
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                可借数量
+                可借
               </th>
               <th scope="col" className="px-6 py-3" />
             </tr>
@@ -57,6 +82,9 @@ export const BookList = ({ books, loading, onEdit, onDelete, onLoadMore, hasMore
           <tbody className="bg-white divide-y divide-gray-200">
             {books.map((book) => (
               <tr key={book.id}>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <CoverThumbnail coverUrl={book.cover_image_url} title={book.title} />
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   <div className="flex flex-col">
                     <span>{book.title}</span>
