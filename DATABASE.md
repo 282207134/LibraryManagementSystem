@@ -136,32 +136,48 @@ CREATE POLICY "Only admins can delete books" ON books
   USING (auth.jwt() ->> 'role' = 'admin');
 ```
 
-## 未来扩展建议
+## 用户认证说明
 
-### 1. 用户管理系统
+### 基础认证
 
-添加用户表，支持用户注册、登录和权限管理：
+本项目使用 Supabase Auth 进行用户认证。Supabase 会自动维护 `auth.users` 表，包含用户的基本账号信息（email, password_hash 等）。开发者无需手动创建或管理此表，只需通过 Supabase Dashboard 启用相应的登录方式即可（例如 Email 登录）。
+
+### 当前实现
+
+- 项目已实现基于 Supabase Auth 的登录、注册功能
+- 所有用户认证都由 `auth.users` 表自动处理
+- 前端通过 Supabase Client 调用 `signUp()` 和 `signIn()` 方法完成认证
+
+### 扩展用户资料（可选）
+
+如果需要在 `auth.users` 之外存储额外的用户资料（如角色、电话、地址等），可以创建一个扩展表与 `auth.users` 一对一关联：
 
 ```sql
 CREATE TABLE users (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email VARCHAR(255) UNIQUE NOT NULL,
-  name VARCHAR(255) NOT NULL,
-  role VARCHAR(50) DEFAULT 'user', -- 'user', 'admin', 'librarian'
+  full_name VARCHAR(255) NOT NULL,
+  role VARCHAR(50) DEFAULT 'user' CHECK (role IN ('user', 'admin', 'librarian')),
+  phone VARCHAR(20),
+  address TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
 
-### 2. 借阅记录系统
+**注意**：上述扩展表并非当前项目必需，仅在需要额外字段时才创建。详细建表 SQL 和 RLS 策略请参考 [SUPABASE_TABLES_PROPOSAL.md](./SUPABASE_TABLES_PROPOSAL.md)。
 
-添加借阅记录表，跟踪图书借阅情况：
+## 未来扩展建议
+
+### 1. 借阅记录系统
+
+添加借阅记录表，跟踪图书借阅情况。注意：此表引用的 `user_id` 可以直接使用 `auth.users(id)`，也可以使用扩展的 `users` 表：
 
 ```sql
 CREATE TABLE borrowing_records (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   book_id UUID REFERENCES books(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE, -- 或 REFERENCES users(id)
   borrowed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   due_date TIMESTAMP WITH TIME ZONE NOT NULL,
   returned_at TIMESTAMP WITH TIME ZONE,
@@ -175,7 +191,7 @@ CREATE INDEX idx_borrowing_records_user_id ON borrowing_records(user_id);
 CREATE INDEX idx_borrowing_records_status ON borrowing_records(status);
 ```
 
-### 3. 图书封面
+### 2. 图书封面
 
 图书封面图片功能已集成到系统中。`cover_image_url` 字段已包含在 books 表中，用于存储图片 URL 地址。
 
@@ -183,7 +199,7 @@ CREATE INDEX idx_borrowing_records_status ON borrowing_records(status);
 - 在 Supabase Dashboard 中创建 public bucket 名为 `book-covers`
 - 设置为公开访问以便前端直接展示图片
 
-### 4. 图书评分和评论
+### 3. 图书评分和评论
 
 添加评分和评论功能：
 
@@ -191,7 +207,7 @@ CREATE INDEX idx_borrowing_records_status ON borrowing_records(status);
 CREATE TABLE reviews (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   book_id UUID REFERENCES books(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE, -- 或 REFERENCES users(id)
   rating INTEGER CHECK (rating >= 1 AND rating <= 5),
   comment TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -202,7 +218,7 @@ CREATE INDEX idx_reviews_book_id ON reviews(book_id);
 CREATE INDEX idx_reviews_user_id ON reviews(user_id);
 ```
 
-### 5. 图书库存历史
+### 4. 图书库存历史
 
 跟踪图书库存变化：
 
@@ -213,7 +229,7 @@ CREATE TABLE inventory_history (
   action VARCHAR(50) NOT NULL, -- 'add', 'remove', 'borrow', 'return'
   quantity_change INTEGER NOT NULL,
   reason TEXT,
-  created_by UUID REFERENCES users(id),
+  created_by UUID REFERENCES auth.users(id), -- 或 REFERENCES users(id)
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
