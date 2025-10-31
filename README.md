@@ -146,11 +146,21 @@ Supabase Auth 会自动维护 `auth.users` 表用于账号注册和登录，无�
 
 如果需要扩展用户资料（例如角色、手机号等额外字段），可以创建一个与 `auth.users` 一对一关联的 `users` 扩展表。详细的建表 SQL 和推荐策略请参考 [SUPABASE_TABLES_PROPOSAL.md](./SUPABASE_TABLES_PROPOSAL.md)。
 
-### 图书封面图片
+### 图书封面图片上传
 
-- 请确保在 `books` 表中添加 `cover_image_url` 字段（详情见 [DATABASE.md](./DATABASE.md)）。
-- 支持直接填写任意公开的图片 URL。
-- 如果希望将图片存储在 Supabase Storage 中，可创建名为 `book-covers` 的公开存储桶，并上传图片后复制公开访问链接。
+本系统支持直接上传图片到 Supabase Storage：
+
+- 创建名为 `book-covers` 的公开存储桶（Storage Bucket）
+- 运行 `STORAGE_SETUP.sql` 脚本设置存储策略
+- 支持的图片格式：JPEG、PNG、GIF、WebP
+- 图片大小限制：最大 5MB
+- 系统会自动管理图片的上传、更新和删除
+
+**设置步骤**：
+
+1. 在 Supabase Dashboard 中进入 Storage
+2. 创建新的 bucket，命名为 `book-covers`，设置为 public
+3. 在 SQL Editor 中运行 `STORAGE_SETUP.sql` 文件中的脚本来设置访问策略
 
 ## 数据库设计
 
