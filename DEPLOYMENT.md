@@ -100,12 +100,12 @@ CREATE INDEX IF NOT EXISTS idx_books_isbn ON books(isbn);
 
 -- 自动维护 updated_at 字段
 CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $
+RETURNS TRIGGER AS $$  
 BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;  
 
 CREATE TRIGGER update_books_updated_at
   BEFORE UPDATE ON books
