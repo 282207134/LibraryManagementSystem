@@ -25,4 +25,6 @@ export interface BookFormData {
   quantity: number;
   available_quantity: number;
   cover_image_url?: string | null;
+  cover_image_file?: File | null;
+  remove_cover?: boolean;
 }

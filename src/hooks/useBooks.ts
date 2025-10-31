@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { uploadBookCover, deleteBookCover } from '../lib/storageHelper';
 import type { Book, BookFormData } from '../types/book';
 
 const PAGE_SIZE = 10;
@@ -98,10 +99,27 @@ export const useBooks = () => {
       return null;
     }
 
+    let uploadedCoverUrl: string | null = null;
+
     try {
       setError(null);
+
+      let coverImageUrl = bookData.cover_image_url ?? null;
+
+      if (bookData.cover_image_file) {
+        const uploadResult = await uploadBookCover(bookData.cover_image_file);
+        if (uploadResult.error || !uploadResult.url) {
+          setError(`图片上传失败: ${uploadResult.error ?? '未知错误'}`);
+          return null;
+        }
+        coverImageUrl = uploadResult.url;
+        uploadedCoverUrl = uploadResult.url;
+      }
+
+      const { cover_image_file, remove_cover, ...dataToInsert } = bookData;
       const payload = {
-        ...bookData,
+        ...dataToInsert,
+        cover_image_url: coverImageUrl ?? null,
         available_quantity: Math.min(bookData.available_quantity, bookData.quantity),
       };
 
@@ -116,6 +134,9 @@ export const useBooks = () => {
       await refresh();
       return data ?? null;
     } catch (err) {
+      if (uploadedCoverUrl) {
+        await deleteBookCover(uploadedCoverUrl);
+      }
       setError(err instanceof Error ? err.message : '添加图书时发生错误');
       return null;
     }
@@ -131,31 +152,73 @@ export const useBooks = () => {
       return null;
     }
 
+    const existingBook = books.find((item) => item.id === id);
+
     try {
       setError(null);
+
+      let nextCoverUrl = bookData.cover_image_url ?? existingBook?.cover_image_url ?? null;
+      let uploadedCoverUrl: string | null = null;
+
+      if (bookData.cover_image_file) {
+        const uploadResult = await uploadBookCover(bookData.cover_image_file);
+        if (uploadResult.error) {
+          setError(`图片上传失败: ${uploadResult.error}`);
+          return null;
+        }
+        nextCoverUrl = uploadResult.url ?? null;
+        uploadedCoverUrl = uploadResult.url ?? null;
+      } else if (bookData.remove_cover) {
+        nextCoverUrl = null;
+      }
+
+      const { cover_image_file, remove_cover, ...rest } = bookData;
+      const payload: Record<string, unknown> = {
+        ...rest,
+        cover_image_url: nextCoverUrl,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (typeof rest.available_quantity === 'number' && typeof rest.quantity === 'number') {
+        payload.available_quantity = Math.min(rest.available_quantity, rest.quantity);
+      }
+
       const { data, error } = await supabase
         .from('books')
-        .update({ ...bookData, updated_at: new Date().toISOString() })
+        .update(payload)
         .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
 
+      if (existingBook?.cover_image_url && existingBook.cover_image_url !== data.cover_image_url) {
+        await deleteBookCover(existingBook.cover_image_url);
+      }
+
       await refresh();
       return data ?? null;
     } catch (err) {
+      if (uploadedCoverUrl) {
+        await deleteBookCover(uploadedCoverUrl);
+      }
       setError(err instanceof Error ? err.message : '更新图书时发生错误');
       return null;
     }
-  }, [refresh]);
+  }, [refresh, books]);
 
   const deleteBook = useCallback(async (id: string): Promise<boolean> => {
+    const bookToDelete = books.find((item) => item.id === id);
+
     try {
       setError(null);
       const { error } = await supabase.from('books').delete().eq('id', id);
 
       if (error) throw error;
+
+      if (bookToDelete?.cover_image_url) {
+        await deleteBookCover(bookToDelete.cover_image_url);
+      }
 
       await refresh();
       return true;
@@ -163,7 +226,7 @@ export const useBooks = () => {
       setError(err instanceof Error ? err.message : '删除图书时发生错误');
       return false;
     }
-  }, [refresh]);
+  }, [refresh, books]);
 
   useEffect(() => {
     initialize();
