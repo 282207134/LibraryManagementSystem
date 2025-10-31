@@ -134,6 +134,12 @@ npm run lint
 2. 启用 **Email** 登录方式，并根据需要配置邮件模板。
 3. 在 **Authentication → Policies** 中确保匿名访问被禁用，仅允许已认证用户访问 `books` 表。
 
+#### 用户表说明
+
+Supabase Auth 会自动维护 `auth.users` 表用于账号注册和登录，无需手动创建额外的用户表。只需启用 Email 登录（或其他登录方式），即可以 Supabase Auth 提供的用户体系完成基础认证。
+
+如果需要扩展用户资料（例如角色、手机号等额外字段），可以创建一个与 `auth.users` 一对一关联的 `users` 扩展表。详细的建表 SQL 和推荐策略请参考 [SUPABASE_TABLES_PROPOSAL.md](./SUPABASE_TABLES_PROPOSAL.md)。
+
 ### 图书封面图片
 
 - 请确保在 `books` 表中添加 `cover_image_url` 字段（详情见 [DATABASE.md](./DATABASE.md)）。

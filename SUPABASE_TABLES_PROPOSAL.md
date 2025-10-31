@@ -5,6 +5,12 @@
 
 ---
 
+## 用户与认证说明
+
+- Supabase Auth 会自动创建并维护 `auth.users` 表，用于存储所有注册用户的基础账号信息。对于当前项目的核心功能，只需在 Supabase Dashboard 中启用 Email 登录（或其他需要的登录方式），即可获得完整的认证能力，无需手动创建额外的用户表。
+- 如果需要在 `auth.users` 基础上扩展更多资料字段（如角色、联系方式等），可以创建一个与 `auth.users` 一对一关联的扩展表。该扩展表的示例 SQL 见下文的「users 表 - 用户信息扩展表（可选）」章节。
+- 其他引用用户数据的表（例如借阅记录、评论等）可以直接引用 `auth.users(id)`，也可以引用扩展的 `users(id)`，视实际需求而定。
+
 ## 核心表（必须创建）
 
 ### 1. books 表 - 图书信息表
@@ -99,11 +105,13 @@ CREATE POLICY "Authenticated users can delete books" ON books
 
 ---
 
-## 扩展表（推荐创建，用于完整的图书管理系统）
+## 扩展表（可选，用于完整的图书管理系统）
 
-### 2. users 表 - 用户信息扩展表
+### 2. users 表 - 用户信息扩展表（可选）
 
-**用途**: 扩展 Supabase Auth 的用户信息，存储额外的用户资料
+**用途**: 扩展 Supabase Auth 的用户信息，存储额外的用户资料（如角色、电话、地址、借阅限制等）
+
+> **说明**：此表并非必需。如果项目仅需要 Supabase Auth 提供的 email 与 password 认证功能，可以不创建此表，直接使用 `auth.users`。只有在需要额外字段时才创建此表。
 
 ```sql
 CREATE TABLE users (
@@ -172,11 +180,14 @@ CREATE POLICY "Admins can read all users" ON users
 
 **用途**: 跟踪图书借阅、归还情况
 
+> **注意**：此表中的 `user_id` 引用的是扩展表 `users(id)`。如果你没有创建扩展表，可以改为 `REFERENCES auth.users(id)`；同时 RLS 策略中访问 `users` 表的地方也需要相应调整或简化。
+
 ```sql
 CREATE TABLE borrowing_records (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   book_id UUID NOT NULL REFERENCES books(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- 或 auth.users(id)
+
   borrowed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   due_date TIMESTAMP WITH TIME ZONE NOT NULL,
   returned_at TIMESTAMP WITH TIME ZONE,
@@ -260,11 +271,14 @@ CREATE POLICY "Staff can update records" ON borrowing_records
 
 **用途**: 允许用户对图书进行评分和评论
 
+> **注意**：此表的 `user_id` 同样引用了扩展表 `users(id)`。如未创建扩展表，可改为 `REFERENCES auth.users(id)`。
+
 ```sql
 CREATE TABLE reviews (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   book_id UUID NOT NULL REFERENCES books(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- 或 auth.users(id)
+
   rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
   comment TEXT,
   helpful_count INTEGER DEFAULT 0,
@@ -325,11 +339,13 @@ CREATE POLICY "Users can delete own reviews" ON reviews
 
 **用途**: 当图书被借出时，其他用户可以预约，归还后优先借阅
 
+> **注意**：此表默认引用扩展表 `users(id)`，如未创建扩展表，可改为 `REFERENCES auth.users(id)`。
+
 ```sql
 CREATE TABLE reservations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   book_id UUID NOT NULL REFERENCES books(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- 或 auth.users(id)
   reserved_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
   status VARCHAR(50) DEFAULT 'active' 
@@ -378,10 +394,12 @@ CREATE POLICY "Staff can read all reservations" ON reservations
 
 **用途**: 系统通知(逾期提醒、预约通知等)
 
+> **注意**：此表同样默认引用扩展表 `users(id)`，如未创建扩展表，可改为 `REFERENCES auth.users(id)`。
+
 ```sql
 CREATE TABLE notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, -- 或 auth.users(id)
   type VARCHAR(50) NOT NULL 
     CHECK (type IN ('due_soon', 'overdue', 'reservation_ready', 'system')),
   title VARCHAR(255) NOT NULL,
