@@ -91,7 +91,13 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 
 4. **设置 Supabase 数据库**
 
-参考 [DATABASE.md](./DATABASE.md) 文档，在 Supabase 项目中创建数据库表。
+**重要**：请按照 [DEPLOYMENT.md](./DEPLOYMENT.md) 部署指南完成以下操作：
+   - 创建 Supabase 项目
+   - 启用用户认证（Supabase 自动处理用户表，无需手动创建）
+   - 运行数据库 SQL 脚本创建 books 表
+   - 配置 RLS 策略
+
+> 📖 如需详细的数据库设计说明，可参考 [DATABASE.md](./DATABASE.md)。
 
 5. **启动开发服务器**
 
@@ -233,10 +239,21 @@ MIT License
 
 ---
 
-## 相关文档
+## 📚 相关文档
 
-- [数据库设计文档](./DATABASE.md)
-- [部署指南](./DEPLOYMENT.md)
+### 部署与配置
+
+- **[部署指南](./DEPLOYMENT.md)** ⭐ **推荐首先阅读** - 包含完整的部署步骤、用户认证配置、数据库表创建 SQL 和常见问题排查
+
+### 数据库设计
+
+- **[数据库设计文档](./DATABASE.md)** - 详细的数据库结构和字段说明
+- **[完整表创建方案](./SUPABASE_TABLES_PROPOSAL.md)** - 包含借阅记录、评论等扩展功能的完整 SQL（可选）
+
+### 外部资源
+
 - [Supabase 官方文档](https://supabase.com/docs)
 - [React 官方文档](https://react.dev/)
 - [Tailwind CSS 文档](https://tailwindcss.com/docs)
+
+> 💡 **新手建议**：如果您是第一次部署，请从 [DEPLOYMENT.md](./DEPLOYMENT.md) 开始，它包含了所有必需的步骤和 SQL 脚本。其他文档主要用于深入了解数据库设计和扩展功能。
