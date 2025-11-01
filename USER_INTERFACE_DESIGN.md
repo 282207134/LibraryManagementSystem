@@ -2,7 +2,7 @@
 
 ## 文档概述
 
-本文档描述了图书管理系统的**用户界面（User Interface）**的功能需求、设计方案和实现规划。用户界面与现有的管理员界面分离，为普通用户提供浏览、租借和订阅图书的功能。
+本文档描述了图书管理系统的**用户界面（User Interface）**的功能需求、设计方案和实现规划。用户界面与现有的管理员界面分离，为普通用户提供浏览、租借和收藏图书的功能。
 
 ---
 
@@ -19,7 +19,7 @@
 需要开发一个**用户界面**，让普通用户能够：
 - 📖 **浏览图书**：查看所有可用图书的详细信息
 - 📚 **租借图书**：借阅图书并管理借阅记录
-- 🔔 **订阅功能**：订阅感兴趣的图书或分类，获取更新通知
+- ⭐ **收藏功能**：收藏感兴趣的图书或分类，便于快速访问
 - 👤 **用户账户**：独立的用户注册、登录和个人中心
 
 ---
@@ -61,16 +61,84 @@
 
 **权限继承原则**：管理员拥有所有普通用户的权限，外加管理权限。
 
-#### 2.1.4 管理员账户创建方式
-- 通过用户注册界面注册的账号 **默认是普通用户 (role = 'user')**。
-- 创建或升级管理员账号有两种常见方式：
-  1. **Supabase Dashboard 手动创建**：在 Supabase → Authentication → Users 中创建新用户，创建后在 `users` 扩展表中将对应用户的 `role` 字段更新为 `admin`。
-  2. **升级现有用户**：让用户先通过前端界面注册，再在 `users` 表中将该用户的 `role` 从 `user` 更新为 `admin`。
-- 管理员账户登录任意界面（用户端或管理员端）时，系统会根据 `role` 值判断应显示的功能。
+#### 2.1.4 权限系统实现原理
+
+**重要说明**：Supabase Auth 本身不提供"管理员/普通用户"的角色管理功能。所有权限控制都是通过数据库中的 `role` 字段实现的。
+
+##### 权限实现方式
+
+1. **数据库层面**：在 `users` 扩展表中添加 `role` 字段
+   ```sql
+   CREATE TABLE users (
+     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+     email VARCHAR(255) UNIQUE NOT NULL,
+     full_name VARCHAR(255) NOT NULL,
+     role VARCHAR(50) DEFAULT 'user' CHECK (role IN ('user', 'admin')),
+     -- 其他字段...
+   );
+   ```
+
+2. **默认角色分配**：通过用户注册界面注册的账号 **默认 role = 'user'**
+
+3. **创建管理员账号的方法**：
+
+   **方法一：在 Supabase Dashboard 中操作**
+   
+   a. 在 Supabase → Authentication → Users 中创建或找到用户
+   
+   b. 复制该用户的 UID（例如：`2d72f58a-4a46-4b93-8d52-e3545f164258`）
+   
+   c. 在 Supabase → Database → Table Editor → `users` 表中找到该用户
+   
+   d. 将 `role` 字段从 `user` 修改为 `admin`
+   
+   **方法二：使用 SQL Editor**
+   ```sql
+   -- 将指定用户设置为管理员
+   UPDATE users
+   SET role = 'admin'
+   WHERE id = '2d72f58a-4a46-4b93-8d52-e3545f164258';  -- 替换为实际的用户 UID
+   ```
+   
+   **方法三：将管理员降级为普通用户**
+   ```sql
+   UPDATE users
+   SET role = 'user'
+   WHERE id = '管理员的UID';
+   ```
+
+4. **前端权限判断**：
+   ```typescript
+   // 获取当前用户的角色
+   const { data: userProfile } = await supabase
+     .from('users')
+     .select('role')
+     .eq('id', user.id)
+     .single();
+   
+   if (userProfile.role === 'admin') {
+     // 显示管理员功能
+   } else {
+     // 显示普通用户功能
+   }
+   ```
+
+5. **RLS 策略控制**：使用 Row Level Security 在数据库层面控制权限
+   ```sql
+   -- 只有管理员可以修改图书
+   CREATE POLICY "Only admins can update books" ON books
+   FOR UPDATE
+   USING (
+     EXISTS (
+       SELECT 1 FROM users
+       WHERE users.id = auth.uid() AND users.role = 'admin'
+     )
+   );
+   ```
 
 ---
 
-### 2.2 图书浏览模块
+### 2.2 图书浏览与收藏模块
 
 #### 2.2.1 图书列表页面
 **功能特性**：
@@ -88,7 +156,7 @@
 **交互功能**：
 - 点击图书卡片/行 → 进入图书详情页
 - 快速借阅按钮（需登录）
-- 收藏/订阅按钮
+- ⭐ 收藏按钮（收藏/取消收藏）
 
 #### 2.2.2 搜索与筛选
 **搜索功能**：
@@ -99,12 +167,13 @@
 **筛选功能**：
 - 按分类筛选（小说、科技、历史等）
 - 按可借状态筛选（仅显示可借图书）
+- 按收藏状态筛选（显示已收藏图书）
 - 按出版年份排序
 
 **排序选项**：
 - 最新添加
 - 书名 A-Z
-- 最受欢迎（基于借阅次数）
+- 最受欢迎（基于借阅次数或收藏次数）
 
 #### 2.2.3 图书详情页面
 **显示内容**：
@@ -115,7 +184,7 @@
   - 分类、描述
   - 库存信息（总数/可借数）
 - 借阅按钮（根据可借状态动态显示）
-- 订阅按钮（收藏/关注功能）
+- ⭐ 收藏按钮（显示当前收藏状态）
 
 **用户评论区（扩展功能）**：
 - 显示其他用户的评分和评论
@@ -180,57 +249,53 @@
 
 ---
 
-### 2.4 订阅功能模块
+### 2.4 收藏功能模块
 
-#### 2.4.1 图书订阅（收藏）
+#### 2.4.1 图书收藏
 **功能描述**：
-- 用户可以订阅/收藏感兴趣的图书
-- 当图书有更新或重新上架时接收通知
+- 用户可以收藏感兴趣的图书
+- 收藏图书会出现在"我的收藏"页面，便于快速访问
 
 **实现方式**：
-- 创建 `book_subscriptions` 表：
+- 创建 `book_favorites` 表：
   ```sql
-  CREATE TABLE book_subscriptions (
+  CREATE TABLE book_favorites (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    book_id UUID REFERENCES books(id) ON DELETE CASCADE,
-    subscribed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    book_id UUID NOT NULL REFERENCES books(id) ON DELETE CASCADE,
+    favorited_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(user_id, book_id)
   );
   ```
 
 **用户操作**：
-- 在图书详情页点击"订阅"按钮
-- 在"我的订阅"页面查看所有订阅的图书
-- 取消订阅
+- 在图书详情页或列表中点击"收藏"/"取消收藏"按钮
+- 在"我的收藏"页面查看所有收藏的图书
 
-#### 2.4.2 分类订阅
+#### 2.4.2 分类收藏（可选）
 **功能描述**：
-- 用户可以订阅特定的图书分类（如"科技"、"小说"）
-- 当该分类有新书添加时接收通知
+- 用户可以收藏感兴趣的分类（如"科技"、"小说"）
+- 收藏分类后，用户可以在收藏页面快速查看该分类的新书
 
 **实现方式**：
-- 创建 `category_subscriptions` 表：
+- 创建 `category_favorites` 表（可选）：
   ```sql
-  CREATE TABLE category_subscriptions (
+  CREATE TABLE category_favorites (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     category VARCHAR(100) NOT NULL,
-    subscribed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    favorited_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(user_id, category)
   );
   ```
 
-#### 2.4.3 通知系统（可选）
-**通知场景**：
-- 订阅的图书重新可借时
-- 订阅的分类有新书时
-- 借阅图书即将到期提醒（提前 3 天）
-- 借阅图书已逾期提醒
+#### 2.4.3 通知拓展（可选）
+**扩展目标**：在收藏功能基础上，未来可以进一步实现通知提醒，例如：
+- 收藏的图书重新上架或可借时提醒
+- 收藏的分类有新书添加时提醒
 
-**实现方式**：
-- 使用 Supabase 的 Database Webhooks 或 Edge Functions
-- 或前端轮询检查 + 本地通知
+**实现方式（未来规划）**：
+- 使用 Supabase Edge Functions、数据库触发器或外部任务调度，实现邮件/站内提醒
 
 ---
 
@@ -250,10 +315,10 @@
 - 历史借阅总时长
 - 逾期记录统计
 
-#### 2.5.3 我的订阅
-- 已订阅的图书列表
-- 已订阅的分类列表
-- 管理订阅（取消订阅）
+#### 2.5.3 我的收藏
+- 已收藏的图书列表
+- 已收藏的分类列表（如启用分类收藏）
+- 管理收藏（取消收藏）
 
 ---
 
@@ -302,35 +367,35 @@ CREATE INDEX idx_borrowing_records_book_id ON borrowing_records(book_id);
 CREATE INDEX idx_borrowing_records_status ON borrowing_records(status);
 ```
 
-#### 3.1.3 book_subscriptions 表（可选）
-存储用户对图书的订阅：
+#### 3.1.3 book_favorites 表（推荐）
+存储用户收藏的图书：
 
 ```sql
-CREATE TABLE book_subscriptions (
+CREATE TABLE book_favorites (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   book_id UUID NOT NULL REFERENCES books(id) ON DELETE CASCADE,
-  subscribed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  favorited_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(user_id, book_id)
 );
 
-CREATE INDEX idx_book_subscriptions_user_id ON book_subscriptions(user_id);
-CREATE INDEX idx_book_subscriptions_book_id ON book_subscriptions(book_id);
+CREATE INDEX idx_book_favorites_user_id ON book_favorites(user_id);
+CREATE INDEX idx_book_favorites_book_id ON book_favorites(book_id);
 ```
 
-#### 3.1.4 category_subscriptions 表（可选）
-存储用户对分类的订阅：
+#### 3.1.4 category_favorites 表（可选）
+存储用户收藏的分类：
 
 ```sql
-CREATE TABLE category_subscriptions (
+CREATE TABLE category_favorites (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   category VARCHAR(100) NOT NULL,
-  subscribed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  favorited_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(user_id, category)
 );
 
-CREATE INDEX idx_category_subscriptions_user_id ON category_subscriptions(user_id);
+CREATE INDEX idx_category_favorites_user_id ON category_favorites(user_id);
 ```
 
 #### 3.1.5 reviews 表（可选）
@@ -366,7 +431,7 @@ CREATE INDEX idx_reviews_user_id ON reviews(user_id);
 ├── /user/books              # 图书浏览页（带搜索和筛选）
 ├── /user/books/:id          # 图书详情页
 ├── /user/my-borrowings      # 我的借阅记录
-├── /user/my-subscriptions   # 我的订阅
+├── /user/my-favorites       # 我的收藏
 ├── /user/profile            # 个人中心
 └── /user/notifications      # 通知中心（可选）
 
@@ -386,10 +451,10 @@ CREATE INDEX idx_reviews_user_id ON reviews(user_id);
 
 #### 用户界面导航栏
 ```
-Logo | 首页 | 图书浏览 | 我的借阅 | 我的订阅 | 个人中心 | [登出]
+Logo | 首页 | 图书浏览 | 我的借阅 | 我的收藏 | 个人中心 | [登出]
 
 管理员登录时额外显示：
-Logo | 首页 | 图书浏览 | 我的借阅 | 我的订阅 | 个人中心 | [管理后台] | [登出]
+Logo | 首页 | 图书浏览 | 我的借阅 | 我的收藏 | 个人中心 | [管理后台] | [登出]
 ```
 
 #### 管理员界面导航栏（现有）
@@ -416,8 +481,9 @@ src/
 │       ├── UserBookCard.tsx   # 用户图书卡片
 │       ├── UserBookDetail.tsx # 图书详情页
 │       ├── BorrowButton.tsx   # 借阅按钮
+│       ├── FavoriteButton.tsx # 收藏按钮
 │       ├── MyBorrowings.tsx   # 我的借阅
-│       ├── MySubscriptions.tsx # 我的订阅
+│       ├── MyFavorites.tsx    # 我的收藏
 │       ├── UserProfile.tsx    # 用户个人中心
 │       ├── UserLogin.tsx      # 用户登录
 │       ├── UserRegister.tsx   # 用户注册
@@ -427,12 +493,12 @@ src/
 ├── hooks/
 │   ├── useBooks.ts            # 图书操作（现有）
 │   ├── useBorrowings.ts       # 借阅操作（新增）
-│   ├── useSubscriptions.ts    # 订阅操作（新增）
+│   ├── useFavorites.ts        # 收藏操作（新增）
 │   └── useUser.ts             # 用户信息操作（新增）
 ├── types/
 │   ├── book.ts                # 图书类型（现有）
 │   ├── borrowing.ts           # 借阅记录类型（新增）
-│   ├── subscription.ts        # 订阅类型（新增）
+│   ├── favorite.ts            # 收藏类型（新增）
 │   └── user.ts                # 用户类型（新增）
 └── pages/                     # 页面组件（新增）
     ├── admin/
@@ -442,6 +508,7 @@ src/
         ├── UserBooks.tsx
         ├── UserBookDetail.tsx
         ├── UserBorrowings.tsx
+        ├── UserFavorites.tsx
         └── UserProfile.tsx
 ```
 
@@ -464,7 +531,7 @@ function App() {
           <Route path="books" element={<UserBooks />} />
           <Route path="books/:id" element={<UserBookDetail />} />
           <Route path="my-borrowings" element={<MyBorrowings />} />
-          <Route path="my-subscriptions" element={<MySubscriptions />} />
+          <Route path="my-favorites" element={<MyFavorites />} />
           <Route path="profile" element={<UserProfile />} />
         </Route>
         
@@ -581,25 +648,25 @@ export function useBorrowings() {
 }
 ```
 
-#### 5.2.2 订阅相关 API
+#### 5.2.2 收藏相关 API
 ```typescript
-// useSubscriptions.ts
+// useFavorites.ts
 import { supabase } from '../lib/supabaseClient';
 
-export function useSubscriptions() {
-  // 订阅图书
-  const subscribeToBook = async (bookId: string, userId: string) => {
+export function useFavorites() {
+  // 收藏图书
+  const favoriteBook = async (bookId: string, userId: string) => {
     const { error } = await supabase
-      .from('book_subscriptions')
+      .from('book_favorites')
       .insert({ book_id: bookId, user_id: userId });
     
     if (error) throw error;
   };
   
-  // 取消订阅图书
-  const unsubscribeFromBook = async (bookId: string, userId: string) => {
+  // 取消收藏图书
+  const unfavoriteBook = async (bookId: string, userId: string) => {
     const { error } = await supabase
-      .from('book_subscriptions')
+      .from('book_favorites')
       .delete()
       .eq('book_id', bookId)
       .eq('user_id', userId);
@@ -607,10 +674,10 @@ export function useSubscriptions() {
     if (error) throw error;
   };
   
-  // 获取用户订阅的图书
-  const getUserBookSubscriptions = async (userId: string) => {
+  // 获取用户收藏的图书
+  const getUserFavoriteBooks = async (userId: string) => {
     const { data, error } = await supabase
-      .from('book_subscriptions')
+      .from('book_favorites')
       .select(`
         *,
         books (
@@ -626,20 +693,20 @@ export function useSubscriptions() {
     return data;
   };
   
-  // 订阅分类
-  const subscribeToCategory = async (category: string, userId: string) => {
+  // 收藏分类（可选）
+  const favoriteCategory = async (category: string, userId: string) => {
     const { error } = await supabase
-      .from('category_subscriptions')
+      .from('category_favorites')
       .insert({ category, user_id: userId });
     
     if (error) throw error;
   };
   
   return { 
-    subscribeToBook, 
-    unsubscribeFromBook, 
-    getUserBookSubscriptions,
-    subscribeToCategory 
+    favoriteBook, 
+    unfavoriteBook, 
+    getUserFavoriteBooks,
+    favoriteCategory 
   };
 }
 ```
@@ -694,6 +761,26 @@ CREATE POLICY "Only admins can manage books" ON books
   );
 ```
 
+#### 5.3.3 book_favorites 表的 RLS
+```sql
+ALTER TABLE book_favorites ENABLE ROW LEVEL SECURITY;
+
+-- 用户只能查看自己的收藏
+CREATE POLICY "Users can view own favorites" ON book_favorites
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- 用户只能创建自己的收藏
+CREATE POLICY "Users can create own favorites" ON book_favorites
+  FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- 用户只能删除自己的收藏
+CREATE POLICY "Users can delete own favorites" ON book_favorites
+  FOR DELETE
+  USING (auth.uid() = user_id);
+```
+
 ---
 
 ## 6. UI/UX 设计建议
@@ -711,7 +798,7 @@ CREATE POLICY "Only admins can manage books" ON books
 #### 6.2.1 用户首页（图书浏览）
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ [Logo]  首页  图书浏览  我的借阅  我的订阅  [👤 用户名] │
+│ [Logo]  首页  图书浏览  我的借阅  我的收藏  [👤 用户名] │
 ├─────────────────────────────────────────────────────────┤
 │                                                           │
 │  🔍 [搜索框]                    [分类筛选▼] [排序▼]      │
@@ -744,7 +831,7 @@ CREATE POLICY "Only admins can manage books" ON books
 │  └─────────┘                                             │
 │               库存：5 本    可借：3 本                    │
 │                                                           │
-│               [🔖 订阅通知]  [📚 立即借阅]               │
+│               [⭐ 收藏]     [📚 立即借阅]               │
 │                                                           │
 │  ─────────────────────────────────────────────────       │
 │  简介：                                                   │
@@ -1015,7 +1102,7 @@ const getBorrowingsWithStatus = async (userId: string) => {
 - [ ] 借阅功能（正常流程）
 - [ ] 借阅限制检查（达到上限、库存不足）
 - [ ] 归还功能
-- [ ] 订阅和取消订阅
+- [ ] 收藏和取消收藏
 - [ ] 逾期检测
 
 ### 10.2 权限测试
@@ -1034,10 +1121,10 @@ const getBorrowingsWithStatus = async (userId: string) => {
 
 ### 11.1 高级功能
 - 📊 **数据分析仪表盘**：借阅趋势、热门图书统计
-- 🤖 **智能推荐**：基于借阅历史的个性化推荐
+- 🤖 **智能推荐**：基于借阅历史和收藏的个性化推荐
 - 💬 **社交功能**：书友系统、借阅分享
 - 📱 **移动应用**：React Native 或 Flutter 开发原生 App
-- 📧 **邮件通知**：到期提醒、订阅通知邮件
+- 📧 **邮件通知**：到期提醒、收藏图书上架通知邮件
 
 ### 11.2 技术优化
 - 🚀 **缓存机制**：Redis 缓存热门图书数据
@@ -1064,16 +1151,22 @@ const getBorrowingsWithStatus = async (userId: string) => {
 
 本文档详细描述了图书管理系统用户界面的设计方案，包括：
 
-✅ **核心功能**：图书浏览、借阅、归还
-✅ **增强功能**：订阅通知、个人中心、评论系统
-✅ **技术方案**：前端组件设计、后端 API、数据库设计
+✅ **核心功能**：图书浏览、借阅、归还、收藏
+✅ **权限系统**：基于数据库 role 字段的权限管理，管理员可访问所有界面
+✅ **技术方案**：前端组件设计、后端 API、数据库设计、RLS 策略
 ✅ **实施计划**：分阶段开发，优先核心功能
 
-该用户界面将与现有的管理员界面协同工作，为普通用户提供完整的图书借阅体验。建议按照第一阶段（核心功能）→ 第二阶段（增强功能）→ 第三阶段（扩展功能）的顺序逐步实现。
+该用户界面将与现有的管理员界面协同工作，为普通用户提供完整的图书借阅体验。管理员不仅可以使用管理功能，也可以正常使用用户界面的所有功能。建议按照第一阶段（核心功能）→ 第二阶段（增强功能）→ 第三阶段（扩展功能）的顺序逐步实现。
 
 ---
 
-**文档版本**：v1.0  
+**文档版本**：v2.0  
 **创建日期**：2024-11-01  
 **最后更新**：2024-11-01  
 **维护者**：开发团队
+
+**v2.0 更新说明**：
+- ✅ 明确了权限系统实现原理（基于数据库 role 字段而非 Supabase Auth）
+- ✅ 管理员可以访问用户界面的所有功能
+- ✅ 将"订阅功能"改为"收藏功能"，更符合实际使用场景
+- ✅ 添加了详细的权限管理操作步骤
