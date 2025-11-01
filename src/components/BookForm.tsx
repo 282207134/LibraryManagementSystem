@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { Book, BookFormData } from '../types/book';
-import { validateImageFile } from '../lib/storageHelper';
+import { validateImageFile, resolveCoverImageUrl } from '../lib/storageHelper';
 
 interface BookFormProps {
   book?: Book | null;
@@ -30,28 +30,48 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
   const [previewUrl, setPreviewUrl] = useState<string>('');
 
   useEffect(() => {
-    if (book) {
-      setFormData({
-        title: book.title,
-        author: book.author,
-        isbn: book.isbn || '',
-        publisher: book.publisher || '',
-        publication_year: book.publication_year ?? undefined,
-        category: book.category || '',
-        description: book.description || '',
-        quantity: book.quantity,
-        available_quantity: book.available_quantity,
-        cover_image_url: book.cover_image_url ?? null,
-        cover_image_file: null,
-        remove_cover: false,
-      });
-      setPreviewUrl(book.cover_image_url || '');
-      setPreviewError(false);
-    } else {
-      setFormData({ ...emptyForm });
-      setPreviewUrl('');
-      setPreviewError(false);
-    }
+    let mounted = true;
+
+    const loadBookData = async () => {
+      if (book) {
+        setFormData({
+          title: book.title,
+          author: book.author,
+          isbn: book.isbn || '',
+          publisher: book.publisher || '',
+          publication_year: book.publication_year ?? undefined,
+          category: book.category || '',
+          description: book.description || '',
+          quantity: book.quantity,
+          available_quantity: book.available_quantity,
+          cover_image_url: book.cover_image_url ?? null,
+          cover_image_file: null,
+          remove_cover: false,
+        });
+
+        if (book.cover_image_url) {
+          const resolvedUrl = await resolveCoverImageUrl(book.cover_image_url);
+          if (mounted) {
+            const fallbackUrl = resolvedUrl ?? book.cover_image_url ?? '';
+            setPreviewUrl(fallbackUrl);
+            setPreviewError(false);
+          }
+        } else if (mounted) {
+          setPreviewUrl('');
+          setPreviewError(false);
+        }
+      } else {
+        setFormData({ ...emptyForm });
+        setPreviewUrl('');
+        setPreviewError(false);
+      }
+    };
+
+    loadBookData();
+
+    return () => {
+      mounted = false;
+    };
   }, [book]);
 
   useEffect(() => {

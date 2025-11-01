@@ -99,7 +99,7 @@ export const useBooks = () => {
       return null;
     }
 
-    let uploadedCoverUrl: string | null = null;
+    let uploadedCoverPath: string | null = null;
 
     try {
       setError(null);
@@ -108,20 +108,22 @@ export const useBooks = () => {
 
       if (bookData.cover_image_file) {
         const uploadResult = await uploadBookCover(bookData.cover_image_file);
-        if (uploadResult.error || !uploadResult.url) {
-          setError(`图片上传失败: ${uploadResult.error ?? '未知错误'}`);
+        if (uploadResult.error) {
+          setError(`图片上传失败: ${uploadResult.error}`);
           return null;
         }
-        coverImageUrl = uploadResult.url;
-        uploadedCoverUrl = uploadResult.url;
+        coverImageUrl = uploadResult.path ?? uploadResult.url;
+        uploadedCoverPath = uploadResult.path;
       }
 
-      const { cover_image_file, remove_cover, ...dataToInsert } = bookData;
-      const payload = {
-        ...dataToInsert,
+      const payload: Record<string, unknown> = {
+        ...bookData,
         cover_image_url: coverImageUrl ?? null,
         available_quantity: Math.min(bookData.available_quantity, bookData.quantity),
       };
+
+      delete payload.cover_image_file;
+      delete payload.remove_cover;
 
       const { data, error } = await supabase
         .from('books')
@@ -134,8 +136,8 @@ export const useBooks = () => {
       await refresh();
       return data ?? null;
     } catch (err) {
-      if (uploadedCoverUrl) {
-        await deleteBookCover(uploadedCoverUrl);
+      if (uploadedCoverPath) {
+        await deleteBookCover(uploadedCoverPath);
       }
       setError(err instanceof Error ? err.message : '添加图书时发生错误');
       return null;
@@ -153,12 +155,12 @@ export const useBooks = () => {
     }
 
     const existingBook = books.find((item) => item.id === id);
+    let uploadedCoverPath: string | null = null;
 
     try {
       setError(null);
 
       let nextCoverUrl = bookData.cover_image_url ?? existingBook?.cover_image_url ?? null;
-      let uploadedCoverUrl: string | null = null;
 
       if (bookData.cover_image_file) {
         const uploadResult = await uploadBookCover(bookData.cover_image_file);
@@ -166,21 +168,23 @@ export const useBooks = () => {
           setError(`图片上传失败: ${uploadResult.error}`);
           return null;
         }
-        nextCoverUrl = uploadResult.url ?? null;
-        uploadedCoverUrl = uploadResult.url ?? null;
+        nextCoverUrl = uploadResult.path ?? uploadResult.url ?? null;
+        uploadedCoverPath = uploadResult.path;
       } else if (bookData.remove_cover) {
         nextCoverUrl = null;
       }
 
-      const { cover_image_file, remove_cover, ...rest } = bookData;
       const payload: Record<string, unknown> = {
-        ...rest,
+        ...bookData,
         cover_image_url: nextCoverUrl,
         updated_at: new Date().toISOString(),
       };
 
-      if (typeof rest.available_quantity === 'number' && typeof rest.quantity === 'number') {
-        payload.available_quantity = Math.min(rest.available_quantity, rest.quantity);
+      delete payload.cover_image_file;
+      delete payload.remove_cover;
+
+      if (typeof bookData.available_quantity === 'number' && typeof bookData.quantity === 'number') {
+        payload.available_quantity = Math.min(bookData.available_quantity, bookData.quantity);
       }
 
       const { data, error } = await supabase
@@ -199,8 +203,8 @@ export const useBooks = () => {
       await refresh();
       return data ?? null;
     } catch (err) {
-      if (uploadedCoverUrl) {
-        await deleteBookCover(uploadedCoverUrl);
+      if (uploadedCoverPath) {
+        await deleteBookCover(uploadedCoverPath);
       }
       setError(err instanceof Error ? err.message : '更新图书时发生错误');
       return null;
