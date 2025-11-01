@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Book } from '../types/book';
 import { BookCard } from './BookCard';
+import { resolveCoverImageUrl } from '../lib/storageHelper';
 
 interface BookListProps {
   books: Book[];
@@ -13,8 +14,31 @@ interface BookListProps {
 
 const CoverThumbnail = ({ coverUrl, title }: { coverUrl?: string | null; title: string }) => {
   const [failed, setFailed] = useState(false);
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
 
-  if (!coverUrl || failed) {
+  useEffect(() => {
+    let mounted = true;
+    
+    const loadImage = async () => {
+      if (coverUrl) {
+        const url = await resolveCoverImageUrl(coverUrl);
+        if (mounted) {
+          setResolvedUrl(url);
+          setFailed(false);
+        }
+      } else {
+        setResolvedUrl(null);
+      }
+    };
+
+    loadImage();
+
+    return () => {
+      mounted = false;
+    };
+  }, [coverUrl]);
+
+  if (!resolvedUrl || failed) {
     return (
       <div className="w-12 h-16 bg-gray-100 border border-gray-200 rounded flex items-center justify-center text-xs text-gray-500">
         无封面
@@ -24,7 +48,7 @@ const CoverThumbnail = ({ coverUrl, title }: { coverUrl?: string | null; title: 
 
   return (
     <img
-      src={coverUrl}
+      src={resolvedUrl}
       alt={`${title} 封面`}
       className="w-12 h-16 object-cover rounded border border-gray-200"
       onError={() => setFailed(true)}

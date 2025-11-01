@@ -1,5 +1,6 @@
 import type { Book } from '../types/book';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { resolveCoverImageUrl } from '../lib/storageHelper';
 
 interface BookCardProps {
   book: Book;
@@ -9,14 +10,41 @@ interface BookCardProps {
 
 export const BookCard = ({ book, onEdit, onDelete }: BookCardProps) => {
   const [imageError, setImageError] = useState(false);
-  const hasValidImage = book.cover_image_url && !imageError;
+  const [resolvedImageUrl, setResolvedImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    
+    const loadImage = async () => {
+      if (book.cover_image_url) {
+        const url = await resolveCoverImageUrl(book.cover_image_url);
+        if (mounted) {
+          setResolvedImageUrl(url);
+        }
+      } else {
+        setResolvedImageUrl(null);
+      }
+    };
+
+    loadImage();
+
+    return () => {
+      mounted = false;
+    };
+  }, [book.cover_image_url]);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [resolvedImageUrl]);
+
+  const hasValidImage = resolvedImageUrl && !imageError;
 
   return (
     <div className="bg-white shadow rounded-lg p-4 flex gap-4">
       {hasValidImage && (
         <div className="flex-shrink-0">
           <img
-            src={book.cover_image_url}
+            src={resolvedImageUrl}
             alt={`${book.title} 封面`}
             className="w-20 h-28 object-cover rounded"
             onError={() => setImageError(true)}
