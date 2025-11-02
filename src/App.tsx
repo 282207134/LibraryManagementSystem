@@ -7,6 +7,7 @@ import { UserLayout } from './components/user/UserLayout';
 import { UserHome } from './pages/UserHome';
 import { UserMyBorrowings } from './pages/UserMyBorrowings';
 import { UserFavorites } from './pages/UserFavorites';
+import { UserBookDetail } from './pages/UserBookDetail';
 
 // 旧的管理员界面暂时保留
 import AdminApp from './AdminApp';
@@ -46,6 +47,7 @@ function AuthRoutes() {
         <Route index element={<Navigate to="/user/home" replace />} />
         <Route path="home" element={<UserHome />} />
         <Route path="books" element={<UserHome />} />
+        <Route path="books/:id" element={<UserBookDetail />} />
         <Route path="my-borrowings" element={<UserMyBorrowings />} />
         <Route path="my-favorites" element={<UserFavorites />} />
         <Route path="profile" element={<div className="p-8 text-center text-gray-500">个人中心页面开发中...</div>} />

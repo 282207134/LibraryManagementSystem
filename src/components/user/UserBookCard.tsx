@@ -71,7 +71,7 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
         ? `借阅成功！到期日期：${new Date(dueDate).toLocaleDateString()}`
         : borrowSucceeded
           ? '借阅成功！'
-          : '借阅成功！可以在“我的借阅”中查看详情。';
+          : '借阅成功！可以在"我的借阅"中查看详情。';
 
       alert(message);
       onBorrowSuccess?.();
@@ -104,8 +104,8 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow flex flex-col w-full h-full">
-      {/* 封面区域 - 书本比例 3:4 */}
-      <Link to={`/user/books/${book.id}`} className="block aspect-[3/4] bg-gray-200 overflow-hidden flex-shrink-0 relative">
+      {/* 封面区域 - 调整为更紧凑的比例，高度约 160px */}
+      <Link to={`/user/books/${book.id}`} className="block h-40 bg-gray-200 overflow-hidden flex-shrink-0 relative cursor-pointer">
         {coverImageUrl ? (
           <img
             src={coverImageUrl}
@@ -121,30 +121,30 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
           />
         ) : null}
         <div className={`absolute inset-0 w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 ${coverImageUrl ? 'hidden' : ''}`}>
-          <span className="text-4xl">📖</span>
+          <span className="text-2xl">📖</span>
         </div>
       </Link>
-      {/* 内容区域 */}
-      <div className="p-4 flex-1 flex flex-col">
-        <Link to={`/user/books/${book.id}`}>
-          <h3 className="font-bold text-lg text-gray-900 hover:text-blue-600 transition-colors truncate">
+      {/* 内容区域 - 减小内边距 */}
+      <div className="p-3 flex-1 flex flex-col">
+        <Link to={`/user/books/${book.id}`} className="cursor-pointer">
+          <h3 className="font-bold text-base text-gray-900 hover:text-blue-600 transition-colors truncate leading-tight">
             {book.title}
           </h3>
         </Link>
-        <p className="text-gray-600 text-sm mt-1 truncate">作者：{book.author}</p>
+        <p className="text-gray-600 text-xs mt-0.5 truncate">作者：{book.author}</p>
         {book.category && (
-          <p className="text-gray-500 text-xs mt-1">{book.category}</p>
+          <p className="text-gray-500 text-xs mt-0.5">分类：{book.category}</p>
         )}
-        <p className={`text-sm mt-2 ${isAvailable ? 'text-green-600' : 'text-red-600'}`}>
+        <p className={`text-xs mt-1.5 ${isAvailable ? 'text-green-600' : 'text-red-600'}`}>
           可借：{book.available_quantity}/{book.quantity}
         </p>
 
-        {/* 按钮区域 - 自动推到底部 */}
-        <div className="mt-auto pt-4 flex gap-2">
+        {/* 按钮区域 - 减小按钮尺寸和间距 */}
+        <div className="mt-auto pt-2 flex gap-1.5">
           <button
             onClick={handleBorrow}
             disabled={!isAvailable || isBorrowed || loading}
-            className={`flex-1 px-4 py-2 rounded-lg text-white text-sm font-medium transition-colors ${
+            className={`flex-1 px-2.5 py-1.5 rounded text-white text-xs font-medium transition-colors ${
               !isAvailable || isBorrowed
                 ? 'bg-gray-400 cursor-not-allowed'
                 : 'bg-blue-600 hover:bg-blue-700'
@@ -155,14 +155,14 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
           <button
             onClick={handleToggleFavorite}
             disabled={loading}
-            className={`px-3 py-2 rounded-lg transition-colors ${
+            className={`px-2 py-1.5 rounded transition-colors ${
               isFavorite
                 ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
             title={isFavorite ? '取消收藏' : '收藏'}
           >
-            {isFavorite ? '⭐' : '☆'}
+            <span className="text-xs">{isFavorite ? '⭐' : '☆'}</span>
           </button>
         </div>
       </div>

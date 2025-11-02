@@ -101,7 +101,7 @@ export const UserMyBorrowings = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">我的借阅记录</h1>
         <p className="text-gray-600">
-          当前借阅：{currentBorrowingsCount}/5 本
+          当前借阅：{currentBorrowingsCount} 本
         </p>
       </div>
 
