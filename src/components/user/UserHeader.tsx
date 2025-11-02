@@ -65,6 +65,14 @@ export const UserHeader = () => {
               </span>
             )}
           </span>
+          {userRole === 'admin' && (
+            <Link
+              to="/admin"
+              className="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+            >
+              管理后台
+            </Link>
+          )}
           <button
             onClick={handleSignOut}
             className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"

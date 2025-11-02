@@ -8,20 +8,24 @@ interface BorrowResult {
   due_date?: string;
 }
 
+const DEFAULT_BORROW_DAYS = 30;
+
 export function useBorrowings() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // 借阅图书
-  const borrowBook = useCallback(async (bookId: string, userId: string): Promise<BorrowResult> => {
+  const borrowBook = useCallback(async (bookId: string, userId: string, days: number = DEFAULT_BORROW_DAYS): Promise<BorrowResult> => {
     setLoading(true);
     setError(null);
 
     try {
       // 调用数据库函数进行借阅
+      // 明确使用带三个参数的版本以避免函数重载歧义
       const { data, error: rpcError } = await supabase.rpc('borrow_book', {
-        p_user_id: userId,
         p_book_id: bookId,
+        p_user_id: userId,
+        p_days: days,
       });
 
       if (rpcError) {
