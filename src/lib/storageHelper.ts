@@ -131,7 +131,7 @@ export const uploadBookCover = async (file: File): Promise<UploadImageResult> =>
           url: null,
           path: null,
           error:
-            '存储桶未找到。请先在 Supabase Dashboard 中创建名为 "book-covers" 的存储桶，并设置为 public。详情请参考 STORAGE_SETUP.md',
+            '存储桶未找到。请先在 Supabase Dashboard 中创建名为 "book-covers" 的存储桶，并设置为 public。详情请参考 DEPLOYMENT.md',
         };
       }
 
