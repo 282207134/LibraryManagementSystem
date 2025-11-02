@@ -161,6 +161,8 @@ ON storage.objects FOR SELECT TO public
 USING (bucket_id = 'book-covers');
 ```
 
+> 其他可选 SQL 脚本位于 [`docs/sql`](./docs/sql) 目录，包含迁移、借阅功能和 RLS 修复等进阶场景说明。
+
 ---
 
 ## 🌐 部署到线上（推荐 Vercel）
