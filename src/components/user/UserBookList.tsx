@@ -32,7 +32,7 @@ export const UserBookList = ({
 
   return (
     <div>
-      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 grid-cols-[repeat(auto-fit,_minmax(150px,_1fr))]">
         {books.map((book) => (
           <UserBookCard key={book.id} book={book} onBorrowSuccess={onBorrowSuccess} />
         ))}

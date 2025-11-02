@@ -33,7 +33,7 @@ const FavoriteBookCover = ({ coverUrl, title }: { coverUrl?: string | null; titl
         />
       ) : null}
       <div className={`absolute inset-0 w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 ${imageUrl ? 'hidden' : ''}`}>
-        <span className="text-4xl">📖</span>
+        <span className="text-3xl">📖</span>
       </div>
     </>
   );
@@ -87,7 +87,7 @@ export const UserFavorites = () => {
           </Link>
         </div>
       ) : (
-        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-[repeat(auto-fit,_minmax(150px,_1fr))]">
           {favorites.map((favorite) => (
             <div
               key={favorite.id}
@@ -96,28 +96,28 @@ export const UserFavorites = () => {
               <Link to={`/user/books/${favorite.book_id}`} className="block aspect-[3/4] bg-gray-200 overflow-hidden relative">
                 <FavoriteBookCover coverUrl={favorite.books?.cover_image_url} title={favorite.books?.title || '未知图书'} />
               </Link>
-              <div className="p-4">
+              <div className="p-3">
                 <Link to={`/user/books/${favorite.book_id}`}>
-                  <h3 className="font-bold text-lg text-gray-900 hover:text-blue-600 transition-colors truncate">
+                  <h3 className="font-semibold text-sm text-gray-900 hover:text-blue-600 transition-colors truncate">
                     {favorite.books?.title || '未知图书'}
                   </h3>
                 </Link>
-                <p className="text-gray-600 text-sm mt-1 truncate">
+                <p className="text-gray-600 text-xs mt-1 truncate">
                   作者：{favorite.books?.author || '未知'}
                 </p>
-                <p className="text-gray-500 text-sm mt-2">
+                <p className="text-gray-500 text-xs mt-2">
                   收藏时间：{new Date(favorite.favorited_at).toLocaleDateString()}
                 </p>
-                <div className="mt-4 flex justify-between items-center">
+                <div className="mt-3 flex justify-between items-center">
                   <Link
                     to={`/user/books/${favorite.book_id}`}
-                    className="text-sm text-blue-600 hover:text-blue-700"
+                    className="text-xs text-blue-600 hover:text-blue-700"
                   >
                     查看详情
                   </Link>
                   <button
                     onClick={() => handleRemove(favorite.book_id)}
-                    className="text-sm text-red-500 hover:text-red-600"
+                    className="text-xs text-red-500 hover:text-red-600"
                   >
                     取消收藏
                   </button>
