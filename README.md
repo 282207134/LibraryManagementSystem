@@ -1,45 +1,28 @@
 # 📚 图书管理系统
 
-基于 **React + TypeScript + Supabase** 构建的现代化图书管理系统，实现图书的增删改查、用户认证以及封面图片管理等核心能力。
-
-> 想最快速地把项目跑起来？请直接阅读 👉 [DEPLOY.md](./DEPLOY.md)
+基于 **React + TypeScript + Supabase** 构建的现代化图书管理系统。
 
 ---
 
-## ✨ 功能亮点
+## ✨ 功能特性
 
 - 用户注册、登录与会话管理（Supabase Auth）
-- 图书的新增、编辑、删除与列表展示
-- 搜索与分页，支持移动端响应式布局
-- 图书封面上传，可选的 Supabase Storage 集成
-- TypeScript 全面类型约束与实时错误提示
+- 图书的增删改查与分页搜索
+- 响应式设计，支持移动端
+- 图书封面上传（可选）
 
 ---
 
 ## 🛠 技术栈
 
-| 模块 | 技术 |
-|------|------|
-| 前端框架 | React 18 + TypeScript |
-| 构建工具 | Vite |
-| UI 框架 | Tailwind CSS |
-| 数据与认证 | Supabase (PostgreSQL + Auth + Storage) |
-
-项目结构（节选）：
-
-```
-src/
-├── components/        # 组件（列表、表单、搜索等）
-├── contexts/          # 认证上下文
-├── hooks/             # 自定义 hooks（如 useBooks）
-├── lib/               # Supabase 客户端封装
-├── types/             # TypeScript 类型定义
-└── main.tsx / App.tsx # 入口与根组件
-```
+- **前端**：React 18 + TypeScript + Vite + Tailwind CSS
+- **后端**：Supabase (PostgreSQL + Auth + Storage)
 
 ---
 
-## ⚡ 快速开始
+## 🚀 快速部署（10分钟）
+
+### 第一步：准备代码
 
 ```bash
 git clone <repository-url>
@@ -48,33 +31,178 @@ npm install
 cp .env.example .env
 ```
 
-在 Supabase 创建项目、启用 Email 登录，并将获取到的 URL 与 anon key 写入 `.env`：
+### 第二步：配置 Supabase
+
+#### 1. 创建项目
+
+访问 [Supabase](https://app.supabase.com)，创建新项目。
+
+#### 2. 配置环境变量
+
+在项目 Dashboard 点击 **Connect**，复制 URL 和 anon key，填入 `.env`：
 
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
-运行开发服务器：
+#### 3. 启用 Email 认证
+
+在 **Authentication** → **Providers** 中启用 **Email** 登录。
+
+#### 4. 创建数据库表
+
+在 **SQL Editor** 执行以下 SQL：
+
+```sql
+-- 启用 UUID 扩展
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- 创建图书表
+CREATE TABLE IF NOT EXISTS books (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title VARCHAR(255) NOT NULL,
+  author VARCHAR(255) NOT NULL,
+  isbn VARCHAR(13) UNIQUE,
+  publisher VARCHAR(255),
+  publication_year INTEGER,
+  category VARCHAR(100),
+  description TEXT,
+  quantity INTEGER DEFAULT 1 CHECK (quantity >= 0),
+  available_quantity INTEGER DEFAULT 1 CHECK (available_quantity >= 0 AND available_quantity <= quantity),
+  cover_image_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 创建索引
+CREATE INDEX IF NOT EXISTS idx_books_title ON books(title);
+CREATE INDEX IF NOT EXISTS idx_books_author ON books(author);
+CREATE INDEX IF NOT EXISTS idx_books_category ON books(category);
+CREATE INDEX IF NOT EXISTS idx_books_isbn ON books(isbn);
+
+-- 自动更新时间戳
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS update_books_updated_at ON books;
+CREATE TRIGGER update_books_updated_at
+  BEFORE UPDATE ON books
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- 启用行级安全（RLS）
+ALTER TABLE books ENABLE ROW LEVEL SECURITY;
+
+-- 删除旧策略
+DROP POLICY IF EXISTS "Authenticated users can read books" ON books;
+DROP POLICY IF EXISTS "Authenticated users can insert books" ON books;
+DROP POLICY IF EXISTS "Authenticated users can update books" ON books;
+DROP POLICY IF EXISTS "Authenticated users can delete books" ON books;
+
+-- 创建新策略（只允许登录用户操作）
+CREATE POLICY "Authenticated users can read books" ON books
+  FOR SELECT USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can insert books" ON books
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can update books" ON books
+  FOR UPDATE USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated users can delete books" ON books
+  FOR DELETE USING (auth.role() = 'authenticated');
+```
+
+### 第三步：运行
 
 ```bash
 npm run dev
 ```
 
-浏览器访问 `http://localhost:5173`，注册账号并验证 CRUD 功能即可。
-
-> 需要数据库脚本、RLS 策略、部署和故障排查等完整步骤，请查看 [DEPLOY.md](./DEPLOY.md)。
+访问 `http://localhost:5173`，注册账号即可使用。
 
 ---
 
-## 🔑 环境变量
+## 📸 图片上传配置（可选）
 
-| 变量名 | 说明 |
-|--------|------|
-| `VITE_SUPABASE_URL` | Supabase 项目 URL |
-| `VITE_SUPABASE_ANON_KEY` | Supabase 公共 anon key |
+如需上传图书封面：
 
-所有 Vite 环境变量必须以 `VITE_` 前缀开头。
+### 1. 创建存储桶
+
+在 **Storage** 中创建名为 `book-covers` 的 **public** 存储桶。
+
+### 2. 配置存储策略
+
+在 SQL Editor 执行：
+
+```sql
+-- 允许已认证用户上传/更新/删除
+CREATE POLICY "Allow authenticated upload"
+ON storage.objects FOR INSERT TO authenticated
+WITH CHECK (bucket_id = 'book-covers');
+
+CREATE POLICY "Allow authenticated update"
+ON storage.objects FOR UPDATE TO authenticated
+USING (bucket_id = 'book-covers');
+
+CREATE POLICY "Allow authenticated delete"
+ON storage.objects FOR DELETE TO authenticated
+USING (bucket_id = 'book-covers');
+
+-- 允许公开读取
+CREATE POLICY "Allow public read"
+ON storage.objects FOR SELECT TO public
+USING (bucket_id = 'book-covers');
+```
+
+---
+
+## 🌐 部署到线上（推荐 Vercel）
+
+1. 将代码推送到 GitHub
+2. 在 [Vercel](https://vercel.com) 导入项目
+3. 配置：
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+   - Framework: Vite
+4. 添加环境变量：
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+5. 部署
+
+---
+
+## 🔧 常见问题
+
+### 无法注册/登录？
+
+- 确认 Supabase Email 登录已启用
+- 检查 `.env` 配置是否正确
+- 重启开发服务器
+
+### 数据无法加载？
+
+- 确认 SQL 脚本已完整执行
+- 检查 RLS 策略是否配置
+- 确保已登录（RLS 要求认证用户）
+
+### 图片上传失败？
+
+- 确认存储桶 `book-covers` 已创建并设为 public
+- 确认存储策略已配置
+- 检查浏览器控制台错误信息
+
+### 本地正常，部署后异常？
+
+- 检查部署平台的环境变量配置
+- 触发重新部署
+- 查看构建日志
 
 ---
 
@@ -89,37 +217,31 @@ npm run lint     # ESLint 检查
 
 ---
 
-## 🚀 部署
+## 📊 数据库表结构
 
-推荐部署流程（Vercel）：
+### books 表
 
-1. 将代码推送到 GitHub
-2. 在 [Vercel](https://vercel.com) 导入仓库
-3. Build Command：`npm run build`
-4. Output Directory：`dist`
-5. 在平台环境变量中配置 `VITE_SUPABASE_URL` 和 `VITE_SUPABASE_ANON_KEY`
-
-更详细的说明请阅读 [DEPLOY.md](./DEPLOY.md)。
-
----
-
-## 📄 文档索引
-
-| 文档 | 内容 |
-|------|------|
-| [DEPLOY.md](./DEPLOY.md) | 一站式部署指南（含 SQL 脚本、RLS 策略、图片上传配置与常见问题） |
-| [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) | 常见问题排查与解决方案 |
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | UUID | 主键，自动生成 |
+| title | VARCHAR(255) | 书名（必填） |
+| author | VARCHAR(255) | 作者（必填） |
+| isbn | VARCHAR(13) | ISBN 编号（唯一） |
+| publisher | VARCHAR(255) | 出版社 |
+| publication_year | INTEGER | 出版年份 |
+| category | VARCHAR(100) | 分类 |
+| description | TEXT | 简介 |
+| quantity | INTEGER | 库存总数 |
+| available_quantity | INTEGER | 可借数量 |
+| cover_image_url | TEXT | 封面图片 URL |
+| created_at | TIMESTAMP | 创建时间 |
+| updated_at | TIMESTAMP | 更新时间 |
 
 ---
 
 ## 🤝 贡献
 
-欢迎提交 Issue 和 Pull Request：
-
-1. Fork 本仓库
-2. 创建分支 `git checkout -b feature/xxx`
-3. 提交更改 `git commit -m "feat: add xxx"`
-4. 推送分支并发起 PR
+欢迎提交 Issue 和 Pull Request。
 
 ---
 
