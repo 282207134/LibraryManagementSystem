@@ -198,25 +198,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // 如果页面不可见，完全跳过处理（包括状态更新，除非是登出事件）
-      // 这样可以避免切换标签页时触发任何重新渲染或页面刷新
-      if (document.hidden && event !== 'SIGNED_OUT') {
-        // 完全跳过，不更新任何状态，避免页面刷新
-        return;
-      }
-      
-      // 只在真正重要的认证状态变化时才处理，避免页面切换时重复加载
-      // TOKEN_REFRESHED 和 INITIAL_SESSION 事件不应该触发加载状态
+      // TOKEN_REFRESHED 和 INITIAL_SESSION 事件不应该触发任何处理
+      // 这些是后台的 token 刷新，不需要更新 UI 或重新加载用户资料
       if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-        // 只更新 session，不触发 loading 状态，也不显示超时警告
+        // 静默更新 session，不触发任何其他操作，避免页面刷新
         setSession(session);
-        if (session?.user) {
-          setUser(session.user);
-          // 静默更新用户资料，不显示 loading，也不显示超时警告
-          loadUserProfile(session.user).catch(() => {
-            // 静默失败，不输出警告
-          });
-        }
         return;
       }
 
