@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useBooks } from './hooks/useBooks';
 import { BookList } from './components/BookList';
 import { BookForm } from './components/BookForm';
@@ -127,7 +128,13 @@ const BooksDashboard = () => {
 };
 
 function AdminApp() {
-  return <BooksDashboard />;
+  return (
+    <Routes>
+      <Route index element={<Navigate to="dashboard" replace />} />
+      <Route path="dashboard" element={<BooksDashboard />} />
+      <Route path="*" element={<Navigate to="dashboard" replace />} />
+    </Routes>
+  );
 }
 
 export default AdminApp;
