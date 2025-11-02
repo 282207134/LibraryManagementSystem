@@ -91,13 +91,15 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 
 4. **设置 Supabase 数据库**
 
-**重要**：请按照 [DEPLOYMENT.md](./DEPLOYMENT.md) 部署指南完成以下操作：
-   - 创建 Supabase 项目
-   - 启用用户认证（Supabase 自动处理用户表，无需手动创建）
-   - 运行数据库 SQL 脚本创建 books 表
-   - 配置 RLS 策略
-
-> 📖 如需详细的数据库设计说明，可参考 [DATABASE.md](./DATABASE.md)。
+**重要**：请按照以下文档完成 Supabase 配置：
+   - **[部署速查指南（QUICK_START.md）](./QUICK_START.md)** ⭐ - 最简单快速的部署步骤
+   - **[详细部署指南（DEPLOYMENT.md）](./DEPLOYMENT.md)** 📖 - 包含完整的步骤、截图和常见问题
+   
+完成后，你的系统将具备：
+   - ✅ Supabase 项目与数据库
+   - ✅ 用户认证（Email 登录）
+   - ✅ books 表与 RLS 策略
+   - ✅ 可选的封面图片上传功能
 
 5. **启动开发服务器**
 
@@ -161,6 +163,8 @@ Supabase Auth 会自动维护 `auth.users` 表用于账号注册和登录，无�
 1. 在 Supabase Dashboard 中进入 Storage
 2. 创建新的 bucket，命名为 `book-covers`，设置为 public
 3. 在 SQL Editor 中运行 `STORAGE_SETUP.sql` 文件中的脚本来设置访问策略
+
+> 详细的存储配置说明请参考 [DEPLOYMENT.md](./DEPLOYMENT.md) 的 "Supabase Storage" 部分
 
 ## 数据库设计
 
@@ -251,19 +255,26 @@ MIT License
 
 ## 📚 相关文档
 
-### 部署与配置
+### 🚀 部署指南（按推荐顺序阅读）
 
-- **[部署指南](./DEPLOYMENT.md)** ⭐ **推荐首先阅读** - 包含完整的部署步骤、用户认证配置、数据库表创建 SQL 和常见问题排查
+1. **[部署速查指南（QUICK_START.md）](./QUICK_START.md)** ⭐ **最简单快速** - 10 分钟快速部署，包含核心 SQL 脚本
+2. **[详细部署指南（DEPLOYMENT.md）](./DEPLOYMENT.md)** 📖 **深入理解** - 完整的部署步骤、截图、RLS 策略和常见问题排查
+3. **[故障排除（TROUBLESHOOTING.md）](./TROUBLESHOOTING.md)** 🔧 **遇到问题** - 常见错误的解决方案
 
-### 数据库设计
+### 📊 数据库与扩展功能
 
-- **[数据库设计文档](./DATABASE.md)** - 详细的数据库结构和字段说明
-- **[完整表创建方案](./SUPABASE_TABLES_PROPOSAL.md)** - 包含借阅记录、评论等扩展功能的完整 SQL（可选）
+- **[数据库设计文档（DATABASE.md）](./DATABASE.md)** - 详细的数据库结构、字段说明和性能建议
+- **[完整表创建方案（SUPABASE_TABLES_PROPOSAL.md）](./SUPABASE_TABLES_PROPOSAL.md)** - 包含借阅记录、评论等扩展功能的完整 SQL（可选）
+- **[用户界面设计（USER_INTERFACE_DESIGN.md）](./USER_INTERFACE_DESIGN.md)** - 用户界面的详细设计文档
 
-### 外部资源
+### 🌐 外部资源
 
 - [Supabase 官方文档](https://supabase.com/docs)
 - [React 官方文档](https://react.dev/)
 - [Tailwind CSS 文档](https://tailwindcss.com/docs)
 
-> 💡 **新手建议**：如果您是第一次部署，请从 [DEPLOYMENT.md](./DEPLOYMENT.md) 开始，它包含了所有必需的步骤和 SQL 脚本。其他文档主要用于深入了解数据库设计和扩展功能。
+> 💡 **部署建议**：
+> - **新手入门**：直接看 [QUICK_START.md](./QUICK_START.md)，10分钟快速部署
+> - **详细学习**：需要了解每一步细节时，阅读 [DEPLOYMENT.md](./DEPLOYMENT.md)
+> - **遇到问题**：参考 [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
+> - **扩展功能**：其他文档主要用于深入了解数据库设计和扩展功能

@@ -243,9 +243,9 @@ USING (bucket_id = 'book-covers');
 1. 检查浏览器控制台的错误信息
 2. 查看 Supabase Dashboard 的日志（Logs 菜单）
 3. 参考相关文档：
-   - [STORAGE_SETUP.md](./STORAGE_SETUP.md) - 存储配置详细说明
+   - [部署速查指南](./QUICK_START.md) - 覆盖最小可用部署步骤
+   - [DEPLOYMENT.md](./DEPLOYMENT.md) - 详细部署指南（含存储配置）
    - [DATABASE.md](./DATABASE.md) - 数据库结构说明
-   - [DEPLOYMENT.md](./DEPLOYMENT.md) - 部署指南
 
 4. 提交 Issue 时，请包含：
    - 错误的完整描述
