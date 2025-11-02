@@ -24,6 +24,9 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
     if (user) {
       hasUserBorrowedBook(user.id, book.id).then(setIsBorrowed);
       isBookFavorited(book.id, user.id).then(setIsFavorite);
+    } else {
+      setIsBorrowed(false);
+      setIsFavorite(false);
     }
   }, [user, book.id, hasUserBorrowedBook, isBookFavorited]);
 
@@ -39,26 +42,44 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
   const handleBorrow = async () => {
     if (!user) return;
     setLoading(true);
-    
+
+    let dueDate: string | undefined;
+    let borrowSucceeded = false;
+    let errorMessage: string | null = null;
+
     try {
       const result = await borrowBook(book.id, user.id);
-      
-      if (result.success) {
-        alert(`借阅成功！到期日期：${new Date(result.due_date!).toLocaleDateString()}`);
-        setIsBorrowed(true);
-        // 只有成功时才刷新列表
-        onBorrowSuccess?.();
-      } else {
-        // 确保错误信息有值
-        const errorMsg = result.error || '借阅失败，请稍后重试';
-        alert(`借阅失败：${errorMsg}`);
+      borrowSucceeded = !!result.success;
+
+      if (result.due_date) {
+        dueDate = result.due_date;
+      }
+
+      if (!result.success) {
+        errorMessage = result.error || '借阅失败，请稍后重试';
       }
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : '借阅失败，请稍后重试';
-      alert(`借阅失败：${errorMsg}`);
-    } finally {
-      setLoading(false);
+      errorMessage = error instanceof Error ? error.message : '借阅失败，请稍后重试';
     }
+
+    const actualBorrowStatus = await hasUserBorrowedBook(user.id, book.id);
+    setIsBorrowed(actualBorrowStatus);
+    setLoading(false);
+
+    if (actualBorrowStatus) {
+      const message = dueDate
+        ? `借阅成功！到期日期：${new Date(dueDate).toLocaleDateString()}`
+        : borrowSucceeded
+          ? '借阅成功！'
+          : '借阅成功！可以在“我的借阅”中查看详情。';
+
+      alert(message);
+      onBorrowSuccess?.();
+      return;
+    }
+
+    const finalError = errorMessage || '借阅失败，请稍后重试';
+    alert(`借阅失败：${finalError}`);
   };
 
   const handleToggleFavorite = async () => {
