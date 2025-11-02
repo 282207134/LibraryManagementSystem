@@ -2,7 +2,42 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useFavorites } from '../hooks/useFavorites';
+import { resolveCoverImageUrl } from '../lib/storageHelper';
 import type { BookFavorite } from '../types/favorite';
+
+// 封面图片组件
+const FavoriteBookCover = ({ coverUrl, title }: { coverUrl?: string | null; title: string }) => {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (coverUrl) {
+      resolveCoverImageUrl(coverUrl).then(setImageUrl);
+    } else {
+      setImageUrl(null);
+    }
+  }, [coverUrl]);
+
+  return (
+    <>
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt={title}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.style.display = 'none';
+            const placeholder = target.nextElementSibling as HTMLElement;
+            if (placeholder) placeholder.style.display = 'flex';
+          }}
+        />
+      ) : null}
+      <div className={`absolute inset-0 w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 ${imageUrl ? 'hidden' : ''}`}>
+        <span className="text-4xl">📖</span>
+      </div>
+    </>
+  );
+};
 
 export const UserFavorites = () => {
   const { user } = useAuth();
@@ -58,18 +93,8 @@ export const UserFavorites = () => {
               key={favorite.id}
               className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
             >
-              <Link to={`/user/books/${favorite.book_id}`}>
-                {favorite.books?.cover_image_url ? (
-                  <img
-                    src={favorite.books.cover_image_url}
-                    alt={favorite.books.title}
-                    className="w-full h-48 object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-400">
-                    <span className="text-4xl">📖</span>
-                  </div>
-                )}
+              <Link to={`/user/books/${favorite.book_id}`} className="block aspect-[3/4] bg-gray-200 overflow-hidden relative">
+                <FavoriteBookCover coverUrl={favorite.books?.cover_image_url} title={favorite.books?.title || '未知图书'} />
               </Link>
               <div className="p-4">
                 <Link to={`/user/books/${favorite.book_id}`}>

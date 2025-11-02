@@ -2,6 +2,10 @@
 
 一个基于 React + TypeScript + Supabase 的现代化图书管理系统，实现图书的增删改查（CRUD）功能。
 
+## 🚀 快速开始
+
+**👉 首次部署请查看 [部署指南.md](./部署指南.md)**
+
 ## 技术栈
 
 - **前端框架**: React 18+ with TypeScript
@@ -91,9 +95,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 
 4. **设置 Supabase 数据库**
 
-**重要**：请按照以下文档完成 Supabase 配置：
-   - **[部署速查指南（QUICK_START.md）](./QUICK_START.md)** ⭐ - 最简单快速的部署步骤
-   - **[详细部署指南（DEPLOYMENT.md）](./DEPLOYMENT.md)** 📖 - 包含完整的步骤、截图和常见问题
+请按照 [部署指南.md](./部署指南.md) 完成 Supabase 配置。
    
 完成后，你的系统将具备：
    - ✅ Supabase 项目与数据库
@@ -255,26 +257,5 @@ MIT License
 
 ## 📚 相关文档
 
-### 🚀 部署指南（按推荐顺序阅读）
-
-1. **[部署速查指南（QUICK_START.md）](./QUICK_START.md)** ⭐ **最简单快速** - 10 分钟快速部署，包含核心 SQL 脚本
-2. **[详细部署指南（DEPLOYMENT.md）](./DEPLOYMENT.md)** 📖 **深入理解** - 完整的部署步骤、截图、RLS 策略和常见问题排查
-3. **[故障排除（TROUBLESHOOTING.md）](./TROUBLESHOOTING.md)** 🔧 **遇到问题** - 常见错误的解决方案
-
-### 📊 数据库与扩展功能
-
-- **[数据库设计文档（DATABASE.md）](./DATABASE.md)** - 详细的数据库结构、字段说明和性能建议
-- **[完整表创建方案（SUPABASE_TABLES_PROPOSAL.md）](./SUPABASE_TABLES_PROPOSAL.md)** - 包含借阅记录、评论等扩展功能的完整 SQL（可选）
-- **[用户界面设计（USER_INTERFACE_DESIGN.md）](./USER_INTERFACE_DESIGN.md)** - 用户界面的详细设计文档
-
-### 🌐 外部资源
-
-- [Supabase 官方文档](https://supabase.com/docs)
-- [React 官方文档](https://react.dev/)
-- [Tailwind CSS 文档](https://tailwindcss.com/docs)
-
-> 💡 **部署建议**：
-> - **新手入门**：直接看 [QUICK_START.md](./QUICK_START.md)，10分钟快速部署
-> - **详细学习**：需要了解每一步细节时，阅读 [DEPLOYMENT.md](./DEPLOYMENT.md)
-> - **遇到问题**：参考 [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
-> - **扩展功能**：其他文档主要用于深入了解数据库设计和扩展功能
+- **[部署指南.md](./部署指南.md)** - 完整的部署教程
+- **[DATABASE.md](./DATABASE.md)** - 数据库设计文档（可选）

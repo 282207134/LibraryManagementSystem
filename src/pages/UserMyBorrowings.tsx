@@ -2,7 +2,42 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useBorrowings } from '../hooks/useBorrowings';
+import { resolveCoverImageUrl } from '../lib/storageHelper';
 import type { BorrowingRecord } from '../types/borrowing';
+
+// 封面图片组件
+const BorrowingBookCover = ({ coverUrl, title }: { coverUrl?: string | null; title: string }) => {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (coverUrl) {
+      resolveCoverImageUrl(coverUrl).then(setImageUrl);
+    } else {
+      setImageUrl(null);
+    }
+  }, [coverUrl]);
+
+  return (
+    <>
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt={title}
+          className="w-16 h-24 object-cover rounded"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.style.display = 'none';
+            const placeholder = target.nextElementSibling as HTMLElement;
+            if (placeholder) placeholder.style.display = 'flex';
+          }}
+        />
+      ) : null}
+      <div className={`w-16 h-24 bg-gray-200 rounded flex items-center justify-center ${imageUrl ? 'hidden' : ''}`}>
+        📖
+      </div>
+    </>
+  );
+};
 
 export const UserMyBorrowings = () => {
   const { user } = useAuth();
@@ -128,17 +163,10 @@ export const UserMyBorrowings = () => {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex gap-4">
-                    {record.books?.cover_image_url ? (
-                      <img
-                        src={record.books.cover_image_url}
-                        alt={record.books.title}
-                        className="w-16 h-24 object-cover rounded"
-                      />
-                    ) : (
-                      <div className="w-16 h-24 bg-gray-200 rounded flex items-center justify-center">
-                        📖
-                      </div>
-                    )}
+                    <BorrowingBookCover 
+                      coverUrl={record.books?.cover_image_url} 
+                      title={record.books?.title || '未知图书'} 
+                    />
                     <div>
                       <Link
                         to={`/user/books/${record.book_id}`}

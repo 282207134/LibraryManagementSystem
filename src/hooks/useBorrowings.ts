@@ -29,17 +29,34 @@ export function useBorrowings() {
       });
 
       if (rpcError) {
-        const errorMessage = rpcError.message || '借阅失败';
+        const errorMessage = rpcError.message || '借阅失败，请稍后重试';
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
 
-      if (data && !data.success) {
-        setError(data.error || '借阅失败');
-        return { success: false, error: data.error };
+      // 检查返回数据
+      if (!data) {
+        const errorMessage = '借阅失败：未收到服务器响应';
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
       }
 
-      return { success: true, due_date: data?.due_date };
+      // 检查 success 字段（可能为 false 或不存在）
+      if (data.success === false || (data.success !== true && data.error)) {
+        const errorMessage = data.error || '借阅失败，请稍后重试';
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+
+      // 确保成功时才返回
+      if (data.success === true) {
+        return { success: true, due_date: data.due_date };
+      }
+
+      // 如果 success 字段不存在，检查是否有错误
+      const errorMessage = data.error || '借阅失败：未知错误';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '借阅失败';
       setError(errorMessage);

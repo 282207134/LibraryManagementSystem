@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useBorrowings } from '../../hooks/useBorrowings';
 import { useFavorites } from '../../hooks/useFavorites';
+import { resolveCoverImageUrl } from '../../lib/storageHelper';
 import type { Book } from '../../types/book';
 
 interface UserBookCardProps {
@@ -17,6 +18,7 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
   const [isBorrowed, setIsBorrowed] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -25,18 +27,37 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
     }
   }, [user, book.id, hasUserBorrowedBook, isBookFavorited]);
 
+  // 解析封面图片 URL
+  useEffect(() => {
+    if (book.cover_image_url) {
+      resolveCoverImageUrl(book.cover_image_url).then(setCoverImageUrl);
+    } else {
+      setCoverImageUrl(null);
+    }
+  }, [book.cover_image_url]);
+
   const handleBorrow = async () => {
     if (!user) return;
     setLoading(true);
-    const result = await borrowBook(book.id, user.id);
-    setLoading(false);
-
-    if (result.success) {
-      alert(`借阅成功！到期日期：${new Date(result.due_date!).toLocaleDateString()}`);
-      setIsBorrowed(true);
-      onBorrowSuccess?.();
-    } else {
-      alert(`借阅失败：${result.error}`);
+    
+    try {
+      const result = await borrowBook(book.id, user.id);
+      
+      if (result.success) {
+        alert(`借阅成功！到期日期：${new Date(result.due_date!).toLocaleDateString()}`);
+        setIsBorrowed(true);
+        // 只有成功时才刷新列表
+        onBorrowSuccess?.();
+      } else {
+        // 确保错误信息有值
+        const errorMsg = result.error || '借阅失败，请稍后重试';
+        alert(`借阅失败：${errorMsg}`);
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : '借阅失败，请稍后重试';
+      alert(`借阅失败：${errorMsg}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,21 +82,29 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
   const isAvailable = book.available_quantity > 0;
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-      <Link to={`/user/books/${book.id}`}>
-        {book.cover_image_url ? (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow flex flex-col w-full h-full">
+      {/* 封面区域 - 书本比例 3:4 */}
+      <Link to={`/user/books/${book.id}`} className="block aspect-[3/4] bg-gray-200 overflow-hidden flex-shrink-0 relative">
+        {coverImageUrl ? (
           <img
-            src={book.cover_image_url}
+            src={coverImageUrl}
             alt={book.title}
-            className="w-full h-48 object-cover"
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              // 如果图片加载失败，显示占位符
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              const placeholder = target.nextElementSibling as HTMLElement;
+              if (placeholder) placeholder.style.display = 'flex';
+            }}
           />
-        ) : (
-          <div className="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-400">
-            <span className="text-4xl">📖</span>
-          </div>
-        )}
+        ) : null}
+        <div className={`absolute inset-0 w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 ${coverImageUrl ? 'hidden' : ''}`}>
+          <span className="text-4xl">📖</span>
+        </div>
       </Link>
-      <div className="p-4">
+      {/* 内容区域 */}
+      <div className="p-4 flex-1 flex flex-col">
         <Link to={`/user/books/${book.id}`}>
           <h3 className="font-bold text-lg text-gray-900 hover:text-blue-600 transition-colors truncate">
             {book.title}
@@ -89,7 +118,8 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
           可借：{book.available_quantity}/{book.quantity}
         </p>
 
-        <div className="mt-4 flex gap-2">
+        {/* 按钮区域 - 自动推到底部 */}
+        <div className="mt-auto pt-4 flex gap-2">
           <button
             onClick={handleBorrow}
             disabled={!isAvailable || isBorrowed || loading}

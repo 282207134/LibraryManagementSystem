@@ -1,7 +1,8 @@
+import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 export const Header = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, userRole } = useAuth();
 
   const getUserDisplayName = () => {
     if (user?.user_metadata?.name) {
@@ -21,9 +22,20 @@ export const Header = () => {
     <header className="bg-white shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">图书管理系统</h1>
-            <p className="text-sm text-gray-600">管理和查看您的图书收藏</p>
+          <div className="flex items-center gap-4">
+            {/* 如果是管理员，显示返回用户界面按钮 */}
+            {userRole === 'admin' && (
+              <Link
+                to="/user/home"
+                className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                ← 返回图书浏览
+              </Link>
+            )}
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">图书管理系统</h1>
+              <p className="text-sm text-gray-600">管理和查看您的图书收藏</p>
+            </div>
           </div>
           
           <div className="flex items-center gap-4">
