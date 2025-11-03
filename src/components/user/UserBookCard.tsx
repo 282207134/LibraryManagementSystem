@@ -104,8 +104,8 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow flex flex-col w-full h-full">
-      {/* 封面区域 - 调整为更紧凑的比例，高度约 160px */}
-      <Link to={`/user/books/${book.id}`} className="block h-40 bg-gray-200 overflow-hidden flex-shrink-0 relative cursor-pointer">
+      {/* 封面区域 - 增加高度使卡片更高 */}
+      <Link to={`/user/books/${book.id}`} className="block h-60 bg-gray-200 overflow-hidden flex-shrink-0 relative cursor-pointer">
         {coverImageUrl ? (
           <img
             src={coverImageUrl}
