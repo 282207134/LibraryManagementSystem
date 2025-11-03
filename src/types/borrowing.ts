@@ -14,4 +14,9 @@ export interface BorrowingRecord {
   created_at: string;
   updated_at: string;
   books?: Pick<Book, 'id' | 'title' | 'author' | 'cover_image_url'>;
+  users?: {
+    id: string;
+    email: string;
+    full_name: string;
+  };
 }

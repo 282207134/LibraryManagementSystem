@@ -37,6 +37,24 @@ export const Header = () => {
               <p className="text-sm text-gray-600">管理和查看您的图书收藏</p>
             </div>
           </div>
+
+          {/* 管理员导航菜单 */}
+          {userRole === 'admin' && (
+            <nav className="hidden md:flex items-center gap-2">
+              <Link
+                to="/admin/dashboard"
+                className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                图书管理
+              </Link>
+              <Link
+                to="/admin/borrowings"
+                className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                借阅记录
+              </Link>
+            </nav>
+          )}
           
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">

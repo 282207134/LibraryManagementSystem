@@ -5,6 +5,7 @@ import { BookList } from './components/BookList';
 import { BookForm } from './components/BookForm';
 import { SearchBar } from './components/SearchBar';
 import { Header } from './components/Header';
+import { AdminBorrowings } from './pages/AdminBorrowings';
 import type { Book, BookFormData } from './types/book';
 
 const BooksDashboard = () => {
@@ -132,6 +133,7 @@ function AdminApp() {
     <Routes>
       <Route index element={<Navigate to="dashboard" replace />} />
       <Route path="dashboard" element={<BooksDashboard />} />
+      <Route path="borrowings" element={<AdminBorrowings />} />
       <Route path="*" element={<Navigate to="dashboard" replace />} />
     </Routes>
   );

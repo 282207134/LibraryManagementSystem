@@ -192,6 +192,71 @@ export function useBorrowings() {
     }
   }, []);
 
+  // 管理员：获取所有借阅记录（不限制用户）
+  const getAllBorrowings = useCallback(async (): Promise<BorrowingRecord[]> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 先获取借阅记录和图书信息
+      const { data: borrowingsData, error: borrowingsError } = await supabase
+        .from('borrowing_records')
+        .select(`
+          *,
+          books (
+            id,
+            title,
+            author,
+            cover_image_url
+          )
+        `)
+        .order('borrowed_at', { ascending: false });
+
+      if (borrowingsError) {
+        setError(borrowingsError.message);
+        return [];
+      }
+
+      if (!borrowingsData || borrowingsData.length === 0) {
+        return [];
+      }
+
+      // 获取所有唯一的用户ID
+      const userIds = [...new Set(borrowingsData.map((r: any) => r.user_id))];
+
+      // 批量查询用户信息
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select('id, email, full_name')
+        .in('id', userIds);
+
+      if (usersError) {
+        console.error('获取用户信息失败:', usersError);
+        // 即使获取用户信息失败，也返回借阅记录（不包含用户信息）
+        return borrowingsData as BorrowingRecord[];
+      }
+
+      // 创建用户信息映射
+      const usersMap = new Map(
+        (usersData || []).map((u) => [u.id, { id: u.id, email: u.email, full_name: u.full_name }])
+      );
+
+      // 合并借阅记录和用户信息
+      const result = borrowingsData.map((record: any) => ({
+        ...record,
+        users: usersMap.get(record.user_id) || null,
+      }));
+
+      return result as BorrowingRecord[];
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '获取借阅记录失败';
+      setError(errorMessage);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     loading,
     error,
@@ -200,5 +265,6 @@ export function useBorrowings() {
     getUserBorrowings,
     getCurrentBorrowings,
     hasUserBorrowedBook,
+    getAllBorrowings,
   };
 }
