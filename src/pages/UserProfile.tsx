@@ -198,75 +198,75 @@ export const UserProfile = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-3">
       {/* 页面标题 */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">个人中心</h1>
-        <p className="text-gray-600">管理您的账户信息和偏好设置</p>
+      <div className="mb-3">
+        <h1 className="text-xl font-bold text-gray-900 mb-1">个人中心</h1>
+        <p className="text-sm text-gray-600">管理您的账户信息和偏好设置</p>
       </div>
 
       {/* 成功/错误提示（不包括密码错误） */}
       {successMessage && (
-        <div className="p-4 rounded-lg bg-green-100 text-green-800 border border-green-200">
+        <div className="p-3 rounded-lg bg-green-100 text-green-800 border border-green-200 text-sm">
           {successMessage}
         </div>
       )}
       {error && !passwordError && (
-        <div className="p-4 rounded-lg bg-red-100 text-red-800 border border-red-200">
+        <div className="p-3 rounded-lg bg-red-100 text-red-800 border border-red-200 text-sm">
           {error}
         </div>
       )}
 
       {/* 统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-2.5">
+        <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">总借阅数</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalBorrows}</p>
+              <p className="text-xs text-gray-600 mb-0.5">总借阅数</p>
+              <p className="text-lg font-bold text-gray-900">{stats.totalBorrows}</p>
             </div>
-            <div className="text-4xl">📚</div>
+            <div className="text-2xl">📚</div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">当前借阅</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.currentBorrows}</p>
+              <p className="text-xs text-gray-600 mb-0.5">当前借阅</p>
+              <p className="text-lg font-bold text-blue-600">{stats.currentBorrows}</p>
             </div>
-            <div className="text-4xl">📖</div>
+            <div className="text-2xl">📖</div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">历史借阅</p>
-              <p className="text-2xl font-bold text-green-600">{stats.historyBorrows}</p>
+              <p className="text-xs text-gray-600 mb-0.5">历史借阅</p>
+              <p className="text-lg font-bold text-green-600">{stats.historyBorrows}</p>
             </div>
-            <div className="text-4xl">✅</div>
+            <div className="text-2xl">✅</div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white rounded-lg shadow p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 mb-1">我的收藏</p>
-              <p className="text-2xl font-bold text-purple-600">{stats.favoritesCount}</p>
+              <p className="text-xs text-gray-600 mb-0.5">我的收藏</p>
+              <p className="text-lg font-bold text-purple-600">{stats.favoritesCount}</p>
             </div>
-            <div className="text-4xl">❤️</div>
+            <div className="text-2xl">❤️</div>
           </div>
         </div>
       </div>
 
       {/* 账户信息 */}
       <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b">
-          <h2 className="text-xl font-bold text-gray-900">账户信息</h2>
+        <div className="p-4 border-b">
+          <h2 className="text-base font-bold text-gray-900">账户信息</h2>
         </div>
-        <div className="p-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-4 space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">邮箱地址</label>
               <p className="text-gray-900">{userProfile.email}</p>
@@ -289,13 +289,13 @@ export const UserProfile = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">注册时间</label>
-              <p className="text-gray-900">{formatDate(userProfile.member_since)}</p>
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">注册时间</label>
+              <p className="text-sm text-gray-900">{formatDate(userProfile.member_since)}</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">借阅上限</label>
-              <p className="text-gray-900">{userProfile.max_borrow_limit} 本</p>
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">借阅上限</label>
+              <p className="text-sm text-gray-900">{userProfile.max_borrow_limit} 本</p>
             </div>
           </div>
         </div>
@@ -303,12 +303,12 @@ export const UserProfile = () => {
 
       {/* 个人信息 */}
       <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900">个人信息</h2>
+        <div className="p-4 border-b flex items-center justify-between">
+          <h2 className="text-base font-bold text-gray-900">个人信息</h2>
           {!isEditingProfile ? (
             <button
               onClick={() => setIsEditingProfile(true)}
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-3 py-1 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               编辑信息
             </button>
@@ -325,70 +325,70 @@ export const UserProfile = () => {
                 }
                 setError(null);
               }}
-              className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              className="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
             >
               取消
             </button>
           )}
         </div>
-        <div className="p-6 space-y-4">
+        <div className="p-4 space-y-2.5">
           {isEditingProfile ? (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                <label className="block text-xs font-medium text-gray-700 mb-0.5">姓名</label>
                 <input
                   type="text"
                   value={profileForm.full_name}
                   onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="请输入您的姓名"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">电话</label>
+                <label className="block text-xs font-medium text-gray-700 mb-0.5">电话</label>
                 <input
                   type="tel"
                   value={profileForm.phone}
                   onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="请输入您的电话号码（可选）"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">地址</label>
+                <label className="block text-xs font-medium text-gray-700 mb-0.5">地址</label>
                 <textarea
                   value={profileForm.address}
                   onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={3}
+                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={2}
                   placeholder="请输入您的地址（可选）"
                 />
               </div>
 
               <button
                 onClick={handleUpdateProfile}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-5 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 保存更改
               </button>
             </>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">姓名</label>
-                <p className="text-gray-900">{userProfile.full_name || '未设置'}</p>
+                <label className="block text-xs font-medium text-gray-700 mb-0.5">姓名</label>
+                <p className="text-sm text-gray-900">{userProfile.full_name || '未设置'}</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">电话</label>
-                <p className="text-gray-900">{userProfile.phone || '未设置'}</p>
+                <label className="block text-xs font-medium text-gray-700 mb-0.5">电话</label>
+                <p className="text-sm text-gray-900">{userProfile.phone || '未设置'}</p>
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">地址</label>
-                <p className="text-gray-900">{userProfile.address || '未设置'}</p>
+                <label className="block text-xs font-medium text-gray-700 mb-0.5">地址</label>
+                <p className="text-sm text-gray-900">{userProfile.address || '未设置'}</p>
               </div>
             </div>
           )}
@@ -397,15 +397,15 @@ export const UserProfile = () => {
 
       {/* 更改密码 */}
       <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b flex items-center justify-between">
+        <div className="p-4 border-b flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">更改密码</h2>
-            <p className="text-sm text-gray-500 mt-1">定期更改密码可以保护您的账户安全</p>
+            <h2 className="text-base font-bold text-gray-900">更改密码</h2>
+            <p className="text-xs text-gray-500 mt-0.5">定期更改密码可以保护您的账户安全</p>
           </div>
           {!isChangingPassword ? (
             <button
               onClick={() => setIsChangingPassword(true)}
-              className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-3 py-1 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               更改密码
             </button>
@@ -421,61 +421,61 @@ export const UserProfile = () => {
                 setPasswordError(null);
                 setError(null);
               }}
-              className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              className="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
             >
               取消
             </button>
           )}
         </div>
         {isChangingPassword && (
-          <div className="p-6 space-y-4">
+          <div className="p-4 space-y-2.5">
             {passwordError && (
-              <div className="p-4 rounded-lg bg-red-100 text-red-800 border border-red-200">
+              <div className="p-3 rounded-lg bg-red-100 text-red-800 border border-red-200 text-sm">
                 {passwordError}
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">当前密码</label>
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">当前密码</label>
               <input
                 type="password"
                 value={passwordForm.currentPassword}
                 onChange={(e) =>
                   setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="请输入当前密码"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">新密码</label>
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">新密码</label>
               <input
                 type="password"
                 value={passwordForm.newPassword}
                 onChange={(e) =>
                   setPasswordForm({ ...passwordForm, newPassword: e.target.value })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="请输入新密码（至少6位）"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">确认新密码</label>
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">确认新密码</label>
               <input
                 type="password"
                 value={passwordForm.confirmPassword}
                 onChange={(e) =>
                   setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="请再次输入新密码"
               />
             </div>
 
             <button
               onClick={handleChangePassword}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-5 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               更新密码
             </button>
@@ -484,15 +484,15 @@ export const UserProfile = () => {
       </div>
 
       {/* 操作按钮 */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-lg shadow p-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">账户操作</h3>
-            <p className="text-sm text-gray-500">退出登录后将清除本地会话</p>
+            <h3 className="text-sm font-semibold text-gray-900 mb-0.5">账户操作</h3>
+            <p className="text-xs text-gray-500">退出登录后将清除本地会话</p>
           </div>
           <button
             onClick={handleSignOut}
-            className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="px-5 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
             退出登录
           </button>

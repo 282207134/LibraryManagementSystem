@@ -63,22 +63,22 @@ export const BookCarousel = ({ books, title, autoPlay = true, interval = 5000 }:
 
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-      <div className="p-6 border-b">
-        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+      <div className="p-5 border-b">
+        <h2 className="text-xl font-bold text-gray-900">{title}</h2>
       </div>
 
       <div className="relative">
         {/* 轮播内容 */}
-        <div className="relative h-96 overflow-hidden">
+        <div className="relative h-80 overflow-hidden">
           <div
             className="flex transition-transform duration-500 ease-in-out h-full"
             style={{ transform: `translateX(-${currentIndex * 100}%)` }}
           >
             {books.map((book) => (
               <div key={book.id} className="min-w-full h-full flex items-center bg-gradient-to-r from-blue-50 to-purple-50">
-                <div className="container mx-auto px-8 flex items-center gap-8 h-full">
+                <div className="container mx-auto px-6 flex items-center gap-6 h-full">
                   {/* 封面图片 */}
-                  <div className="flex-shrink-0 w-64 h-80 shadow-2xl rounded-lg overflow-hidden">
+                  <div className="flex-shrink-0 w-52 h-64 shadow-2xl rounded-lg overflow-hidden">
                     {coverUrls.get(book.id) ? (
                       <img
                         src={coverUrls.get(book.id)}
@@ -94,11 +94,11 @@ export const BookCarousel = ({ books, title, autoPlay = true, interval = 5000 }:
 
                   {/* 图书信息 */}
                   <div className="flex-1">
-                    <h3 className="text-4xl font-bold text-gray-900 mb-4">{book.title}</h3>
-                    <p className="text-xl text-gray-600 mb-4">作者：{book.author}</p>
+                    <h3 className="text-3xl font-bold text-gray-900 mb-3">{book.title}</h3>
+                    <p className="text-lg text-gray-600 mb-3">作者：{book.author}</p>
                     
                     {book.category && (
-                      <p className="text-lg text-gray-500 mb-4">分类：{book.category}</p>
+                      <p className="text-base text-gray-500 mb-3">分类：{book.category}</p>
                     )}
 
                     {book.average_rating && book.average_rating > 0 && (
@@ -111,7 +111,7 @@ export const BookCarousel = ({ books, title, autoPlay = true, interval = 5000 }:
                     )}
 
                     {book.description && (
-                      <p className="text-gray-700 mb-6 line-clamp-3">{book.description}</p>
+                      <p className="text-gray-700 mb-5 line-clamp-3 text-sm">{book.description}</p>
                     )}
 
                     <Link

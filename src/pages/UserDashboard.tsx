@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { SearchBar } from '../components/SearchBar';
 import { BookCarousel } from '../components/BookCarousel';
 import { BookRanking } from '../components/BookRanking';
 import { UserBookList } from '../components/user/UserBookList';
 import { useHomeData } from '../hooks/useHomeData';
-import { useBooks } from '../hooks/useBooks';
 import { resolveCoverImageUrl } from '../lib/storageHelper';
 import type { Book } from '../types/book';
 import type { BookWithStats } from '../hooks/useHomeData';
@@ -18,8 +16,6 @@ export const UserDashboard = () => {
     getCategories,
     getBooksByCategory
   } = useHomeData();
-
-  const { searchBooks } = useBooks();
 
   const [recommendedBooks, setRecommendedBooks] = useState<BookWithStats[]>([]);
   const [popularBooks, setPopularBooks] = useState<BookWithStats[]>([]);
@@ -60,12 +56,6 @@ export const UserDashboard = () => {
     setCategoryBooks(books);
   };
 
-  const handleSearch = (term: string) => {
-    searchBooks(term);
-    // 跳转到图书浏览页面
-    window.location.href = `/user/home?search=${encodeURIComponent(term)}`;
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -75,16 +65,7 @@ export const UserDashboard = () => {
   }
 
   return (
-    <div className="space-y-8">
-      {/* 顶部搜索栏 */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-8 text-white">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold mb-4">欢迎来到图书馆</h1>
-          <p className="text-xl mb-6 text-blue-100">发现好书，开启阅读之旅</p>
-          <SearchBar onSearch={handleSearch} />
-        </div>
-      </div>
-
+    <div className="space-y-6">
       {/* 推荐书籍轮播 */}
       {recommendedBooks.length > 0 && (
         <BookCarousel 
@@ -104,10 +85,10 @@ export const UserDashboard = () => {
         {/* 右侧：新上架图书 */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow-lg overflow-hidden h-full flex flex-col">
-            <div className="p-6 border-b flex-shrink-0">
-              <h2 className="text-2xl font-bold text-gray-900">📚 新上架</h2>
+            <div className="p-5 border-b flex-shrink-0">
+              <h2 className="text-xl font-bold text-gray-900">📚 新上架</h2>
             </div>
-            <div className="p-6 flex-1">
+            <div className="p-5 flex-1">
               <NewBooksGrid books={newBooks} />
             </div>
           </div>
@@ -117,16 +98,16 @@ export const UserDashboard = () => {
       {/* 分类浏览 */}
       {categories.length > 0 && (
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="p-6 border-b">
-            <h2 className="text-2xl font-bold text-gray-900">📖 分类浏览</h2>
+          <div className="p-5 border-b">
+            <h2 className="text-xl font-bold text-gray-900">📖 分类浏览</h2>
           </div>
-          <div className="p-6">
-            <div className="flex flex-wrap gap-3 mb-6">
+          <div className="p-5">
+            <div className="flex flex-wrap gap-2.5 mb-5">
               {categories.map((category) => (
                 <button
                   key={category}
                   onClick={() => handleCategoryClick(category)}
-                  className={`px-4 py-2 rounded-lg transition-colors ${
+                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                     selectedCategory === category
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -139,7 +120,7 @@ export const UserDashboard = () => {
 
             {selectedCategory && categoryBooks.length > 0 && (
               <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
                   {selectedCategory} 分类图书
                 </h3>
                 <UserBookList

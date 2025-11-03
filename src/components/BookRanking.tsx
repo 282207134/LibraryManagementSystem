@@ -37,8 +37,8 @@ export const BookRanking = ({ books, title, showRank = true }: BookRankingProps)
 
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden h-full flex flex-col">
-      <div className="p-6 border-b flex-shrink-0">
-        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+      <div className="p-5 border-b flex-shrink-0">
+        <h2 className="text-xl font-bold text-gray-900">{title}</h2>
       </div>
 
       <div className="divide-y flex-1">
@@ -46,14 +46,14 @@ export const BookRanking = ({ books, title, showRank = true }: BookRankingProps)
           <Link
             key={book.id}
             to={`/user/books/${book.id}`}
-            className="block p-4 hover:bg-gray-50 transition-colors"
+            className="block p-3 hover:bg-gray-50 transition-colors"
           >
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               {/* 排名 */}
               {showRank && (
-                <div className="flex-shrink-0 w-12 text-center">
+                <div className="flex-shrink-0 w-10 text-center">
                   <span
-                    className={`text-2xl font-bold ${
+                    className={`text-xl font-bold ${
                       index < 3 ? 'text-yellow-500' : 'text-gray-400'
                     }`}
                   >
@@ -63,7 +63,7 @@ export const BookRanking = ({ books, title, showRank = true }: BookRankingProps)
               )}
 
               {/* 封面 */}
-              <div className="flex-shrink-0 w-20 h-28 rounded overflow-hidden bg-gray-200">
+              <div className="flex-shrink-0 w-16 h-24 rounded overflow-hidden bg-gray-200">
                 {coverUrls.get(book.id) ? (
                   <img
                     src={coverUrls.get(book.id)}
@@ -79,10 +79,10 @@ export const BookRanking = ({ books, title, showRank = true }: BookRankingProps)
 
               {/* 图书信息 */}
               <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold text-gray-900 truncate mb-1">
+                <h3 className="text-base font-semibold text-gray-900 truncate mb-1">
                   {book.title}
                 </h3>
-                <p className="text-sm text-gray-600 mb-2">作者：{book.author}</p>
+                <p className="text-xs text-gray-600 mb-1.5">作者：{book.author}</p>
                 
                 <div className="flex items-center gap-4">
                   {book.average_rating && book.average_rating > 0 && (

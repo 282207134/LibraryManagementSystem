@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { SearchBar } from '../components/SearchBar';
 import { UserBookList } from '../components/user/UserBookList';
 import { useBooks } from '../hooks/useBooks';
 
@@ -16,19 +15,11 @@ export const UserHome = () => {
     }
   }, [searchParams, searchBooks]);
 
-  const handleSearch = (term: string) => {
-    searchBooks(term);
-  };
-
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">图书浏览</h1>
-        <p className="text-gray-600">发现感兴趣的图书，立即借阅</p>
-      </div>
-
       <div className="mb-6">
-        <SearchBar onSearch={handleSearch} />
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">图书浏览</h1>
+        <p className="text-sm text-gray-600">发现感兴趣的图书，立即借阅</p>
       </div>
 
       <UserBookList
