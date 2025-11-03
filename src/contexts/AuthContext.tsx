@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useState, useRef, type ReactNode } from 'react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import { AuthContext, type AuthContextType } from './AuthContextBase';
@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userRole, setUserRole] = useState<AuthContextType['userRole']>(null);
   const [session, setSession] = useState<AuthContextType['session']>(null);
   const [loading, setLoading] = useState<AuthContextType['loading']>(true);
+  const userRef = useRef(user); // 用于在 onAuthStateChange 中检查用户ID，避免依赖问题
 
   const loadUserProfile = useCallback(
     async (supabaseUser: SupabaseUser | null) => {
@@ -91,6 +92,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await loadUserProfile(user);
   }, [loadUserProfile, user]);
 
+  // 更新 userRef 当 user 变化时
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -98,7 +104,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // 添加超时保护，5 秒后强制结束 loading
       const timeoutId = setTimeout(() => {
         if (isMounted) {
-          console.warn('初始化超时，强制结束 loading 状态');
           setLoading(false);
         }
       }, 5000);
@@ -206,9 +211,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      // 如果已经是 SIGNED_IN 状态且用户ID相同，这可能是重复的事件
+      // 常见场景：切换标签页时，Supabase 可能会重新触发 SIGNED_IN
+      // 这种情况下，我们应该静默处理，不显示 loading
+      if (event === 'SIGNED_IN' && session?.user && session.user.id === userRef.current?.id && !!userRef.current) {
+        // 静默更新 session，不触发 loading
+        setSession(session);
+        return;
+      }
+
       // 添加超时保护
       const timeoutId = setTimeout(() => {
-        console.warn('处理认证状态变化超时，强制结束 loading');
         setLoading(false);
       }, 5000);
 
@@ -249,7 +262,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 (profileError.message.includes('401') || 
                  profileError.message.includes('403') ||
                  profileError.message.includes('permission'))) {
-              console.warn('权限错误，清除 session');
               await supabase.auth.signOut();
               setSession(null);
               setUser(null);
