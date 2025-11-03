@@ -119,7 +119,8 @@ export const useBooks = () => {
       const payload: Record<string, unknown> = {
         ...bookData,
         cover_image_url: coverImageUrl ?? null,
-        available_quantity: Math.min(bookData.available_quantity, bookData.quantity),
+        // available_quantity 由数据库触发器自动计算，新增时默认为quantity
+        available_quantity: bookData.quantity,
       };
 
       delete payload.cover_image_file;
@@ -182,10 +183,8 @@ export const useBooks = () => {
 
       delete payload.cover_image_file;
       delete payload.remove_cover;
-
-      if (typeof bookData.available_quantity === 'number' && typeof bookData.quantity === 'number') {
-        payload.available_quantity = Math.min(bookData.available_quantity, bookData.quantity);
-      }
+      // available_quantity 由数据库触发器自动计算，不在这里设置
+      delete payload.available_quantity;
 
       const { data, error } = await supabase
         .from('books')
