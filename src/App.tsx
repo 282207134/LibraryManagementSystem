@@ -9,6 +9,7 @@ import { UserDashboard } from './pages/UserDashboard';
 import { UserMyBorrowings } from './pages/UserMyBorrowings';
 import { UserFavorites } from './pages/UserFavorites';
 import { UserBookDetail } from './pages/UserBookDetail';
+import { ResetPassword } from './pages/ResetPassword';
 
 // 旧的管理员界面暂时保留
 import AdminApp from './AdminApp';
@@ -29,41 +30,51 @@ function AuthRoutes() {
     return <LoadingScreen />;
   }
 
-  if (!user) {
-    return (
-      <div>
-        {authMode === 'login' ? (
-          <Login onToggleMode={() => setAuthMode('register')} />
-        ) : (
-          <Register onToggleMode={() => setAuthMode('login')} />
-        )}
-      </div>
-    );
-  }
-
   return (
     <Routes>
-      {/* 用户界面路由 */}
-      <Route path="/user" element={<UserLayout />}>
-        <Route index element={<Navigate to="/user/dashboard" replace />} />
-        <Route path="dashboard" element={<UserDashboard />} />
-        <Route path="home" element={<UserHome />} />
-        <Route path="books" element={<UserHome />} />
-        <Route path="books/:id" element={<UserBookDetail />} />
-        <Route path="my-borrowings" element={<UserMyBorrowings />} />
-        <Route path="my-favorites" element={<UserFavorites />} />
-        <Route path="profile" element={<div className="p-8 text-center text-gray-500">个人中心页面开发中...</div>} />
-      </Route>
+      {/* 密码重置页面（不需要登录，必须在最前面） */}
+      <Route path="/reset-password" element={<ResetPassword />} />
 
-      {/* 管理员界面路由（仅管理员可访问） */}
-      <Route
-        path="/admin/*"
-        element={userRole === 'admin' ? <AdminApp /> : <Navigate to="/user/home" replace />}
-      />
+      {!user ? (
+        /* 未登录用户：显示登录/注册页面 */
+        <>
+          <Route
+            path="*"
+            element={
+              authMode === 'login' ? (
+                <Login onToggleMode={() => setAuthMode('register')} />
+              ) : (
+                <Register onToggleMode={() => setAuthMode('login')} />
+              )
+            }
+          />
+        </>
+      ) : (
+        /* 已登录用户：显示应用内容 */
+        <>
+          {/* 用户界面路由 */}
+          <Route path="/user" element={<UserLayout />}>
+            <Route index element={<Navigate to="/user/dashboard" replace />} />
+            <Route path="dashboard" element={<UserDashboard />} />
+            <Route path="home" element={<UserHome />} />
+            <Route path="books" element={<UserHome />} />
+            <Route path="books/:id" element={<UserBookDetail />} />
+            <Route path="my-borrowings" element={<UserMyBorrowings />} />
+            <Route path="my-favorites" element={<UserFavorites />} />
+            <Route path="profile" element={<div className="p-8 text-center text-gray-500">个人中心页面开发中...</div>} />
+          </Route>
 
-      {/* 默认重定向到用户首页 */}
-      <Route path="/" element={<Navigate to="/user/dashboard" replace />} />
-      <Route path="*" element={<Navigate to="/user/dashboard" replace />} />
+          {/* 管理员界面路由（仅管理员可访问） */}
+          <Route
+            path="/admin/*"
+            element={userRole === 'admin' ? <AdminApp /> : <Navigate to="/user/dashboard" replace />}
+          />
+
+          {/* 默认重定向到用户首页 */}
+          <Route path="/" element={<Navigate to="/user/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/user/dashboard" replace />} />
+        </>
+      )}
     </Routes>
   );
 }

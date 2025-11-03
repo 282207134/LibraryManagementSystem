@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { ForgotPassword } from './ForgotPassword';
 
 interface LoginProps {
   onToggleMode: () => void;
@@ -10,7 +11,17 @@ export const Login = ({ onToggleMode }: LoginProps) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { signIn } = useAuth();
+
+  if (showForgotPassword) {
+    return (
+      <ForgotPassword
+        onBack={() => setShowForgotPassword(false)}
+        onSuccess={() => setShowForgotPassword(false)}
+      />
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +45,7 @@ export const Login = ({ onToggleMode }: LoginProps) => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">图书管理系统</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">图书馆</h1>
           <p className="text-gray-600">登录您的账户</p>
         </div>
 
@@ -63,9 +74,18 @@ export const Login = ({ onToggleMode }: LoginProps) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              密码
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700">
+                密码
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                忘记密码？
+              </button>
+            </div>
             <input
               type="password"
               value={password}
