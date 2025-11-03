@@ -1,9 +1,20 @@
+import { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { SearchBar } from '../components/SearchBar';
 import { UserBookList } from '../components/user/UserBookList';
 import { useBooks } from '../hooks/useBooks';
 
 export const UserHome = () => {
+  const [searchParams] = useSearchParams();
   const { books, loading, error, hasMore, searchBooks, loadMore, refresh } = useBooks();
+
+  // 从 URL 参数获取搜索词
+  useEffect(() => {
+    const searchTerm = searchParams.get('search');
+    if (searchTerm) {
+      searchBooks(searchTerm);
+    }
+  }, [searchParams, searchBooks]);
 
   const handleSearch = (term: string) => {
     searchBooks(term);

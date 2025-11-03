@@ -12,18 +12,18 @@ export const UserHeader = () => {
     <header className="bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-8">
-          <Link to="/user/home" className="text-2xl font-bold text-blue-600">
+          <Link to="/user/dashboard" className="text-2xl font-bold text-blue-600">
             📚 图书馆
           </Link>
           <nav className="hidden md:flex space-x-6">
             <Link
-              to="/user/home"
+              to="/user/dashboard"
               className="text-gray-700 hover:text-blue-600 transition-colors"
             >
               首页
             </Link>
             <Link
-              to="/user/books"
+              to="/user/home"
               className="text-gray-700 hover:text-blue-600 transition-colors"
             >
               图书浏览

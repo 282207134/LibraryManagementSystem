@@ -5,6 +5,7 @@ import { Login } from './components/Login';
 import { Register } from './components/Register';
 import { UserLayout } from './components/user/UserLayout';
 import { UserHome } from './pages/UserHome';
+import { UserDashboard } from './pages/UserDashboard';
 import { UserMyBorrowings } from './pages/UserMyBorrowings';
 import { UserFavorites } from './pages/UserFavorites';
 import { UserBookDetail } from './pages/UserBookDetail';
@@ -44,7 +45,8 @@ function AuthRoutes() {
     <Routes>
       {/* 用户界面路由 */}
       <Route path="/user" element={<UserLayout />}>
-        <Route index element={<Navigate to="/user/home" replace />} />
+        <Route index element={<Navigate to="/user/dashboard" replace />} />
+        <Route path="dashboard" element={<UserDashboard />} />
         <Route path="home" element={<UserHome />} />
         <Route path="books" element={<UserHome />} />
         <Route path="books/:id" element={<UserBookDetail />} />
@@ -60,8 +62,8 @@ function AuthRoutes() {
       />
 
       {/* 默认重定向到用户首页 */}
-      <Route path="/" element={<Navigate to="/user/home" replace />} />
-      <Route path="*" element={<Navigate to="/user/home" replace />} />
+      <Route path="/" element={<Navigate to="/user/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/user/dashboard" replace />} />
     </Routes>
   );
 }
