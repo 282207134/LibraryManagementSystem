@@ -3,9 +3,12 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useBorrowings } from '../hooks/useBorrowings';
 import { useFavorites } from '../hooks/useFavorites';
+import { useReviews } from '../hooks/useReviews';
 import { resolveCoverImageUrl } from '../lib/storageHelper';
 import { supabase } from '../lib/supabaseClient';
+import { StarRating } from '../components/StarRating';
 import type { Book } from '../types/book';
+import type { Review, ReviewWithUser, BookRatingStats } from '../types/review';
 
 export const UserBookDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -13,6 +16,7 @@ export const UserBookDetail = () => {
   const { user } = useAuth();
   const { borrowBook, hasUserBorrowedBook } = useBorrowings();
   const { favoriteBook, unfavoriteBook, isBookFavorited } = useFavorites();
+  const { getReviews, getUserReview, submitReview, deleteReview, getBookRatingStats } = useReviews();
   
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
@@ -21,6 +25,15 @@ export const UserBookDetail = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [borrowLoading, setBorrowLoading] = useState(false);
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+  
+  // 评论相关状态
+  const [reviews, setReviews] = useState<ReviewWithUser[]>([]);
+  const [userReview, setUserReview] = useState<Review | null>(null);
+  const [ratingStats, setRatingStats] = useState<BookRatingStats | null>(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [selectedRating, setSelectedRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [showReviewForm, setShowReviewForm] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -62,7 +75,18 @@ export const UserBookDetail = () => {
           const favorited = await isBookFavorited(id, user.id);
           setIsBorrowed(borrowed);
           setIsFavorite(favorited);
+          
+          // 加载用户的评论
+          const review = await getUserReview(id, user.id);
+          setUserReview(review);
+          if (review) {
+            setSelectedRating(review.rating);
+            setComment(review.comment || '');
+          }
         }
+        
+        // 加载所有评论和评分统计
+        await loadReviewsAndStats(id);
       } catch (err) {
         console.error('加载图书详情失败', err);
         setError(err instanceof Error ? err.message : '加载图书详情失败');
@@ -118,6 +142,53 @@ export const UserBookDetail = () => {
     }
     
     setBorrowLoading(false);
+  };
+
+  const loadReviewsAndStats = async (bookId: string) => {
+    setReviewLoading(true);
+    try {
+      const [reviewsData, statsData] = await Promise.all([
+        getReviews(bookId),
+        getBookRatingStats(bookId),
+      ]);
+      setReviews(reviewsData);
+      setRatingStats(statsData);
+    } catch (err) {
+      console.error('加载评论失败:', err);
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!user || !id || selectedRating === 0) return;
+    
+    setReviewLoading(true);
+    const review = await submitReview(id, user.id, selectedRating, comment);
+    
+    if (review) {
+      setUserReview(review);
+      setShowReviewForm(false);
+      await loadReviewsAndStats(id);
+    }
+    setReviewLoading(false);
+  };
+
+  const handleDeleteReview = async () => {
+    if (!userReview || !user) return;
+    
+    if (window.confirm('确定要删除这条评论吗？')) {
+      setReviewLoading(true);
+      const success = await deleteReview(userReview.id, user.id);
+      
+      if (success) {
+        setUserReview(null);
+        setSelectedRating(0);
+        setComment('');
+        await loadReviewsAndStats(id);
+      }
+      setReviewLoading(false);
+    }
   };
 
   if (loading) {
@@ -261,13 +332,151 @@ export const UserBookDetail = () => {
 
             {/* 图书简介 */}
             {book.description && (
-              <div className="border-t pt-6">
+              <div className="border-t pt-6 mb-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-3">图书简介</h2>
                 <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
                   {book.description}
                 </p>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* 评论和评分区域 */}
+        <div className="border-t p-6">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">评论与评分</h2>
+            
+            {/* 评分统计 */}
+            {ratingStats && ratingStats.total_reviews > 0 && (
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-4 mb-2">
+                  <StarRating rating={ratingStats.average_rating} readonly showText size="lg" />
+                  <span className="text-gray-600">
+                    共 {ratingStats.total_reviews} 条评论
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* 用户评论表单 */}
+            {user && (
+              <div className="mb-6">
+                {userReview ? (
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <p className="font-medium text-gray-900">我的评论</p>
+                        <StarRating rating={userReview.rating} readonly size="sm" />
+                      </div>
+                      <button
+                        onClick={handleDeleteReview}
+                        className="text-red-600 hover:text-red-700 text-sm"
+                      >
+                        删除
+                      </button>
+                    </div>
+                    {userReview.comment && (
+                      <p className="text-gray-700 mt-2">{userReview.comment}</p>
+                    )}
+                    <button
+                      onClick={() => setShowReviewForm(true)}
+                      className="mt-3 text-blue-600 hover:text-blue-700 text-sm"
+                    >
+                      修改评论
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowReviewForm(!showReviewForm)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    {showReviewForm ? '取消评论' : '添加评论'}
+                  </button>
+                )}
+
+                {showReviewForm && (
+                  <div className="mt-4 p-4 border rounded-lg">
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        评分
+                      </label>
+                      <StarRating
+                        rating={selectedRating}
+                        onRatingChange={setSelectedRating}
+                        size="lg"
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        评论内容（可选）
+                      </label>
+                      <textarea
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        placeholder="分享你的阅读体验..."
+                        rows={4}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleSubmitReview}
+                        disabled={reviewLoading || selectedRating === 0}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {reviewLoading ? '提交中...' : '提交评论'}
+                      </button>
+                      {userReview && (
+                        <button
+                          onClick={() => {
+                            setShowReviewForm(false);
+                            setSelectedRating(userReview.rating);
+                            setComment(userReview.comment || '');
+                          }}
+                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                        >
+                          取消
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 评论列表 */}
+            <div className="mt-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">
+                所有评论 ({reviews.length})
+              </h3>
+              {reviewLoading ? (
+                <p className="text-gray-500">加载中...</p>
+              ) : reviews.length === 0 ? (
+                <p className="text-gray-500">暂无评论，快来第一个评论吧！</p>
+              ) : (
+                <div className="space-y-4">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="p-4 border rounded-lg">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {review.user_full_name || review.user_email || '匿名用户'}
+                          </p>
+                          <StarRating rating={review.rating} readonly size="sm" />
+                        </div>
+                        <span className="text-sm text-gray-500">
+                          {new Date(review.created_at).toLocaleDateString('zh-CN')}
+                        </span>
+                      </div>
+                      {review.comment && (
+                        <p className="text-gray-700 mt-2">{review.comment}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useBorrowings } from '../../hooks/useBorrowings';
 import { useFavorites } from '../../hooks/useFavorites';
+import { useReviews } from '../../hooks/useReviews';
 import { resolveCoverImageUrl } from '../../lib/storageHelper';
+import { StarRating } from '../StarRating';
 import type { Book } from '../../types/book';
 
 interface UserBookCardProps {
@@ -15,10 +17,12 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
   const { user } = useAuth();
   const { borrowBook, hasUserBorrowedBook } = useBorrowings();
   const { favoriteBook, unfavoriteBook, isBookFavorited } = useFavorites();
+  const { getBookRatingStats } = useReviews();
   const [isBorrowed, setIsBorrowed] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+  const [averageRating, setAverageRating] = useState<number | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -38,6 +42,19 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
       setCoverImageUrl(null);
     }
   }, [book.cover_image_url]);
+
+  // 加载评分统计
+  useEffect(() => {
+    const loadRating = async () => {
+      const stats = await getBookRatingStats(book.id);
+      if (stats && stats.total_reviews > 0) {
+        setAverageRating(stats.average_rating);
+      } else {
+        setAverageRating(null);
+      }
+    };
+    loadRating();
+  }, [book.id, getBookRatingStats]);
 
   const handleBorrow = async () => {
     if (!user) return;
@@ -134,6 +151,11 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
         <p className="text-gray-600 text-xs mt-0.5 truncate">作者：{book.author}</p>
         {book.category && (
           <p className="text-gray-500 text-xs mt-0.5">分类：{book.category}</p>
+        )}
+        {averageRating !== null && (
+          <div className="mt-1.5">
+            <StarRating rating={averageRating} readonly size="sm" showText />
+          </div>
         )}
         <p className={`text-xs mt-1.5 ${isAvailable ? 'text-green-600' : 'text-red-600'}`}>
           可借：{book.available_quantity}/{book.quantity}
