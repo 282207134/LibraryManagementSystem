@@ -156,14 +156,14 @@ export const UserBookDetail = () => {
       </Link>
 
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="flex flex-col md:flex-row">
+        <div className="flex flex-col md:flex-row md:min-h-[600px]">
           {/* 封面区域 */}
-          <div className="md:w-1/3 p-6 bg-gray-50 flex items-center justify-center">
+          <div className="md:w-1/3 bg-gray-50 relative overflow-hidden">
             {coverImageUrl ? (
               <img
                 src={coverImageUrl}
                 alt={book.title}
-                className="max-w-full max-h-[500px] object-contain rounded-lg shadow-lg"
+                className="w-full h-full object-cover absolute inset-0"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.style.display = 'none';
@@ -172,7 +172,7 @@ export const UserBookDetail = () => {
                 }}
               />
             ) : null}
-            <div className={`w-full h-[500px] bg-gray-200 rounded-lg flex items-center justify-center text-gray-400 ${coverImageUrl ? 'hidden' : ''}`}>
+            <div className={`w-full h-full min-h-[400px] md:min-h-[600px] bg-gray-200 flex items-center justify-center text-gray-400 ${coverImageUrl ? 'hidden' : ''}`}>
               <span className="text-6xl">📖</span>
             </div>
           </div>
