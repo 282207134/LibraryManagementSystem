@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import type { Book } from '../types/book';
-import type { BookRatingStats } from '../types/review';
 
 export interface BookWithStats extends Book {
   borrow_count?: number;

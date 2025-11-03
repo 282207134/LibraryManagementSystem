@@ -49,8 +49,6 @@ export const BookCarousel = ({ books, title, autoPlay = true, interval = 5000 }:
     return null;
   }
 
-  const currentBook = books[currentIndex];
-
   const goToPrev = () => {
     setCurrentIndex((prev) => (prev - 1 + books.length) % books.length);
   };

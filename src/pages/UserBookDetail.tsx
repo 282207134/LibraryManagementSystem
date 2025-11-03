@@ -12,7 +12,6 @@ import type { Review, ReviewWithUser, BookRatingStats } from '../types/review';
 
 export const UserBookDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { borrowBook, hasUserBorrowedBook } = useBorrowings();
   const { favoriteBook, unfavoriteBook, isBookFavorited } = useFavorites();
@@ -185,7 +184,9 @@ export const UserBookDetail = () => {
         setUserReview(null);
         setSelectedRating(0);
         setComment('');
-        await loadReviewsAndStats(id);
+        if (id) {
+          await loadReviewsAndStats(id);
+        }
       }
       setReviewLoading(false);
     }

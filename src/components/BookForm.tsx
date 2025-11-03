@@ -261,26 +261,20 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
     }
 
     // available_quantity 将由数据库触发器自动计算，不在这里设置
-    const payload: Partial<BookFormData> = {
+    const payload: BookFormData = {
       title,
       author,
       quantity: formData.quantity,
-      // 不设置 available_quantity，让数据库自动计算
+      isbn: isbn || '',
+      publisher: publisher || '',
+      publication_year: formData.publication_year,
+      category: category || '',
+      description: description || '',
+      available_quantity: formData.available_quantity,
+      cover_image_url: coverImageUrl || null,
+      cover_image_file: formData.cover_image_file || null,
+      remove_cover: formData.remove_cover || false,
     };
-
-    if (isbn) payload.isbn = isbn;
-    if (publisher) payload.publisher = publisher;
-    if (formData.publication_year) payload.publication_year = formData.publication_year;
-    if (category) payload.category = category;
-    if (description) payload.description = description;
-    
-    if (formData.cover_image_file) {
-      payload.cover_image_file = formData.cover_image_file;
-    } else if (formData.remove_cover) {
-      payload.remove_cover = true;
-    } else if (coverImageUrl) {
-      payload.cover_image_url = coverImageUrl;
-    }
 
     setIsSubmitting(true);
     try {

@@ -27,7 +27,7 @@ export const StarRating = ({
     }
   };
 
-  const handleMouseEnter = (value: number) => {
+  const handleMouseEnter = (_value: number) => {
     if (!readonly) {
       // 可以添加悬停效果
     }
