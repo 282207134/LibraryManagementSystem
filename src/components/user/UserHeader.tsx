@@ -3,9 +3,22 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
 export const UserHeader = () => {
-  const { userProfile, userRole, signOut } = useAuth();
+  const { user, userProfile, userRole, signOut } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
+
+  const getUserDisplayName = () => {
+    // 优先使用 userProfile 的 full_name，但确保不是邮箱格式
+    if (userProfile?.full_name && !userProfile.full_name.includes('@')) {
+      return userProfile.full_name;
+    }
+    // 其次使用 user_metadata 中的 name
+    if (user?.user_metadata?.name) {
+      return user.user_metadata.name;
+    }
+    // 最后使用邮箱的用户名部分
+    return user?.email?.split('@')[0] || '用户';
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -73,20 +86,12 @@ export const UserHeader = () => {
                   搜索
                 </button>
               </form>
-              {userRole === 'admin' && (
-                <Link
-                  to="/admin/dashboard"
-                  className="text-red-600 hover:text-red-700 transition-colors font-medium text-sm"
-                >
-                  管理后台
-                </Link>
-              )}
             </nav>
           </div>
           
           <div className="flex items-center space-x-3 flex-shrink-0">
               <span className="text-gray-700">
-                👤 {userProfile?.full_name || '用户'}
+                👤 {getUserDisplayName()}
                 {userRole === 'admin' && (
                   <span className="ml-2 text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
                     管理员
@@ -95,8 +100,8 @@ export const UserHeader = () => {
               </span>
               {userRole === 'admin' && (
                 <Link
-                  to="/admin"
-                  className="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                  to="/admin/dashboard"
+                  className="text-red-600 hover:text-red-700 transition-colors font-medium text-sm"
                 >
                   管理后台
                 </Link>

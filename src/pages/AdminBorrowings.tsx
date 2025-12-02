@@ -45,6 +45,20 @@ export const AdminBorrowings = () => {
   const [filter, setFilter] = useState<'all' | 'borrowed' | 'returned' | 'overdue'>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // 格式化用户显示名称：用户名（邮箱）
+  const formatUserName = (user: { full_name?: string; email?: string } | null | undefined): string => {
+    if (!user) return '未知用户（未知邮箱）';
+    
+    const email = user.email || '未知邮箱';
+    // 如果 full_name 存在且不是邮箱格式，使用 full_name
+    if (user.full_name && !user.full_name.includes('@')) {
+      return `${user.full_name}（${email}）`;
+    }
+    // 否则使用邮箱的用户名部分
+    const emailUsername = email.split('@')[0] || '用户';
+    return `${emailUsername}（${email}）`;
+  };
+
   useEffect(() => {
     loadBorrowings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -277,8 +291,7 @@ export const AdminBorrowings = () => {
                       <div className="bg-gray-50 p-3 rounded-lg mt-2 mb-3">
                         <p className="text-sm text-gray-700">
                           <span className="font-medium">借阅用户：</span>
-                          {record.users?.full_name || '未知用户'} 
-                          <span className="text-gray-500 ml-2">({record.users?.email || '未知邮箱'})</span>
+                          {formatUserName(record.users)}
                         </p>
                       </div>
 

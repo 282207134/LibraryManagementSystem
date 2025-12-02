@@ -40,6 +40,14 @@ export const UserDashboard = () => {
         setPopularBooks(popular);
         setNewBooks(newBooksData);
         setCategories(categoriesData);
+        
+        // 自动选择第一个分类作为默认选项
+        if (categoriesData.length > 0) {
+          const firstCategory = categoriesData[0];
+          setSelectedCategory(firstCategory);
+          const books = await getBooksByCategory(firstCategory, 20);
+          setCategoryBooks(books);
+        }
       } catch (err) {
         console.error('加载首页数据失败:', err);
       } finally {
@@ -48,7 +56,7 @@ export const UserDashboard = () => {
     };
 
     loadHomeData();
-  }, [getRecommendedBooks, getPopularBooks, getNewBooks, getCategories]);
+  }, [getRecommendedBooks, getPopularBooks, getNewBooks, getCategories, getBooksByCategory]);
 
   const handleCategoryClick = async (category: string) => {
     setSelectedCategory(category);

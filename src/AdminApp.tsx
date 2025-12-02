@@ -95,13 +95,13 @@ const BooksDashboard = () => {
           </div>
         )}
 
-        <div className="mb-6 flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
+        <div className="mb-6 flex gap-2 items-start">
+          <div className="flex-1 [&>form]:mb-0">
             <SearchBar onSearch={handleSearch} />
           </div>
           <button
             onClick={handleAddBook}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors whitespace-nowrap"
           >
             添加图书
           </button>
