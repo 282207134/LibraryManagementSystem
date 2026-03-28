@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Book } from '../types/book';
 import { BookCard } from './BookCard';
+import { Pagination } from './Pagination';
 import { resolveCoverImageUrl } from '../lib/storageHelper';
 
 interface BookListProps {
@@ -8,8 +9,9 @@ interface BookListProps {
   loading: boolean;
   onEdit: (book: Book) => void;
   onDelete: (book: Book) => void;
-  onLoadMore: () => void;
-  hasMore: boolean;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void | Promise<void>;
 }
 
 const CoverThumbnail = ({ coverUrl, title }: { coverUrl?: string | null; title: string }) => {
@@ -56,7 +58,15 @@ const CoverThumbnail = ({ coverUrl, title }: { coverUrl?: string | null; title: 
   );
 };
 
-export const BookList = ({ books, loading, onEdit, onDelete, onLoadMore, hasMore }: BookListProps) => {
+export const BookList = ({
+  books,
+  loading,
+  onEdit,
+  onDelete,
+  currentPage,
+  totalPages,
+  onPageChange,
+}: BookListProps) => {
   if (loading && books.length === 0) {
     return (
       <div className="text-center py-10">
@@ -148,19 +158,16 @@ export const BookList = ({ books, loading, onEdit, onDelete, onLoadMore, hasMore
         ))}
       </div>
 
-      <div className="flex flex-col items-center gap-4">
-        {loading && <span className="text-gray-500">加载中...</span>}
+      {loading && books.length > 0 && (
+        <p className="text-center text-sm text-gray-500">加载中...</p>
+      )}
 
-        {hasMore && (
-          <button
-            onClick={onLoadMore}
-            disabled={loading}
-            className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? '加载中...' : '加载更多'}
-          </button>
-        )}
-      </div>
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={(p) => void onPageChange(p)}
+        loading={loading}
+      />
     </div>
   );
 };

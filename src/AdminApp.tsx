@@ -9,7 +9,8 @@ import { AdminBorrowings } from './pages/AdminBorrowings';
 import type { Book, BookFormData } from './types/book';
 
 const BooksDashboard = () => {
-  const { books, loading, error, searchBooks, loadMore, hasMore, addBook, updateBook, deleteBook } = useBooks();
+  const { books, loading, error, searchBooks, page, totalPages, goToPage, addBook, updateBook, deleteBook } =
+    useBooks();
   const [showForm, setShowForm] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -112,8 +113,9 @@ const BooksDashboard = () => {
           loading={loading}
           onEdit={handleEditBook}
           onDelete={handleDeleteBook}
-          onLoadMore={loadMore}
-          hasMore={hasMore}
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={goToPage}
         />
 
         {showForm && (

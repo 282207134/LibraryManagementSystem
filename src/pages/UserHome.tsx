@@ -5,7 +5,7 @@ import { useBooks } from '../hooks/useBooks';
 
 export const UserHome = () => {
   const [searchParams] = useSearchParams();
-  const { books, loading, error, hasMore, searchBooks, loadMore, refresh } = useBooks();
+  const { books, loading, error, page, totalPages, searchBooks, goToPage, refresh } = useBooks();
 
   // 从 URL 参数获取搜索词
   useEffect(() => {
@@ -26,8 +26,9 @@ export const UserHome = () => {
         books={books}
         loading={loading}
         error={error}
-        hasMore={hasMore}
-        onLoadMore={loadMore}
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={goToPage}
         onBorrowSuccess={refresh}
       />
     </div>

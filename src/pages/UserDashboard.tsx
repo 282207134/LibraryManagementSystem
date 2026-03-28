@@ -135,8 +135,9 @@ export const UserDashboard = () => {
                   books={categoryBooks}
                   loading={false}
                   error={null}
-                  hasMore={false}
-                  onLoadMore={() => {}}
+                  currentPage={1}
+                  totalPages={1}
+                  onPageChange={() => {}}
                 />
               </div>
             )}
