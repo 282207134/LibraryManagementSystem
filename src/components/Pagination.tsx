@@ -35,7 +35,7 @@ export interface PaginationProps {
 }
 
 const btnBase =
-  'inline-flex min-h-9 min-w-9 items-center justify-center border border-slate-200 bg-white px-2 text-sm text-gray-800 transition-colors hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-40 rounded';
+  'inline-flex min-h-9 min-w-9 items-center justify-center border border-cyan-300/20 bg-white/10 backdrop-blur-sm px-2 text-sm text-cyan-50 transition-colors hover:bg-cyan-500/20 disabled:pointer-events-none disabled:opacity-40 rounded-lg';
 
 export const Pagination = ({ currentPage, totalPages, onPageChange, loading }: PaginationProps) => {
   if (totalPages <= 1) return null;
@@ -44,7 +44,7 @@ export const Pagination = ({ currentPage, totalPages, onPageChange, loading }: P
   const busy = Boolean(loading);
 
   return (
-    <nav className="mt-8 flex flex-wrap items-center justify-center gap-1" aria-label="分页">
+    <nav className="mt-8 flex flex-wrap items-center justify-center gap-1.5" aria-label="分页">
       <button
         type="button"
         className={`${btnBase} gap-1 px-3`}
@@ -61,7 +61,7 @@ export const Pagination = ({ currentPage, totalPages, onPageChange, loading }: P
             <button
               key="ellipsis-last"
               type="button"
-              className={`${btnBase} min-w-[4.25rem] px-2 text-gray-700`}
+              className={`${btnBase} min-w-[4.25rem] px-2 text-cyan-100`}
               disabled={busy}
               onClick={() => onPageChange(totalPages)}
               aria-label={`第 ${totalPages} 页`}
@@ -77,7 +77,7 @@ export const Pagination = ({ currentPage, totalPages, onPageChange, loading }: P
           return (
             <span
               key={`e-${idx}`}
-              className={`${btnBase} cursor-default text-gray-500 hover:bg-white`}
+              className={`${btnBase} cursor-default text-cyan-100/60 hover:bg-white/10`}
               aria-hidden
             >
               …
@@ -90,7 +90,7 @@ export const Pagination = ({ currentPage, totalPages, onPageChange, loading }: P
             type="button"
             className={`${btnBase} ${
               item === currentPage
-                ? 'border-sky-300 bg-sky-100 text-sky-950 hover:bg-sky-100'
+                ? 'border-cyan-300/60 bg-gradient-to-r from-cyan-500/40 to-violet-500/40 text-white shadow-md shadow-cyan-500/20 hover:bg-cyan-500/40'
                 : ''
             }`}
             disabled={busy}

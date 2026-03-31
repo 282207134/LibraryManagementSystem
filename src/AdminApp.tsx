@@ -74,16 +74,20 @@ const BooksDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-[#060a19] text-cyan-50">
+      <div className="pointer-events-none fixed inset-0 -z-10">
+        <div className="absolute top-10 left-8 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
+        <div className="absolute bottom-8 right-10 h-80 w-80 rounded-full bg-violet-500/10 blur-3xl" />
+      </div>
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {notification && (
           <div
-            className={`mb-6 p-4 rounded-lg ${
+            className={`mb-6 p-4 rounded-xl border ${
               notification.type === 'success'
-                ? 'bg-green-100 text-green-800 border border-green-200'
-                : 'bg-red-100 text-red-800 border border-red-200'
+                ? 'bg-emerald-500/15 text-emerald-100 border-emerald-300/30'
+                : 'bg-rose-500/15 text-rose-100 border-rose-300/30'
             }`}
           >
             {notification.message}
@@ -91,7 +95,7 @@ const BooksDashboard = () => {
         )}
 
         {error && !loading && (
-          <div className="mb-6 p-4 rounded-lg bg-red-100 text-red-800 border border-red-200">
+          <div className="mb-6 p-4 rounded-xl bg-rose-500/15 text-rose-100 border border-rose-300/30">
             错误: {error}
           </div>
         )}
@@ -102,7 +106,7 @@ const BooksDashboard = () => {
           </div>
           <button
             onClick={handleAddBook}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors whitespace-nowrap"
+            className="px-6 py-2.5 rounded-xl font-medium text-white whitespace-nowrap bg-gradient-to-r from-emerald-500 to-cyan-600 hover:from-emerald-400 hover:to-cyan-500 transition-all shadow-[0_12px_30px_-14px_rgba(16,185,129,0.8)]"
           >
             添加图书
           </button>

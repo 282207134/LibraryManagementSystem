@@ -153,6 +153,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
 
   // 计算可借数量（只读显示）
   const calculatedAvailableQuantity = Math.max(0, formData.quantity - borrowedCount);
+  const useEditCoverCompactLayout = Boolean(book && previewUrl && !previewError);
 
   // 处理文件（统一处理从不同来源获取的文件）
   const processFile = (file: File) => {
@@ -285,66 +286,70 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-6">{book ? '编辑图书' : '添加图书'}</h2>
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-[#0d142c] border border-white/10 rounded-2xl shadow-xl max-w-[38rem] w-full max-h-[90vh] overflow-y-auto text-cyan-50">
+        <div className="p-4">
+          <h2 className="text-xl font-bold mb-5">{book ? '编辑图书' : '添加图书'}</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-cyan-100 mb-1">
                 书名 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
+                title="书名"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2 border border-cyan-300/25 bg-white/10 text-cyan-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-cyan-100 mb-1">
                 作者 <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
+                title="作者"
                 value={formData.author}
                 onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3.5 py-2 border border-cyan-300/25 bg-white/10 text-cyan-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400"
                 required
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ISBN</label>
+                <label className="block text-sm font-medium text-cyan-100 mb-1">ISBN</label>
                 <input
                   type="text"
                   value={formData.isbn}
                   onChange={(e) => setFormData({ ...formData, isbn: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3.5 py-2 border border-cyan-300/25 bg-white/10 text-cyan-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400"
                   placeholder="10 或 13 位数字"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">出版社</label>
+                <label className="block text-sm font-medium text-cyan-100 mb-1">出版社</label>
                 <input
                   type="text"
+                  title="出版社"
                   value={formData.publisher}
                   onChange={(e) => setFormData({ ...formData, publisher: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3.5 py-2 border border-cyan-300/25 bg-white/10 text-cyan-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">出版年份</label>
+                <label className="block text-sm font-medium text-cyan-100 mb-1">出版年份</label>
                 <input
                   type="number"
+                  title="出版年份"
                   value={formData.publication_year ?? ''}
                   onChange={(e) => {
                     const parsed = Number.parseInt(e.target.value, 10);
@@ -353,58 +358,61 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                       publication_year: Number.isNaN(parsed) ? undefined : parsed,
                     });
                   }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3.5 py-2 border border-cyan-300/25 bg-white/10 text-cyan-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400"
                   min="1000"
                   max="9999"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">分类</label>
+                <label className="block text-sm font-medium text-cyan-100 mb-1">分类</label>
                 <input
                   type="text"
+                  title="分类"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3.5 py-2 border border-cyan-300/25 bg-white/10 text-cyan-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">简介</label>
+              <label className="block text-sm font-medium text-cyan-100 mb-1">简介</label>
               <textarea
+                title="简介"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={4}
+                className="w-full px-3.5 py-2 border border-cyan-300/25 bg-white/10 text-cyan-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                rows={2}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-cyan-100 mb-1">
                 封面图片
-                <span className="text-gray-500 text-xs font-normal ml-2">
-                  (支持点击选择、拖拽上传或粘贴图片)
+                <span className="text-cyan-100/60 text-xs font-normal ml-2">
+                  (支持点击选择或拖拽上传)
                 </span>
               </label>
+
               <div className="space-y-2">
                 <div
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
-                  className={`border-2 border-dashed rounded-lg p-6 transition-colors ${
+                  className={`border-2 border-dashed rounded-xl p-3 transition-colors ${
                     isDragging
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-300 hover:border-gray-400 bg-gray-50'
+                      ? 'border-cyan-400 bg-cyan-500/10'
+                      : 'border-cyan-300/30 hover:border-cyan-300/60 bg-white/5'
                   }`}
                 >
                   <div className="flex flex-col items-center justify-center gap-2">
                     {isDragging ? (
-                      <p className="text-blue-600 font-medium">松开鼠标以上传图片</p>
+                      <p className="text-cyan-300 font-medium">松开鼠标以上传图片</p>
                     ) : (
                       <>
                         <svg
-                          className="w-12 h-12 text-gray-400"
+                          className="w-10 h-10 text-cyan-100/50"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -416,123 +424,188 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                             d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                           />
                         </svg>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-cyan-100/75">
                           拖拽图片到这里，或{' '}
-                          <label className="text-blue-600 hover:text-blue-700 cursor-pointer underline">
+                          <label className="text-cyan-300 hover:text-cyan-200 cursor-pointer underline">
                             点击选择文件
                           </label>
                         </p>
-                        <p className="text-xs text-gray-500">也可以在网页中复制图片后直接粘贴</p>
                       </>
                     )}
                   </div>
                   <input
                     type="file"
+                    title="封面图片文件"
                     accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                     onChange={handleFileChange}
                     className="hidden"
                     id="cover-image-input"
                   />
-                  <label
-                    htmlFor="cover-image-input"
-                    className="cursor-pointer"
-                    onClick={(e) => {
-                      // 如果点击的是label，不阻止默认行为
-                      if (isDragging) {
-                        e.preventDefault();
-                      }
-                    }}
-                  >
-                    <div className="mt-4 text-center">
-                      <span className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
-                        选择文件
-                      </span>
-                    </div>
-                  </label>
                 </div>
-                {previewUrl && !previewError && (
-                  <div className="mt-4">
-                    <p className="text-sm text-gray-700 mb-2">预览：</p>
-                    <div className="w-32 h-48 overflow-hidden rounded-lg border border-gray-200">
-                      <img
-                        src={previewUrl}
-                        alt={`封面预览 - ${formData.title || '图书'}`}
-                        className="w-full h-full object-cover"
-                        onError={() => setPreviewError(true)}
-                      />
-                    </div>
-                  </div>
-                )}
+
                 {previewError && (
                   <div className="text-sm text-red-600">
                     图片加载失败，请重新选择图片。
                   </div>
                 )}
-                {previewUrl && (
-                  <button
-                    type="button"
-                    onClick={handleClearCover}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                  >
-                    清除封面
-                  </button>
-                )}
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-cyan-100/55">
                   支持 JPEG、PNG、GIF 和 WebP 格式，文件大小不超过 5MB。
                 </p>
+
+                {useEditCoverCompactLayout ? (
+                  <div className="grid grid-cols-[7rem_minmax(0,1fr)] gap-3 items-stretch min-h-[14.5rem]">
+                    <div className="h-full flex flex-col">
+                      <p className="text-sm text-cyan-100 mb-2">预览：</p>
+                      <div className="w-28 h-40 overflow-hidden rounded-lg border border-cyan-300/20">
+                        <img
+                          src={previewUrl}
+                          alt={`封面预览 - ${formData.title || '图书'}`}
+                          className="w-full h-full object-cover"
+                          onError={() => setPreviewError(true)}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleClearCover}
+                        className="mt-auto w-28 px-3 py-2 border border-cyan-300/25 text-cyan-100 rounded-xl hover:bg-white/10"
+                      >
+                        清除封面
+                      </button>
+                    </div>
+
+                    <div className="h-full min-h-[12rem] flex flex-col">
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium text-cyan-100 mb-1">
+                            库存数量 <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="number"
+                            title="库存数量"
+                            value={formData.quantity}
+                            onChange={(e) => handleQuantityChange(e.target.value)}
+                            className="w-full px-3.5 py-2 border border-cyan-300/25 bg-white/10 text-cyan-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                            min="0"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-cyan-100 mb-1">
+                            可借数量 <span className="text-cyan-100/55 text-xs">(自动计算)</span>
+                          </label>
+                          <div className="w-full px-3.5 py-2 border border-cyan-300/20 rounded-xl bg-white/5 text-cyan-100">
+                            {calculatedAvailableQuantity} / {formData.quantity}
+                            {borrowedCount > 0 && (
+                              <span className="text-xs text-cyan-100/55 ml-2">
+                                (已借出: {borrowedCount})
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2.5 mt-auto pt-10">
+                        <button
+                          type="button"
+                          onClick={onCancel}
+                          disabled={isSubmitting}
+                          className="px-4 py-2 border border-cyan-300/25 text-cyan-100 rounded-xl hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          取消
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="px-4 py-2 text-white rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isSubmitting ? '保存中...' : book ? '更新' : '添加'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {previewUrl && !previewError && (
+                      <div className="mt-2">
+                        <p className="text-sm text-cyan-100 mb-2">预览：</p>
+                        <div className="w-28 h-40 overflow-hidden rounded-lg border border-cyan-300/20">
+                          <img
+                            src={previewUrl}
+                            alt={`封面预览 - ${formData.title || '图书'}`}
+                            className="w-full h-full object-cover"
+                            onError={() => setPreviewError(true)}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleClearCover}
+                          className="mt-2 w-28 px-3 py-2 border border-cyan-300/25 text-cyan-100 rounded-xl hover:bg-white/10"
+                        >
+                          清除封面
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  库存数量 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  value={formData.quantity}
-                  onChange={(e) => handleQuantityChange(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  min="0"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  可借数量 <span className="text-gray-500 text-xs">(自动计算)</span>
-                </label>
-                <div className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
-                  {calculatedAvailableQuantity} / {formData.quantity}
-                  {borrowedCount > 0 && (
-                    <span className="text-xs text-gray-500 ml-2">
-                      (已借出: {borrowedCount})
-                    </span>
-                  )}
+            {!useEditCoverCompactLayout && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-cyan-100 mb-1">
+                    库存数量 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    title="库存数量"
+                    value={formData.quantity}
+                    onChange={(e) => handleQuantityChange(e.target.value)}
+                    className="w-full px-3.5 py-2 border border-cyan-300/25 bg-white/10 text-cyan-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    min="0"
+                    required
+                  />
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  可借数量 = 库存数量 - 已借出数量（由系统自动计算）
-                </p>
-              </div>
-            </div>
 
-            <div className="flex justify-end gap-3 pt-4">
-              <button
-                type="button"
-                onClick={onCancel}
-                disabled={isSubmitting}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                取消
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? '保存中...' : book ? '更新' : '添加'}
-              </button>
-            </div>
+                <div>
+                  <label className="block text-sm font-medium text-cyan-100 mb-1">
+                    可借数量 <span className="text-cyan-100/55 text-xs">(自动计算)</span>
+                  </label>
+                  <div className="w-full px-3.5 py-2 border border-cyan-300/20 rounded-xl bg-white/5 text-cyan-100">
+                    {calculatedAvailableQuantity} / {formData.quantity}
+                    {borrowedCount > 0 && (
+                      <span className="text-xs text-cyan-100/55 ml-2">
+                        (已借出: {borrowedCount})
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-cyan-100/55 mt-1">
+                    可借数量 = 库存数量 - 已借出数量（由系统自动计算）
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {!useEditCoverCompactLayout && (
+              <div className="flex justify-end gap-2.5 pt-3">
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  disabled={isSubmitting}
+                  className="px-5 py-2 border border-cyan-300/25 text-cyan-100 rounded-xl hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  取消
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-5 py-2 text-white rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? '保存中...' : book ? '更新' : '添加'}
+                </button>
+              </div>
+            )}
           </form>
         </div>
       </div>

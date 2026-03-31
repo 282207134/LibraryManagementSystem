@@ -17,9 +17,9 @@ export const UserHome = () => {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">图书浏览</h1>
-        <p className="text-sm text-gray-600">发现感兴趣的图书，立即借阅</p>
+      <div className="mb-6 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+        <h1 className="text-2xl font-bold text-cyan-50 mb-2">图书浏览</h1>
+        <p className="text-sm text-cyan-100/70">发现感兴趣的图书，立即借阅</p>
       </div>
 
       <UserBookList

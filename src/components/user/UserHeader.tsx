@@ -32,41 +32,41 @@ export const UserHeader = () => {
   };
 
   return (
-    <header className="bg-white shadow-sm">
-      <div className="max-w-[72rem] mx-auto px-3 py-2.5">
+    <header className="sticky top-0 z-20 border-b border-white/10 bg-[#0b1024]/80 backdrop-blur-xl shadow-[0_8px_32px_-16px_rgba(0,0,0,0.7)]">
+      <div className="max-w-[72rem] mx-auto px-3 py-3">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center space-x-6 flex-shrink-0">
-            <Link to="/user/dashboard" className="text-lg font-bold text-blue-600">
+            <Link to="/user/dashboard" className="text-lg font-bold text-cyan-300 drop-shadow">
               📚 图书馆
             </Link>
             <nav className="hidden md:flex items-center space-x-4">
               <Link
                 to="/user/dashboard"
-                className="text-gray-700 hover:text-blue-600 transition-colors text-sm"
+                className="text-cyan-50/80 hover:text-cyan-300 transition-colors text-sm"
               >
                 首页
               </Link>
               <Link
                 to="/user/home"
-                className="text-gray-700 hover:text-blue-600 transition-colors text-sm"
+                className="text-cyan-50/80 hover:text-cyan-300 transition-colors text-sm"
               >
                 图书浏览
               </Link>
               <Link
                 to="/user/my-borrowings"
-                className="text-gray-700 hover:text-blue-600 transition-colors text-sm"
+                className="text-cyan-50/80 hover:text-cyan-300 transition-colors text-sm"
               >
                 我的借阅
               </Link>
               <Link
                 to="/user/my-favorites"
-                className="text-gray-700 hover:text-blue-600 transition-colors text-sm"
+                className="text-cyan-50/80 hover:text-cyan-300 transition-colors text-sm"
               >
                 我的收藏
               </Link>
               <Link
                 to="/user/profile"
-                className="text-gray-700 hover:text-blue-600 transition-colors text-sm"
+                className="text-cyan-50/80 hover:text-cyan-300 transition-colors text-sm"
               >
                 个人中心
               </Link>
@@ -77,11 +77,11 @@ export const UserHeader = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="搜索书名或作者..."
-                  className="w-32 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs"
+                  className="w-40 px-3 py-1.5 border border-cyan-300/30 bg-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-cyan-400 text-xs text-white placeholder:text-cyan-100/50"
                 />
                 <button
                   type="submit"
-                  className="px-2.5 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-xs whitespace-nowrap"
+                  className="px-3 py-1.5 bg-gradient-to-r from-cyan-500 to-violet-600 text-white rounded-lg hover:from-cyan-400 hover:to-violet-500 transition-colors text-xs whitespace-nowrap"
                 >
                   搜索
                 </button>
@@ -90,10 +90,10 @@ export const UserHeader = () => {
           </div>
           
           <div className="flex items-center space-x-3 flex-shrink-0">
-              <span className="text-gray-700">
+              <span className="text-cyan-50/90">
                 👤 {getUserDisplayName()}
                 {userRole === 'admin' && (
-                  <span className="ml-2 text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
+                  <span className="ml-2 text-xs bg-rose-500/20 text-rose-200 px-2 py-1 rounded border border-rose-300/30">
                     管理员
                   </span>
                 )}
@@ -101,14 +101,14 @@ export const UserHeader = () => {
               {userRole === 'admin' && (
                 <Link
                   to="/admin/dashboard"
-                  className="text-red-600 hover:text-red-700 transition-colors font-medium text-sm"
+                  className="text-rose-300 hover:text-rose-200 transition-colors font-medium text-sm"
                 >
                   管理后台
                 </Link>
               )}
               <button
                 onClick={handleSignOut}
-                className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm text-cyan-50/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors border border-white/10"
               >
                 登出
               </button>

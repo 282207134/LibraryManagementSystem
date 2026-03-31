@@ -120,14 +120,15 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
   const isAvailable = book.available_quantity > 0;
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow flex flex-col w-full h-full">
+    <div className="group relative rounded-2xl border border-white/10 bg-[#0f1630]/80 backdrop-blur-sm overflow-hidden hover:border-cyan-300/40 hover:shadow-[0_16px_50px_-20px_rgba(34,211,238,0.55)] transition-all flex flex-col w-full h-full">
+      <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.16),transparent_50%)]" />
       {/* 封面区域 - 增加高度使卡片更高 */}
-      <Link to={`/user/books/${book.id}`} className="block h-48 bg-gray-200 overflow-hidden flex-shrink-0 relative cursor-pointer">
+      <Link to={`/user/books/${book.id}`} className="block h-48 bg-slate-900 overflow-hidden flex-shrink-0 relative cursor-pointer">
         {coverImageUrl ? (
           <img
             src={coverImageUrl}
             alt={book.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             onError={(e) => {
               // 如果图片加载失败，显示占位符
               const target = e.target as HTMLImageElement;
@@ -137,27 +138,27 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
             }}
           />
         ) : null}
-        <div className={`absolute inset-0 w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 ${coverImageUrl ? 'hidden' : ''}`}>
+        <div className={`absolute inset-0 w-full h-full bg-slate-800 flex items-center justify-center text-cyan-200/60 ${coverImageUrl ? 'hidden' : ''}`}>
           <span className="text-2xl">📖</span>
         </div>
       </Link>
       {/* 内容区域 - 减小内边距 */}
       <div className="p-3 flex-1 flex flex-col">
         <Link to={`/user/books/${book.id}`} className="cursor-pointer">
-          <h3 className="font-bold text-base text-gray-900 hover:text-blue-600 transition-colors truncate leading-tight">
+          <h3 className="font-bold text-base text-cyan-50 hover:text-cyan-300 transition-colors truncate leading-tight">
             {book.title}
           </h3>
         </Link>
-        <p className="text-gray-600 text-xs mt-0.5 truncate">作者：{book.author}</p>
+        <p className="text-cyan-100/70 text-xs mt-0.5 truncate">作者：{book.author}</p>
         {book.category && (
-          <p className="text-gray-500 text-xs mt-0.5">分类：{book.category}</p>
+          <p className="text-cyan-100/60 text-xs mt-0.5">分类：{book.category}</p>
         )}
         {averageRating !== null && (
           <div className="mt-1.5">
             <StarRating rating={averageRating} readonly size="sm" showText />
           </div>
         )}
-        <p className={`text-xs mt-1.5 ${isAvailable ? 'text-green-600' : 'text-red-600'}`}>
+        <p className={`text-xs mt-1.5 ${isAvailable ? 'text-emerald-300' : 'text-rose-300'}`}>
           可借：{book.available_quantity}/{book.quantity}
         </p>
 
@@ -168,8 +169,8 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
             disabled={!isAvailable || isBorrowed || loading}
             className={`flex-1 px-2.5 py-1.5 rounded text-white text-xs font-medium transition-colors ${
               !isAvailable || isBorrowed
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700'
+                ? 'bg-slate-500 cursor-not-allowed'
+                : 'bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500'
             }`}
           >
             {isBorrowed ? '已借阅' : isAvailable ? '立即借阅' : '库存不足'}
@@ -179,8 +180,8 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
             disabled={loading}
             className={`px-2 py-1.5 rounded transition-colors ${
               isFavorite
-                ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-amber-300/25 text-amber-200 hover:bg-amber-300/35'
+                : 'bg-white/10 text-cyan-100/80 hover:bg-white/20'
             }`}
             title={isFavorite ? '取消收藏' : '收藏'}
           >

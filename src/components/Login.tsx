@@ -42,22 +42,31 @@ export const Login = ({ onToggleMode }: LoginProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-8">
+    <div className="relative min-h-screen overflow-hidden bg-[#050816] flex items-center justify-center p-4">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-32 -left-32 h-80 w-80 rounded-full bg-cyan-500/25 blur-3xl" />
+        <div className="absolute top-1/3 -right-24 h-72 w-72 rounded-full bg-violet-500/20 blur-3xl" />
+        <div className="absolute -bottom-20 left-1/3 h-64 w-64 rounded-full bg-fuchsia-500/20 blur-3xl" />
+      </div>
+
+      <div className="relative w-full max-w-md rounded-3xl border border-white/15 bg-white/10 backdrop-blur-xl shadow-[0_20px_80px_-20px_rgba(56,189,248,0.6)] p-8 text-white">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">图书馆</h1>
-          <p className="text-gray-600">登录您的账户</p>
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-violet-500 text-xl shadow-lg shadow-cyan-500/40">
+            📚
+          </div>
+          <h1 className="text-3xl font-bold mb-2 tracking-wide">图书馆</h1>
+          <p className="text-cyan-100/80">登录您的账户</p>
         </div>
 
         {error && (
-          <div className="mb-4 p-4 rounded-lg bg-red-100 text-red-800 border border-red-200">
+          <div className="mb-4 p-4 rounded-xl bg-rose-500/15 text-rose-100 border border-rose-300/30">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-cyan-100 mb-1">
               邮箱地址
             </label>
             <input
@@ -67,7 +76,7 @@ export const Login = ({ onToggleMode }: LoginProps) => {
                 setEmail(e.target.value);
                 if (error) setError(null);
               }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-white/20 bg-white/10 rounded-xl text-white placeholder:text-cyan-100/50 focus:outline-none focus:ring-2 focus:ring-cyan-400"
               placeholder="your@email.com"
               required
             />
@@ -75,13 +84,13 @@ export const Login = ({ onToggleMode }: LoginProps) => {
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-cyan-100">
                 密码
               </label>
               <button
                 type="button"
                 onClick={() => setShowForgotPassword(true)}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="text-sm text-cyan-200 hover:text-cyan-100 font-medium"
               >
                 忘记密码？
               </button>
@@ -93,7 +102,7 @@ export const Login = ({ onToggleMode }: LoginProps) => {
                 setPassword(e.target.value);
                 if (error) setError(null);
               }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 border border-white/20 bg-white/10 rounded-xl text-white placeholder:text-cyan-100/50 focus:outline-none focus:ring-2 focus:ring-cyan-400"
               placeholder="••••••••"
               required
             />
@@ -102,18 +111,18 @@ export const Login = ({ onToggleMode }: LoginProps) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-violet-600 text-white rounded-xl hover:from-cyan-400 hover:to-violet-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-cyan-500/30"
           >
             {loading ? '登录中...' : '登录'}
           </button>
         </form>
 
         <div className="mt-6 text-center">
-          <p className="text-gray-600">
+          <p className="text-cyan-100/80">
             还没有账户？{' '}
             <button
               onClick={onToggleMode}
-              className="text-blue-600 hover:text-blue-700 font-medium"
+              className="text-cyan-300 hover:text-cyan-100 font-medium"
             >
               立即注册
             </button>
