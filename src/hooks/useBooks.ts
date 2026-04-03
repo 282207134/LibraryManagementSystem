@@ -11,6 +11,7 @@ type LoadOptions = {
 };
 
 export const useBooks = () => {
+  // 图书模块统一状态：列表、分页、检索、错误与加载态
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +24,7 @@ export const useBooks = () => {
     return Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   }, [totalCount]);
 
+  // 核心加载函数：先查总数，再按页拉取数据
   const loadBooks = useCallback(async ({ search, page: pageArg }: LoadOptions): Promise<boolean> => {
     setLoading(true);
     setError(null);
@@ -32,6 +34,7 @@ export const useBooks = () => {
     const to = from + PAGE_SIZE - 1;
 
     try {
+      // count 查询用于计算分页总页数
       let countQuery = supabase.from('books').select('*', { count: 'exact', head: true });
 
       if (search) {
@@ -43,6 +46,7 @@ export const useBooks = () => {
       const queryCount = typeof count === 'number' ? count : 0;
       setTotalCount(queryCount);
 
+      // 真实数据查询：按创建时间倒序，保证最新图书优先
       let query = supabase
         .from('books')
         .select('*', { count: 'exact' })
@@ -74,6 +78,7 @@ export const useBooks = () => {
   }, []);
 
   const initialize = useCallback(async () => {
+    // 初次进入默认加载第一页且不带搜索词
     const ok = await loadBooks({ search: '', page: 1 });
     if (ok) {
       setPage(1);
@@ -83,6 +88,7 @@ export const useBooks = () => {
 
   const searchBooks = useCallback(
     async (term: string) => {
+      // 去除首尾空格，避免无意义查询
       const normalizedTerm = term.trim();
       const ok = await loadBooks({ search: normalizedTerm, page: 1 });
       if (ok) {
@@ -94,11 +100,13 @@ export const useBooks = () => {
   );
 
   const refresh = useCallback(async () => {
+    // 按当前筛选条件刷新，不重置用户所在页
     await loadBooks({ search: searchTerm, page });
   }, [loadBooks, page, searchTerm]);
 
   const goToPage = useCallback(
     async (nextPage: number) => {
+      // 防止越界页码与重复请求
       if (loading || totalCount === null) return;
       const maxPage = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
       const clamped = Math.min(Math.max(1, nextPage), maxPage);
@@ -124,6 +132,7 @@ export const useBooks = () => {
         let coverImageUrl = bookData.cover_image_url ?? null;
 
         if (bookData.cover_image_file) {
+          // 新封面先上传到 storage，成功后再写 books 表
           const uploadResult = await uploadBookCover(bookData.cover_image_file);
           if (uploadResult.error) {
             setError(`图片上传失败: ${uploadResult.error}`);
@@ -136,6 +145,7 @@ export const useBooks = () => {
         const payload: Record<string, unknown> = {
           ...bookData,
           cover_image_url: coverImageUrl ?? null,
+          // 新增图书时可借数量默认等于总库存
           available_quantity: bookData.quantity,
         };
 
@@ -149,6 +159,7 @@ export const useBooks = () => {
         await refresh();
         return data ?? null;
       } catch (err) {
+        // 数据写入失败时回滚已上传文件，避免脏文件残留
         if (uploadedCoverPath) {
           await deleteBookCover(uploadedCoverPath);
         }
@@ -179,6 +190,7 @@ export const useBooks = () => {
         let nextCoverUrl = bookData.cover_image_url ?? existingBook?.cover_image_url ?? null;
 
         if (bookData.cover_image_file) {
+          // 更新封面：先上传新图，事务成功后再删旧图
           const uploadResult = await uploadBookCover(bookData.cover_image_file);
           if (uploadResult.error) {
             setError(`图片上传失败: ${uploadResult.error}`);
@@ -211,6 +223,7 @@ export const useBooks = () => {
         await refresh();
         return data ?? null;
       } catch (err) {
+        // 更新失败时删除本次新上传文件，保持存储一致性
         if (uploadedCoverPath) {
           await deleteBookCover(uploadedCoverPath);
         }
@@ -232,6 +245,7 @@ export const useBooks = () => {
         if (error) throw error;
 
         if (bookToDelete?.cover_image_url) {
+          // 数据删除后，顺带清理封面文件
           await deleteBookCover(bookToDelete.cover_image_url);
         }
 

@@ -11,6 +11,7 @@ interface BorrowResult {
 const DEFAULT_BORROW_DAYS = 30;
 
 export function useBorrowings() {
+  // 借阅模块统一状态
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,8 +21,7 @@ export function useBorrowings() {
     setError(null);
 
     try {
-      // 调用数据库函数进行借阅
-      // 明确使用带三个参数的版本以避免函数重载歧义
+      // 借阅逻辑放在数据库函数里，前端仅做参数传递和结果处理
       const { data, error: rpcError } = await supabase.rpc('borrow_book', {
         p_book_id: bookId,
         p_user_id: userId,
@@ -34,26 +34,26 @@ export function useBorrowings() {
         return { success: false, error: errorMessage };
       }
 
-      // 检查返回数据
+      // 防御式校验：避免后端返回空结果导致前端误判成功
       if (!data) {
         const errorMessage = '借阅失败：未收到服务器响应';
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
 
-      // 检查 success 字段（可能为 false 或不存在）
+      // 兼容多种返回形态：success=false 或仅返回 error
       if (data.success === false || (data.success !== true && data.error)) {
         const errorMessage = data.error || '借阅失败，请稍后重试';
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
 
-      // 确保成功时才返回
+      // 明确 success=true 才认定成功
       if (data.success === true) {
         return { success: true, due_date: data.due_date };
       }
 
-      // 如果 success 字段不存在，检查是否有错误
+      // 未命中成功分支时统一按失败处理
       const errorMessage = data.error || '借阅失败：未知错误';
       setError(errorMessage);
       return { success: false, error: errorMessage };
@@ -72,7 +72,7 @@ export function useBorrowings() {
     setError(null);
 
     try {
-      // 调用数据库函数进行归还
+      // 归还同样走数据库函数，保证库存/状态变更原子性
       const { data, error: rpcError } = await supabase.rpc('return_book', {
         p_borrowing_id: borrowingId,
       });
@@ -104,6 +104,7 @@ export function useBorrowings() {
     setError(null);
 
     try {
+      // 联表拉取图书信息，减少前端二次查询
       const { data, error: fetchError } = await supabase
         .from('borrowing_records')
         .select(`
@@ -139,6 +140,7 @@ export function useBorrowings() {
     setError(null);
 
     try {
+      // 仅筛选当前仍在借阅中的记录（borrowed / overdue）
       const { data, error: fetchError } = await supabase
         .from('borrowing_records')
         .select(`
@@ -172,6 +174,7 @@ export function useBorrowings() {
   // 检查用户是否已借阅某本书
   const hasUserBorrowedBook = useCallback(async (userId: string, bookId: string): Promise<boolean> => {
     try {
+      // 轻量查询：只关心是否存在记录
       const { data, error: fetchError } = await supabase
         .from('borrowing_records')
         .select('id')
@@ -198,7 +201,7 @@ export function useBorrowings() {
     setError(null);
 
     try {
-      // 先获取借阅记录和图书信息
+      // 先获取借阅记录（含图书信息）
       const { data: borrowingsData, error: borrowingsError } = await supabase
         .from('borrowing_records')
         .select(`
@@ -221,7 +224,7 @@ export function useBorrowings() {
         return [];
       }
 
-      // 获取所有唯一的用户ID
+      // 提取去重 user_id，进行一次批量查询
       const userIds = [...new Set(borrowingsData.map((r: any) => r.user_id))];
 
       // 批量查询用户信息
@@ -236,12 +239,12 @@ export function useBorrowings() {
         return borrowingsData as BorrowingRecord[];
       }
 
-      // 创建用户信息映射
+      // 用 Map 做 O(1) 匹配，避免多重循环
       const usersMap = new Map(
         (usersData || []).map((u) => [u.id, { id: u.id, email: u.email, full_name: u.full_name }])
       );
 
-      // 合并借阅记录和用户信息
+      // 合并结果供管理员页面展示
       const result = borrowingsData.map((record: any) => ({
         ...record,
         users: usersMap.get(record.user_id) || null,

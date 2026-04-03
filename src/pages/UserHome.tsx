@@ -5,6 +5,7 @@ import { useBooks } from '../hooks/useBooks';
 
 export const UserHome = () => {
   const [searchParams] = useSearchParams();
+  // 复用 useBooks 的分页/搜索/刷新能力
   const { books, loading, error, page, totalPages, searchBooks, goToPage, refresh } = useBooks();
 
   // 从 URL 参数获取搜索词

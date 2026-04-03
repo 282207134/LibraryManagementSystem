@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import type { BookFavorite } from '../types/favorite';
 
 export function useFavorites() {
+  // 收藏模块统一状态
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,6 +60,7 @@ export function useFavorites() {
     setError(null);
 
     try {
+      // 联表返回图书基础信息，避免列表页额外请求
       const { data, error: fetchError } = await supabase
         .from('book_favorites')
         .select(`
@@ -90,6 +92,7 @@ export function useFavorites() {
 
   const isBookFavorited = useCallback(async (bookId: string, userId: string): Promise<boolean> => {
     try {
+      // 极简检查：存在即 true
       const { data, error: fetchError } = await supabase
         .from('book_favorites')
         .select('id')

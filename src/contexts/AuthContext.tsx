@@ -5,6 +5,7 @@ import { AuthContext, type AuthContextType } from './AuthContextBase';
 
 export { AuthContext } from './AuthContextBase';
 
+// 为新注册或缺失 users 记录的账号生成默认资料
 const createDefaultProfile = (supabaseUser: SupabaseUser) => ({
   id: supabaseUser.id,
   email: supabaseUser.email ?? '',
@@ -19,16 +20,19 @@ const createDefaultProfile = (supabaseUser: SupabaseUser) => ({
 });
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  // 全局认证状态：用户、资料、角色、会话及加载态
   const [user, setUser] = useState<AuthContextType['user']>(null);
   const [userProfile, setUserProfile] = useState<AuthContextType['userProfile']>(null);
   const [userRole, setUserRole] = useState<AuthContextType['userRole']>(null);
   const [session, setSession] = useState<AuthContextType['session']>(null);
   const [loading, setLoading] = useState<AuthContextType['loading']>(true);
-  const userRef = useRef(user); // 用于在 onAuthStateChange 中检查用户ID，避免依赖问题
+  // 用 ref 保存最新 user，避免 onAuthStateChange 闭包拿到旧值
+  const userRef = useRef(user);
 
   const loadUserProfile = useCallback(
     async (supabaseUser: SupabaseUser | null) => {
       if (!supabaseUser) {
+        // 未登录时清空资料与角色
         setUserProfile(null);
         setUserRole(null);
         return;
@@ -43,16 +47,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         if (error) {
           console.error('加载用户信息失败', error);
-          // 如果是 401/403/500 错误，可能是 RLS 策略或权限问题
-          // 清除用户资料，但不影响页面加载
+          // 资料查询失败时不阻塞页面渲染，仅清空资料态
           setUserProfile(null);
           setUserRole(null);
           
-          // 如果是权限错误（401/403），尝试清除 session
+          // 识别潜在权限问题，提示用户重新登录
           if (error.code === 'PGRST301' || error.message?.includes('permission') || 
               error.message?.includes('401') || error.message?.includes('403')) {
             console.warn('检测到权限错误，可能需要重新登录');
-            // 注意：这里不自动清除 session，让用户手动处理
           }
           return;
         }
@@ -64,6 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
 
         const defaultProfile = createDefaultProfile(supabaseUser);
+        // users 表不存在记录时自动补一份
         const { data: insertedProfile, error: insertError } = await supabase
           .from('users')
           .insert(defaultProfile)
@@ -101,7 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let isMounted = true;
 
     const init = async () => {
-      // 添加超时保护，5 秒后强制结束 loading
+      // 首次初始化保护：避免网络慢导致 loading 卡住
       const timeoutId = setTimeout(() => {
         if (isMounted) {
           setLoading(false);
@@ -116,7 +119,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        // 如果获取 session 出错，清除状态并继续
+        // 读取 session 失败时降级为空会话状态
         if (sessionError) {
           console.error('获取 session 失败', sessionError);
           setSession(null);
@@ -133,7 +136,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const currentSession = data.session;
         const currentUser = currentSession?.user ?? null;
 
-        // 验证 session 是否过期
+        // 主动检查过期时间，避免持有无效会话
         if (currentSession && currentSession.expires_at) {
           const expiresAt = currentSession.expires_at * 1000; // 转换为毫秒
           if (Date.now() >= expiresAt) {
@@ -154,12 +157,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(currentSession ?? null);
         setUser(currentUser);
         
-        // 如果有用户，尝试加载用户资料，但不要阻塞页面加载
-        // 使用 Promise.race 确保不会无限等待，但不显示警告
+        // 资料加载设置短超时，不阻塞页面首屏
         if (currentUser) {
           try {
             const profilePromise = loadUserProfile(currentUser);
-            // 缩短超时时间，静默处理
+            // 超时后静默放行，后续可再次刷新资料
             const timeoutPromise = new Promise<void>((resolve) => {
               setTimeout(() => {
                 // 静默超时，不显示警告
@@ -197,30 +199,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     init();
 
-    // 完全禁用页面可见性检测，避免切换标签页时触发任何状态更新
-    // visibilityHandler 已被移除，因为我们不希望在任何可见性变化时更新状态
+    // 不处理页面可见性事件，减少切标签导致的额外抖动
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // TOKEN_REFRESHED 和 INITIAL_SESSION 事件不应该触发任何处理
-      // 这些是后台的 token 刷新，不需要更新 UI 或重新加载用户资料
+      // 后台 token 刷新仅同步 session，不触发页面重算
       if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-        // 静默更新 session，不触发任何其他操作，避免页面刷新
         setSession(session);
         return;
       }
 
-      // 如果已经是 SIGNED_IN 状态且用户ID相同，这可能是重复的事件
-      // 常见场景：切换标签页时，Supabase 可能会重新触发 SIGNED_IN
-      // 这种情况下，我们应该静默处理，不显示 loading
+      // 过滤重复 SIGNED_IN 事件，避免无意义 loading 闪烁
       if (event === 'SIGNED_IN' && session?.user && session.user.id === userRef.current?.id && !!userRef.current) {
-        // 静默更新 session，不触发 loading
         setSession(session);
         return;
       }
 
-      // 添加超时保护
+      // 二次保护，保证状态切换不会卡住
       const timeoutId = setTimeout(() => {
         setLoading(false);
       }, 5000);
@@ -229,7 +225,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setLoading(true);
         const currentUser = session?.user ?? null;
         
-        // 如果用户登出，清除所有状态
+        // 登出或会话丢失时，彻底清空本地认证状态
         if (event === 'SIGNED_OUT' || !session) {
           clearTimeout(timeoutId);
           setSession(null);
@@ -243,11 +239,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(currentUser);
         
-        // 尝试加载用户资料，添加超时保护（但不显示警告）
+        // 登录后异步拉取资料，失败不影响会话本身
         if (currentUser) {
           try {
             const profilePromise = loadUserProfile(currentUser);
-            // 缩短超时时间，静默处理（不显示警告）
             const timeoutPromise = new Promise<void>((resolve) => {
               setTimeout(() => {
                 // 静默超时，不显示警告
@@ -257,7 +252,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             await Promise.race([profilePromise, timeoutPromise]);
           } catch (profileError) {
             console.error('加载用户资料时出错', profileError);
-            // 如果是 401/403 错误，可能是权限问题，清除状态让用户重新登录
+            // 明确权限错误时强制登出，避免停留在半登录状态
             if (profileError instanceof Error && 
                 (profileError.message.includes('401') || 
                  profileError.message.includes('403') ||
@@ -295,6 +290,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      // 仅执行认证，资料加载由 onAuthStateChange 统一接管
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       return { error: null };
@@ -318,6 +314,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const createdUser = data.user;
       if (createdUser) {
+        // 注册成功后预写 users 资料，减少首次登录额外步骤
         const defaultProfile = createDefaultProfile(createdUser);
         defaultProfile.full_name = name;
         const { error: insertError } = await supabase.from('users').upsert(defaultProfile);
@@ -335,6 +332,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      // 立即清理本地状态，让 UI 快速回到未登录态
       setUser(null);
       setUserProfile(null);
       setUserRole(null);

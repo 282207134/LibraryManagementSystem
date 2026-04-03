@@ -9,6 +9,7 @@ export interface BookWithStats extends Book {
 }
 
 export const useHomeData = () => {
+  // 首页聚合数据状态（推荐/排行/新书/分类）
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,14 +19,14 @@ export const useHomeData = () => {
       setLoading(true);
       setError(null);
 
-      // 先获取有评分的图书及其平均分
+      // 第一步：读取评论数据并在前端聚合评分
       const { data: reviewsData, error: reviewsError } = await supabase
         .from('reviews')
         .select('book_id, rating');
 
       if (reviewsError) throw reviewsError;
 
-      // 计算每本书的平均评分
+      // 计算每本书的评分总和与数量
       const bookRatings = new Map<string, { sum: number; count: number }>();
       reviewsData?.forEach((review) => {
         const existing = bookRatings.get(review.book_id) || { sum: 0, count: 0 };
@@ -35,7 +36,7 @@ export const useHomeData = () => {
         });
       });
 
-      // 筛选平均分 >= 4.0 的图书
+      // 第二步：筛出高分书
       const highRatedBookIds: string[] = [];
       bookRatings.forEach((stats, bookId) => {
         const avgRating = stats.sum / stats.count;
@@ -51,11 +52,11 @@ export const useHomeData = () => {
         });
       }
 
-      // 随机打乱并取前 limit 个
+      // 第三步：随机打散，避免推荐列表固定不变
       const shuffled = highRatedBookIds.sort(() => Math.random() - 0.5).slice(0, limit);
 
       if (shuffled.length === 0) {
-        // 如果还是没有，返回最近添加的图书
+        // 无评分数据时回退到“最新上架”
         const { data: booksData } = await supabase
           .from('books')
           .select('*')
@@ -71,7 +72,7 @@ export const useHomeData = () => {
 
       if (booksError) throw booksError;
 
-      // 添加评分信息
+      // 第四步：把聚合评分信息合并回图书实体
       return (booksData || []).map((book) => {
         const ratingStats = bookRatings.get(book.id);
         const avgRating = ratingStats ? ratingStats.sum / ratingStats.count : 0;
@@ -97,7 +98,7 @@ export const useHomeData = () => {
       setLoading(true);
       setError(null);
 
-      // 统计每本书的借阅次数
+      // 人气榜核心：统计每本书被借阅次数
       const { data: borrowData, error: borrowError } = await supabase
         .from('borrowing_records')
         .select('book_id');
@@ -110,14 +111,14 @@ export const useHomeData = () => {
         borrowCounts.set(record.book_id, count + 1);
       });
 
-      // 获取图书信息
+      // 拉取图书基础信息
       const { data: allBooks, error: booksError } = await supabase
         .from('books')
         .select('*');
 
       if (booksError) throw booksError;
 
-      // 添加借阅次数并排序
+      // 合并借阅次数并按降序排序
       const booksWithCounts = (allBooks || [])
         .map((book) => ({
           ...book,
@@ -171,6 +172,7 @@ export const useHomeData = () => {
 
       if (fetchError) throw fetchError;
 
+      // 去重、去空并排序，供分类标签展示
       const categories = [...new Set((data || []).map((book) => book.category).filter(Boolean))];
       return categories.sort();
     } catch (err) {

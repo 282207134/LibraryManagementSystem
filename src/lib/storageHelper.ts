@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient';
 
+// 统一管理图书封面所在存储桶
 const BUCKET_NAME = 'book-covers';
 const STORAGE_OBJECT_SEGMENT = '/storage/v1/object/';
 const SIGNED_URL_EXPIRY_SECONDS = 60 * 60; // 1 hour
@@ -17,6 +18,10 @@ type StoragePathInfo = {
 
 const normalizePath = (path: string): string => path.replace(/^\/+/, '');
 
+// 兼容三类输入：
+// 1) 纯路径（covers/xxx.png）
+// 2) 完整 Supabase URL
+// 3) 非 storage 可识别内容（返回 null）
 const extractStoragePath = (input: string | null | undefined): StoragePathInfo | null => {
   if (!input) return null;
 
@@ -79,6 +84,8 @@ const getPublicUrl = (bucket: string, path: string): string | null => {
   return data?.publicUrl ?? null;
 };
 
+// 对外提供“可直接展示”的封面 URL：
+// 优先签名地址，失败后回退 public URL，最后回退原值
 export const resolveCoverImageUrl = async (source?: string | null): Promise<string | null> => {
   if (!source) return null;
 
@@ -111,6 +118,7 @@ export const resolveCoverImageUrl = async (source?: string | null): Promise<stri
 
 export const uploadBookCover = async (file: File): Promise<UploadImageResult> => {
   try {
+    // 通过时间戳 + 随机串生成文件名，降低冲突概率
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
     const filePath = `covers/${fileName}`;
@@ -126,6 +134,7 @@ export const uploadBookCover = async (file: File): Promise<UploadImageResult> =>
       console.error('Upload error:', uploadError);
       const errorMsg = uploadError.message || '上传失败';
 
+      // 针对常见配置错误给出可操作提示
       if (/bucket/i.test(errorMsg) && /not\sfound|does\snot\sexist/i.test(errorMsg)) {
         return {
           url: null,
@@ -145,6 +154,7 @@ export const uploadBookCover = async (file: File): Promise<UploadImageResult> =>
 
     const normalizedPath = normalizePath(uploadData.path);
 
+    // 上传成功后同时尝试签名链接与公共链接，提升可访问性
     const signedUrl = await createSignedUrl(BUCKET_NAME, normalizedPath);
     const publicUrl = getPublicUrl(BUCKET_NAME, normalizedPath);
 
@@ -166,6 +176,7 @@ export const uploadBookCover = async (file: File): Promise<UploadImageResult> =>
 export const deleteBookCover = async (imageIdentifier: string | null): Promise<boolean> => {
   if (!imageIdentifier) return true;
 
+  // 接收路径或 URL，统一解析后执行删除
   const storagePath = extractStoragePath(imageIdentifier);
   if (!storagePath) {
     console.warn('Unable to resolve storage path for cover image, skipping deletion');
@@ -188,6 +199,7 @@ export const deleteBookCover = async (imageIdentifier: string | null): Promise<b
 };
 
 export const validateImageFile = (file: File): string | null => {
+  // 前端基础校验，减少无效上传请求
   const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
   const maxSize = 5 * 1024 * 1024;
 

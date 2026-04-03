@@ -9,6 +9,7 @@ import type { Book } from '../types/book';
 import type { BookWithStats } from '../hooks/useHomeData';
 
 export const UserDashboard = () => {
+  // 首页聚合数据读取函数
   const { 
     getRecommendedBooks, 
     getPopularBooks, 
@@ -17,6 +18,7 @@ export const UserDashboard = () => {
     getBooksByCategory
   } = useHomeData();
 
+  // 仪表盘分区数据状态
   const [recommendedBooks, setRecommendedBooks] = useState<BookWithStats[]>([]);
   const [popularBooks, setPopularBooks] = useState<BookWithStats[]>([]);
   const [newBooks, setNewBooks] = useState<Book[]>([]);
@@ -29,6 +31,7 @@ export const UserDashboard = () => {
     const loadHomeData = async () => {
       setLoading(true);
       try {
+        // 并行请求多个板块数据，缩短首屏等待时间
         const [recommended, popular, newBooksData, categoriesData] = await Promise.all([
           getRecommendedBooks(8),
           getPopularBooks(4),
@@ -58,6 +61,7 @@ export const UserDashboard = () => {
     loadHomeData();
   }, [getRecommendedBooks, getPopularBooks, getNewBooks, getCategories, getBooksByCategory]);
 
+  // 用户切换分类时，动态刷新分类图书列表
   const handleCategoryClick = async (category: string) => {
     setSelectedCategory(category);
     const books = await getBooksByCategory(category, 20);
@@ -154,11 +158,13 @@ interface NewBooksGridProps {
 }
 
 const NewBooksGrid = ({ books }: NewBooksGridProps) => {
+  // 缓存封面解析结果，避免重复解析同一 URL
   const [coverUrls, setCoverUrls] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     const loadCovers = async () => {
       const urlMap = new Map<string, string>();
+      // 顺序解析封面，失败不影响其他书籍展示
       for (const book of books) {
         if (book.cover_image_url) {
           try {
