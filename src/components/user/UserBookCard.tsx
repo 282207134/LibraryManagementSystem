@@ -58,6 +58,15 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
 
   const handleBorrow = async () => {
     if (!user) return;
+
+    if (
+      !window.confirm(
+        `确定借阅《${book.title}》吗？\n确认后将占用您的借阅名额并更新可借数量。`
+      )
+    ) {
+      return;
+    }
+
     setLoading(true);
 
     let dueDate: string | undefined;

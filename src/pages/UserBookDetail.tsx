@@ -98,8 +98,16 @@ export const UserBookDetail = () => {
   }, [id, user, hasUserBorrowedBook, isBookFavorited]);
 
   const handleBorrow = async () => {
-    if (!user || !id) return;
-    
+    if (!user || !id || !book) return;
+
+    if (
+      !window.confirm(
+        `确定借阅《${book.title}》吗？`
+      )
+    ) {
+      return;
+    }
+
     setBorrowLoading(true);
     const result = await borrowBook(id, user.id);
     setBorrowLoading(false);
