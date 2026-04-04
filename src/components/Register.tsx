@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { BrandLogo } from './BrandLogo';
 
 interface RegisterProps {
   onToggleMode: () => void;
@@ -54,6 +55,9 @@ export const Register = ({ onToggleMode }: RegisterProps) => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-8">
         <div className="text-center mb-8">
+          <div className="mx-auto mb-4 flex justify-center">
+            <BrandLogo size="md" className="ring-2 ring-gray-200" />
+          </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">图书管理系统</h1>
           <p className="text-gray-600">创建新的账户</p>
         </div>

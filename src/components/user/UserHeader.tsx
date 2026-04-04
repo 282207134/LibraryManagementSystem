@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { BrandLogo } from '../BrandLogo';
 
 export const UserHeader = () => {
   const { user, userProfile, userRole, signOut } = useAuth();
@@ -36,8 +37,12 @@ export const UserHeader = () => {
       <div className="max-w-[72rem] mx-auto px-3 py-3">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center space-x-6 flex-shrink-0">
-            <Link to="/user/dashboard" className="text-lg font-bold text-cyan-300 drop-shadow">
-              📚 图书馆
+            <Link
+              to="/user/dashboard"
+              className="flex items-center gap-2 text-lg font-bold text-cyan-300 drop-shadow hover:opacity-90 transition-opacity"
+            >
+              <BrandLogo size="sm" className="ring-1 ring-cyan-400/40" />
+              <span>图书馆</span>
             </Link>
             <nav className="hidden md:flex items-center space-x-4">
               <Link

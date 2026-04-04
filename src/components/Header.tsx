@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { BrandLogo } from './BrandLogo';
 
 export const Header = () => {
   const { user, signOut, userRole } = useAuth();
@@ -23,6 +24,7 @@ export const Header = () => {
       <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
+            <BrandLogo size="sm" className="ring-1 ring-cyan-400/35 flex-shrink-0" />
             <div>
               <h1 className="text-2xl font-bold text-cyan-100">图书管理系统</h1>
               <p className="text-sm text-cyan-100/70">管理和查看您的图书收藏</p>

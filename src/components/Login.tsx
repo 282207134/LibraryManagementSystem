@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { BrandLogo } from './BrandLogo';
 import { ForgotPassword } from './ForgotPassword';
 
 interface LoginProps {
@@ -51,8 +52,8 @@ export const Login = ({ onToggleMode }: LoginProps) => {
 
       <div className="relative w-full max-w-md rounded-3xl border border-white/15 bg-white/10 backdrop-blur-xl shadow-[0_20px_80px_-20px_rgba(56,189,248,0.6)] p-8 text-white">
         <div className="text-center mb-8">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-violet-500 text-xl shadow-lg shadow-cyan-500/40">
-            📚
+          <div className="mx-auto mb-4 flex justify-center">
+            <BrandLogo size="md" className="ring-2 ring-white/20" />
           </div>
           <h1 className="text-3xl font-bold mb-2 tracking-wide">图书馆</h1>
           <p className="text-cyan-100/80">登录您的账户</p>
