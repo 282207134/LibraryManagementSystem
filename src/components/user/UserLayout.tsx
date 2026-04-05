@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom';
+import { ChatAssistant } from '../assistant/ChatAssistant';
 import { UserHeader } from './UserHeader';
 
 export const UserLayout = () => {
@@ -12,6 +13,7 @@ export const UserLayout = () => {
       <main className="max-w-[72rem] mx-auto px-3 py-4">
         <Outlet />
       </main>
+      <ChatAssistant />
     </div>
   );
 };
