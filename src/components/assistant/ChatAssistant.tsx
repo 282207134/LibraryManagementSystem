@@ -216,7 +216,7 @@ export const ChatAssistant = () => {
 
       {open ? (
         <div
-          className="fixed bottom-24 right-5 z-40 flex w-[min(100vw-2.5rem,26rem)] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0b1024]/95 shadow-2xl shadow-black/50 backdrop-blur-xl"
+          className="fixed bottom-24 right-5 z-40 flex w-[min(100vw-2.5rem,20rem)] flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#354f72]/92 shadow-2xl shadow-black/40 backdrop-blur-xl"
           role="dialog"
           aria-label="AI 助手对话"
         >
@@ -256,7 +256,7 @@ export const ChatAssistant = () => {
                       {m.books.map((b) => (
                         <li
                           key={b.id}
-                          className="rounded-lg border border-cyan-500/15 bg-[#060a19]/90 px-2.5 py-2"
+                          className="rounded-lg border border-cyan-500/20 bg-[#2a3f5c]/95 px-2.5 py-2"
                         >
                           <Link
                             to={`/user/books/${b.id}`}
@@ -306,7 +306,7 @@ export const ChatAssistant = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="输入问题…"
-              className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#060a19] px-3 py-2 text-sm text-white placeholder:text-white/35 focus:border-cyan-500/50 focus:outline-none"
+              className="min-w-0 flex-1 rounded-xl border border-white/15 bg-[#2a3f5c] px-3 py-2 text-sm text-white placeholder:text-white/35 focus:border-cyan-500/50 focus:outline-none"
               disabled={sending}
             />
             <button
