@@ -12,7 +12,7 @@ interface UserStats {
 }
 
 export const UserProfile = () => {
-  const { user, userProfile, refreshUserProfile, signOut } = useAuth();
+  const { user, userProfile, refreshUserProfile } = useAuth();
   const { getUserBorrowings } = useBorrowings();
   const { getUserFavorites } = useFavorites();
 
@@ -165,13 +165,6 @@ export const UserProfile = () => {
     }
   };
 
-  const handleSignOut = async () => {
-    if (window.confirm('确定要退出登录吗？')) {
-      await signOut();
-      window.location.href = '/';
-    }
-  };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('zh-CN', {
@@ -201,8 +194,8 @@ export const UserProfile = () => {
     <div className="max-w-3xl mx-auto space-y-3">
       {/* 页面标题 */}
       <div className="mb-3">
-        <h1 className="text-xl font-bold text-gray-900 mb-1">个人中心</h1>
-        <p className="text-sm text-gray-600">管理您的账户信息和偏好设置</p>
+        <h1 className="text-xl font-bold text-gray-100 mb-1">个人中心</h1>
+        <p className="text-sm text-gray-300">管理您的账户信息和偏好设置</p>
       </div>
 
       {/* 成功/错误提示（不包括密码错误） */}
@@ -340,7 +333,7 @@ export const UserProfile = () => {
                   type="text"
                   value={profileForm.full_name}
                   onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-1.5 text-sm text-gray-900 placeholder-gray-500 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="请输入您的姓名"
                 />
               </div>
@@ -351,7 +344,7 @@ export const UserProfile = () => {
                   type="tel"
                   value={profileForm.phone}
                   onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-1.5 text-sm text-gray-900 placeholder-gray-500 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="请输入您的电话号码（可选）"
                 />
               </div>
@@ -361,7 +354,7 @@ export const UserProfile = () => {
                 <textarea
                   value={profileForm.address}
                   onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })}
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-1.5 text-sm text-gray-900 placeholder-gray-500 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows={2}
                   placeholder="请输入您的地址（可选）"
                 />
@@ -442,7 +435,7 @@ export const UserProfile = () => {
                 onChange={(e) =>
                   setPasswordForm({ ...passwordForm, currentPassword: e.target.value })
                 }
-                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-1.5 text-sm text-gray-900 placeholder-gray-500 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="请输入当前密码"
               />
             </div>
@@ -455,7 +448,7 @@ export const UserProfile = () => {
                 onChange={(e) =>
                   setPasswordForm({ ...passwordForm, newPassword: e.target.value })
                 }
-                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-1.5 text-sm text-gray-900 placeholder-gray-500 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="请输入新密码（至少6位）"
               />
             </div>
@@ -468,7 +461,7 @@ export const UserProfile = () => {
                 onChange={(e) =>
                   setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })
                 }
-                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-1.5 text-sm text-gray-900 placeholder-gray-500 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="请再次输入新密码"
               />
             </div>
@@ -483,21 +476,6 @@ export const UserProfile = () => {
         )}
       </div>
 
-      {/* 操作按钮 */}
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-0.5">账户操作</h3>
-            <p className="text-xs text-gray-500">退出登录后将清除本地会话</p>
-          </div>
-          <button
-            onClick={handleSignOut}
-            className="px-5 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-          >
-            退出登录
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

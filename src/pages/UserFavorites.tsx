@@ -72,8 +72,8 @@ export const UserFavorites = () => {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">我的收藏</h1>
-        <p className="text-gray-600">收藏的图书会保存在这里</p>
+        <h1 className="text-3xl font-bold text-gray-100 mb-2">我的收藏</h1>
+        <p className="text-gray-300">收藏的图书会保存在这里</p>
       </div>
 
       {favorites.length === 0 ? (
@@ -87,13 +87,13 @@ export const UserFavorites = () => {
           </Link>
         </div>
       ) : (
-        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {favorites.map((favorite) => (
             <div
               key={favorite.id}
               className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
             >
-              <Link to={`/user/books/${favorite.book_id}`} className="block aspect-[3/4] bg-gray-200 overflow-hidden relative">
+              <Link to={`/user/books/${favorite.book_id}`} className="block aspect-3/4 bg-gray-200 overflow-hidden relative">
                 <FavoriteBookCover coverUrl={favorite.books?.cover_image_url} title={favorite.books?.title || '未知图书'} />
               </Link>
               <div className="p-4">
