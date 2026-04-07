@@ -13,6 +13,8 @@ export const Header = () => {
   };
 
   const handleSignOut = async () => {
+    const shouldSignOut = window.confirm('确定要退出登录吗？');
+    if (!shouldSignOut) return;
     const { error } = await signOut();
     if (error) {
       alert(`退出登录失败：${error.message}`);
@@ -72,7 +74,7 @@ export const Header = () => {
               onClick={handleSignOut}
               className="px-4 py-2 text-sm rounded-xl text-rose-100 border border-rose-300/30 bg-rose-500/15 hover:bg-rose-500/25 transition-colors"
             >
-              退出登录
+              退出
             </button>
           </div>
         </div>

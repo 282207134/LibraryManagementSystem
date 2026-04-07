@@ -22,6 +22,8 @@ export const UserHeader = () => {
   };
 
   const handleSignOut = async () => {
+    const shouldSignOut = window.confirm('确定要退出登录吗？');
+    if (!shouldSignOut) return;
     await signOut();
   };
 
@@ -115,7 +117,7 @@ export const UserHeader = () => {
                 onClick={handleSignOut}
                 className="px-4 py-2 text-sm text-cyan-50/90 hover:text-white hover:bg-white/10 rounded-lg transition-colors border border-white/10"
               >
-                登出
+                退出
               </button>
             </div>
           </div>
