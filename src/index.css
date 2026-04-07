@@ -1,1 +1,75 @@
 @import "tailwindcss";
+
+.user-theme[data-theme='light'] {
+  color: #1f2937;
+}
+
+.user-theme[data-theme='light'] main {
+  color: #1f2937;
+}
+
+/* Light mode: keep cards bright and readable on warm background */
+.user-theme[data-theme='light'] main [class*='bg-white'] {
+  background-color: #fffdf7 !important;
+}
+
+.user-theme[data-theme='light'] main [class*='shadow'] {
+  box-shadow: 0 10px 24px -18px rgba(107, 72, 28, 0.35) !important;
+}
+
+.user-theme[data-theme='light'] main [class*='text-gray-100'],
+.user-theme[data-theme='light'] main [class*='text-cyan-50'],
+.user-theme[data-theme='light'] main [class*='text-cyan-100'] {
+  color: #111827 !important;
+}
+
+.user-theme[data-theme='light'] main [class*='text-gray-300'],
+.user-theme[data-theme='light'] main [class*='text-gray-500'],
+.user-theme[data-theme='light'] main [class*='text-gray-600'] {
+  color: #4b5563 !important;
+}
+
+/* User home light surfaces */
+.user-theme[data-theme='light'] .user-home-hero {
+  background-color: #fffdf7 !important;
+  border-color: #f1e3c7 !important;
+}
+
+.user-theme[data-theme='light'] .user-book-list {
+  background-color: #fffaf0 !important;
+  border-color: #f1e3c7 !important;
+  box-shadow: 0 14px 40px -24px rgba(120, 90, 40, 0.22) !important;
+}
+
+.user-theme[data-theme='light'] .user-book-card {
+  background-color: #ffffff !important;
+  border-color: #ead8b5 !important;
+}
+
+.user-theme[data-theme='light'] .user-book-card .user-book-cover {
+  background-color: #f5ead6 !important;
+}
+
+.user-theme[data-theme='light'] .user-book-card h3 {
+  color: #111827 !important;
+}
+
+.user-theme[data-theme='light'] .user-book-card .user-book-meta {
+  color: #4b5563 !important;
+}
+
+.user-theme[data-theme='light'] .user-book-card .user-fav-btn {
+  background-color: #f3e8cf !important;
+  border: 1px solid #e5cf9d;
+  color: #7c5a1f !important;
+}
+
+.user-theme[data-theme='light'] .user-book-card .user-fav-btn:hover {
+  background-color: #ead6ab !important;
+}
+
+.user-theme[data-theme='light'] .user-book-card .user-fav-btn.user-fav-btn-active {
+  background-color: #f6c453 !important;
+  border-color: #e2ad3f;
+  color: #6a4208 !important;
+}

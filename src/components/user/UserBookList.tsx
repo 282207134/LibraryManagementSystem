@@ -34,7 +34,7 @@ export const UserBookList = ({
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-[#0b1228]/75 p-4 md:p-5 shadow-[0_14px_40px_-24px_rgba(0,0,0,0.8)]">
+    <div className="user-book-list rounded-2xl border border-white/10 bg-[#0b1228]/75 p-4 md:p-5 shadow-[0_14px_40px_-24px_rgba(0,0,0,0.8)]">
       <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5">
         {books.map((book) => (
           <UserBookCard key={book.id} book={book} onBorrowSuccess={onBorrowSuccess} />

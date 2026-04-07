@@ -129,10 +129,10 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
   const isAvailable = book.available_quantity > 0;
 
   return (
-    <div className="group relative rounded-2xl border border-white/10 bg-[#0f1630]/80 backdrop-blur-sm overflow-hidden hover:border-cyan-300/40 hover:shadow-[0_16px_50px_-20px_rgba(34,211,238,0.55)] transition-all flex flex-col w-full h-full">
+    <div className="user-book-card group relative rounded-2xl border border-white/10 bg-[#0f1630]/80 backdrop-blur-sm overflow-hidden hover:border-cyan-300/40 hover:shadow-[0_16px_50px_-20px_rgba(34,211,238,0.55)] transition-all flex flex-col w-full h-full">
       <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.16),transparent_50%)]" />
       {/* 封面区域 - 增加高度使卡片更高 */}
-      <Link to={`/user/books/${book.id}`} className="block h-48 bg-slate-900 overflow-hidden flex-shrink-0 relative cursor-pointer">
+      <Link to={`/user/books/${book.id}`} className="user-book-cover block h-48 bg-slate-900 overflow-hidden flex-shrink-0 relative cursor-pointer">
         {coverImageUrl ? (
           <img
             src={coverImageUrl}
@@ -158,9 +158,9 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
             {book.title}
           </h3>
         </Link>
-        <p className="text-cyan-100/70 text-xs mt-0.5 truncate">作者：{book.author}</p>
+        <p className="user-book-meta text-cyan-100/70 text-xs mt-0.5 truncate">作者：{book.author}</p>
         {book.category && (
-          <p className="text-cyan-100/60 text-xs mt-0.5">分类：{book.category}</p>
+          <p className="user-book-meta text-cyan-100/60 text-xs mt-0.5">分类：{book.category}</p>
         )}
         {averageRating !== null && (
           <div className="mt-1.5">
@@ -187,9 +187,9 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
           <button
             onClick={handleToggleFavorite}
             disabled={loading}
-            className={`px-2 py-1.5 rounded transition-colors ${
+            className={`user-fav-btn px-2 py-1.5 rounded transition-colors ${
               isFavorite
-                ? 'bg-amber-300/25 text-amber-200 hover:bg-amber-300/35'
+                ? 'user-fav-btn-active bg-amber-300/25 text-amber-200 hover:bg-amber-300/35'
                 : 'bg-white/10 text-cyan-100/80 hover:bg-white/20'
             }`}
             title={isFavorite ? '取消收藏' : '收藏'}

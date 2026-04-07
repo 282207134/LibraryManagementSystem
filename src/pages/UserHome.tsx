@@ -18,7 +18,7 @@ export const UserHome = () => {
 
   return (
     <div>
-      <div className="mb-6 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+      <div className="user-home-hero mb-2 rounded-2xl border border-white/10 bg-white/5 p-3 backdrop-blur-sm">
         <h1 className="text-2xl font-bold text-cyan-50 mb-2">图书浏览</h1>
       </div>
 
