@@ -103,6 +103,7 @@ export const UserHeader = ({ isLightTheme, onToggleTheme }: UserHeaderProps) => 
           
           <div className="flex items-center space-x-3 flex-shrink-0">
               <button
+                type="button"
                 onClick={onToggleTheme}
                 title={isLightTheme ? '切换到深色主题' : '切换到浅色主题'}
                 aria-label={isLightTheme ? '切换到深色主题' : '切换到浅色主题'}
