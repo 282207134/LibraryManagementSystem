@@ -98,7 +98,7 @@ export const UserDashboard = () => {
         <div className="lg:col-span-2">
           <div className="user-dashboard-section rounded-2xl border border-white/10 bg-[#0d142d]/80 shadow-[0_16px_42px_-24px_rgba(0,0,0,0.9)] overflow-hidden h-full flex flex-col">
             <div className="user-dashboard-section-header p-5 border-b border-white/10 flex-shrink-0">
-              <h2 className="text-xl font-bold text-cyan-50">📚 新上架</h2>
+              <h2 className="text-xl font-bold text-cyan-50">新上架</h2>
             </div>
             <div className="p-5 flex-1">
               <NewBooksGrid books={newBooks} />
@@ -111,7 +111,7 @@ export const UserDashboard = () => {
       {categories.length > 0 && (
         <div className="user-dashboard-section rounded-2xl border border-white/10 bg-[#0d142d]/80 shadow-[0_16px_42px_-24px_rgba(0,0,0,0.9)] overflow-hidden">
           <div className="user-dashboard-section-header p-5 border-b border-white/10">
-            <h2 className="text-xl font-bold text-cyan-50">📖 分类浏览</h2>
+            <h2 className="text-xl font-bold text-cyan-50">分类浏览</h2>
           </div>
           <div className="p-5">
             <div className="flex flex-wrap gap-2.5 mb-5">
