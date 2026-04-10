@@ -7,5 +7,5 @@
 .env.local
 .env.*.local
 
-# Edge Functions 本地密钥（ollama-chat 等）
+# Edge Functions 本地密钥（ai-chat 等）
 functions/.env

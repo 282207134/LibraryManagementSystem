@@ -35,7 +35,7 @@ type BookBatchMeta = {
 type BookPayload = { id: string; title: string; blurb: string };
 
 const BOOK_INTENT_RE =
-  /书|小说|推荐|馆藏|科幻|图书|借阅|作者|分类|册|借|找几|哪些|什么书|书目|读本|看看|热门|人气|排行/i;
+  /书|本|小说|推荐|馆藏|科幻|图书|借阅|作者|分类|册|借|找几|哪些|什么书|书目|读本|看看|热门|人气|排行|有没有|查找|搜索|借书|藏书|図書|蔵書|ありますか|おすすめ|小説|勉強|学習|探し|読みたい|book|books|novel|recommend|library|catalog|author|find/i;
 
 function jsonRes(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -78,14 +78,80 @@ function escapeIlike(s: string): string {
   return s.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
 }
 
-function relevanceScore(book: BookRow, query: string): number {
+function extractSearchKeywords(raw: string): string[] {
+  const out: string[] = [];
+  for (const m of raw.matchAll(/《([^》]{1,60})》/g)) {
+    const x = m[1].trim();
+    if (x.length >= 1) out.push(x);
+  }
+  for (const m of raw.matchAll(/「([^」]{1,60})」/g)) {
+    const x = m[1].trim();
+    if (x.length >= 1) out.push(x);
+  }
+  for (const m of raw.matchAll(/『([^』]{1,60})』/g)) {
+    const x = m[1].trim();
+    if (x.length >= 1) out.push(x);
+  }
+  let s = raw
+    .replace(/《[^》]*》/g, " ")
+    .replace(/「[^」]*」/g, " ")
+    .replace(/『[^』]*』/g, " ");
+  const phraseStops = [
+    "这本书", "哪本书", "什么书", "几本", "一本", "有没有", "可不可以", "请问",
+    "是否", "帮我", "帮我找", "查找", "搜索", "想找", "馆藏", "图书馆", "推荐一下",
+    "有没", "的吗", "这本", "那本", "哪些", "什么类型", "想看", "想借", "在馆",
+    "有没有这", "有没有那",
+    "この本", "その本", "ありますか", "あります", "探しています", "探している",
+    "おすすめ", "教えて", "ください", "図書館", "蔵書", "本が", "本を", "本は",
+    "勉強の", "学習の", "小説の",
+  ];
+  for (const p of phraseStops.sort((a, b) => b.length - a.length)) {
+    s = s.split(p).join(" ");
+  }
+  s = s.replace(
+    /[？?！!，,。.、；;：:""'（）()\[\]【】\s\n\r]+/g,
+    " ",
+  );
+  s = s.replace(/^有(?=[\u4e00-\u9fff])/g, " ");
+  s = s.replace(/吗\s*$/g, " ").replace(/呢\s*$/g, " ").replace(/か\s*$/g, " ");
+
+  for (const m of s.matchAll(/[\u4e00-\u9fff]{2,24}/g)) {
+    out.push(m[0]);
+  }
+  for (const m of s.matchAll(/[\u3040-\u30ff\u31f0-\u31ff\u4e00-\u9fff]{2,30}/g)) {
+    out.push(m[0]);
+  }
+  for (const m of s.matchAll(/[A-Za-z][A-Za-z\s\-]{2,40}/g)) {
+    const w = m[0].trim();
+    if (w.replace(/\s/g, "").length >= 3) out.push(w);
+  }
+
+  const seen = new Set<string>();
+  const deduped: string[] = [];
+  for (const x of out) {
+    const k = x.trim();
+    if (k.length < 2) continue;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    deduped.push(k);
+  }
+  return deduped;
+}
+
+function relevanceScore(book: BookRow, query: string, keywords: string[]): number {
   const q = query.trim().toLowerCase();
-  if (q.length < 1) return 1;
   const t = (book.title ?? "").toLowerCase();
   const a = (book.author ?? "").toLowerCase();
   const c = (book.category ?? "").toLowerCase();
   const d = (book.description ?? "").toLowerCase();
   let s = 0;
+  const kws = keywords.map((x) => x.trim().toLowerCase()).filter((x) => x.length >= 2);
+  for (const kw of kws) {
+    if (t.includes(kw)) s += t === kw ? 55 : 32;
+    if (a.includes(kw)) s += 18;
+    if (c.includes(kw)) s += 16;
+    if (d.includes(kw)) s += 12;
+  }
   if (q.length >= 2 && t.includes(q)) s += 25;
   if (q.length >= 2 && d.includes(q)) s += 12;
   if (q.length >= 2 && c.includes(q)) s += 18;
@@ -105,19 +171,32 @@ async function fetchBooksPool(
 ): Promise<BookRow[]> {
   const sel =
     "id,title,author,category,publication_year,description,available_quantity,quantity,created_at";
-  // PostgREST .or() 以逗号分隔条件，查询里不能含裸逗号
-  const q = query.trim().replace(/,/g, " ").slice(0, 56).trim();
-  if (q.length >= 1) {
-    const esc = escapeIlike(q);
-    const { data, error } = await supabase
-      .from("books")
-      .select(sel)
-      .or(
-        `title.ilike.%${esc}%,author.ilike.%${esc}%,category.ilike.%${esc}%,description.ilike.%${esc}%`,
-      )
-      .order("created_at", { ascending: false })
-      .limit(FETCH_POOL);
-    if (!error && data && data.length > 0) return data as BookRow[];
+  const keywords = extractSearchKeywords(query);
+  const qFallback = query.trim().replace(/,/g, " ").slice(0, 56).trim();
+  const terms = keywords.length > 0
+    ? keywords.map((x) => x.replace(/,/g, " ").trim().slice(0, 56)).filter((x) =>
+      x.length >= 1
+    )
+    : (qFallback.length >= 1 ? [qFallback] : []);
+  if (terms.length >= 1) {
+    const orParts: string[] = [];
+    for (const term of terms.slice(0, 12)) {
+      const esc = escapeIlike(term);
+      if (!esc) continue;
+      orParts.push(`title.ilike.%${esc}%`);
+      orParts.push(`author.ilike.%${esc}%`);
+      orParts.push(`category.ilike.%${esc}%`);
+      orParts.push(`description.ilike.%${esc}%`);
+    }
+    if (orParts.length > 0) {
+      const { data, error } = await supabase
+        .from("books")
+        .select(sel)
+        .or(orParts.join(","))
+        .order("created_at", { ascending: false })
+        .limit(FETCH_POOL);
+      if (!error && data && data.length > 0) return data as BookRow[];
+    }
   }
   const { data: all } = await supabase
     .from("books")
@@ -148,12 +227,13 @@ function rankBooks(
   books: BookRow[],
   query: string,
   reviewMap: Map<string, { count: number; sum: number }>,
+  keywords: string[],
 ): BookRow[] {
   const q = query.trim();
   const scored = books.map((b) => {
     const r = reviewMap.get(b.id) ?? { count: 0, sum: 0 };
     const avg = r.count > 0 ? r.sum / r.count : 0;
-    const rel = relevanceScore(b, q);
+    const rel = relevanceScore(b, q, keywords);
     const hot = r.count * 100 + avg * 15 + rel;
     return { b, hot };
   });
@@ -173,13 +253,82 @@ function toBookPayload(b: BookRow): BookPayload {
   };
 }
 
-function formatBatchForPrompt(batch: BookRow[]): string {
-  return batch
-    .map((b, i) => {
-      const snip = (b.description ?? "").replace(/\s+/g, " ").slice(0, 70);
-      return `${i + 1}. id=${b.id} 《${b.title}》 ${b.author} ${b.category ?? ""} ${snip}`;
-    })
-    .join("\n");
+type UiLang = "zh" | "ja" | "en";
+
+function detectLanguage(text: string): UiLang {
+  if (/[\u3040-\u30ff]/.test(text)) return "ja";
+  if (/[\u4e00-\u9fff]/.test(text)) return "zh";
+  return "en";
+}
+
+function isExistenceQuery(text: string): boolean {
+  return /有没有|有.*吗|在馆|ありますか|ある\?|あります\?|do you have|is there/i.test(text);
+}
+
+function findTitleMatches(books: BookRow[], keywords: string[]): BookRow[] {
+  if (keywords.length === 0) return [];
+  const kws = keywords.map((x) => x.toLowerCase());
+  return books.filter((b) => {
+    const t = (b.title ?? "").toLowerCase();
+    return kws.some((kw) => t.includes(kw) || kw.includes(t));
+  });
+}
+
+function buildGroundedBookReply(
+  query: string,
+  pageBooks: BookRow[],
+  allRanked: BookRow[],
+  total: number,
+  hasMore: boolean,
+  keywords: string[],
+): string {
+  const lang = detectLanguage(query);
+  const matchesAll = findTitleMatches(allRanked, keywords);
+  const pageSet = new Set(pageBooks.map((b) => b.id));
+  const matchesOnPage = matchesAll.filter((b) => pageSet.has(b.id));
+
+  if (isExistenceQuery(query) && keywords.length > 0) {
+    const asked = keywords[0];
+    if (matchesOnPage.length > 0) {
+      if (lang === "ja") {
+        return `「${asked}」は所蔵があります。下のカードから該当書籍を開いて詳細をご確認ください。`;
+      }
+      if (lang === "en") {
+        return `Yes, we have "${asked}" in the catalog. Please open the matching card below for details.`;
+      }
+      return `馆藏中有《${asked}》相关书目。请点击下方对应卡片查看详情。`;
+    }
+    if (matchesAll.length > 0) {
+      if (lang === "ja") {
+        return `「${asked}」に一致する所蔵はありますが、このページには未表示です。下の結果を確認するか「换一批」で続きもご覧ください。`;
+      }
+      if (lang === "en") {
+        return `We do have matches for "${asked}", but they are not on this page. Check current cards or load the next batch.`;
+      }
+      return `馆藏中有《${asked}》的匹配记录，但当前页未展示。请先查看下方结果，或点击“换一批”继续。`;
+    }
+    if (lang === "ja") {
+      return `現在のデータでは「${asked}」は見つかりませんでした。書名・著者名をもう少し具体的にして再検索してください。`;
+    }
+    if (lang === "en") {
+      return `No record found for "${asked}" in the current catalog data. Please try a more specific title or author keyword.`;
+    }
+    return `当前数据库中未找到《${asked}》记录。请尝试更完整的书名或作者名后再搜索。`;
+  }
+
+  if (lang === "ja") {
+    return hasMore
+      ? `関連する蔵書が ${total} 件見つかりました。まず下の ${pageBooks.length} 件をご案内します。続きは「换一批」で表示できます。`
+      : `関連する蔵書が ${total} 件見つかりました。下のカードをご確認ください。`;
+  }
+  if (lang === "en") {
+    return hasMore
+      ? `Found ${total} related books in the catalog. Showing ${pageBooks.length} now; load next batch for more.`
+      : `Found ${total} related books in the catalog. Please check the cards below.`;
+  }
+  return hasMore
+    ? `已找到 ${total} 本相关图书，先展示当前 ${pageBooks.length} 本；可点击“换一批”查看后续结果。`
+    : `已找到 ${total} 本相关图书，请查看下方卡片。`;
 }
 
 async function buildAuthSupabase(
@@ -387,12 +536,13 @@ Deno.serve(async (req) => {
   }
 
   const { supabase } = authClient;
+  const searchKeywords = extractSearchKeywords(lastUser);
   const [pool, reviewMap] = await Promise.all([
     fetchBooksPool(supabase, lastUser),
     loadReviewStats(supabase),
   ]);
 
-  const ranked = rankBooks(pool, lastUser, reviewMap);
+  const ranked = rankBooks(pool, lastUser, reviewMap, searchKeywords);
   const total = ranked.length;
   const slice = ranked.slice(batchOffset, batchOffset + PAGE_SIZE);
   const hasMore = batchOffset + PAGE_SIZE < total;
@@ -419,35 +569,17 @@ Deno.serve(async (req) => {
   }
 
   const booksOut = slice.map(toBookPayload);
-  const catalogHint = formatBatchForPrompt(slice);
-
-  const systemBook = [
-    "你是图书馆智能助手。下面「本轮卡片」中的图书会由网页以**带链接的卡片**展示，每本书含书名与短简介。",
-    "",
-    "写作要求（必须遵守）：",
-    "1. 仅用 2～4 句中文作答，语气自然。",
-    "2. **禁止**使用 Markdown 列表、星号、项目符号、编号清单；**禁止**在正文里重复逐本写出书名、作者、出版年等（界面已展示）。",
-    "3. 只可概括推荐理由、阅读顺序或共同点；不要编造下列以外的图书。",
-    "",
-    "【本轮卡片将展示的图书（仅供你把握主题，勿在回复中展开书目）】",
-    catalogHint,
-  ].join("\n");
-
-  const llmMessages: Msg[] = [
-    { role: "system", content: systemBook },
-    ...dialog,
-  ];
-
-  const out = await runLlm(llmMessages, bodyModel);
-  if ("error" in out) {
-    return jsonRes(
-      { error: out.error, detail: out.detail },
-      out.status,
-    );
-  }
+  const groundedText = buildGroundedBookReply(
+    lastUser,
+    slice,
+    ranked,
+    total,
+    hasMore,
+    searchKeywords,
+  );
 
   return jsonRes({
-    message: { role: "assistant", content: out.content },
+    message: { role: "assistant", content: groundedText },
     books: booksOut,
     bookBatch: batchMeta,
   });

@@ -10,8 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "supabase:init": "npx supabase@latest init",
-    "supabase:functions:serve": "npx supabase@latest functions serve ollama-chat --no-verify-jwt --env-file supabase/functions/.env",
-    "supabase:functions:deploy": "npx supabase@latest functions deploy ollama-chat --use-api --project-ref fmilpfmdvpbpomygpxtz",
+    "supabase:functions:serve": "npx supabase@latest functions serve ai-chat --no-verify-jwt --env-file supabase/functions/.env",
+    "supabase:functions:deploy": "npx supabase@latest functions deploy ai-chat --use-api --project-ref fmilpfmdvpbpomygpxtz",
     "supabase:cloud:secrets": "npx supabase@latest secrets set --env-file supabase/functions/.env --project-ref fmilpfmdvpbpomygpxtz"
   },
   "dependencies": {

@@ -57,7 +57,7 @@ async function formatEdgeFunctionFailure(
   response: Response | null | undefined,
 ): Promise<string> {
   if (!response) {
-    return `${message}。请确认已部署 ollama-chat，已配置模型与密钥，并已执行 npm run supabase:cloud:secrets。`;
+    return `${message}。请确认已部�?ai-chat，已配置模型与密钥，并已执行 npm run supabase:cloud:secrets。`;
   }
   let body = '';
   try {
@@ -77,7 +77,7 @@ async function formatEdgeFunctionFailure(
     body = '(无法读取错误详情)';
   }
   const tail = body.length > 480 ? `${body.slice(0, 480)}…` : body;
-  return `${message}（HTTP ${response.status}）${tail ? `：${tail}` : ''}`;
+  return `${message}（HTTP ${response.status}�?{tail ? `�?{tail}` : ''}`;
 }
 
 function buildInvokeBody(
@@ -118,7 +118,7 @@ export const ChatAssistant = () => {
 
   const invokeChat = useCallback(
     async (history: ChatMessage[], bookBatchOffset?: number) => {
-      const { data, error, response } = await supabase.functions.invoke('ollama-chat', {
+      const { data, error, response } = await supabase.functions.invoke('ai-chat', {
         body: buildInvokeBody(history, bookBatchOffset),
       });
 
@@ -137,7 +137,7 @@ export const ChatAssistant = () => {
           hint:
             typeof data === 'object' && data !== null
               ? JSON.stringify(data)
-              : '未收到有效回复',
+              : '未收到有效回�?,
         };
       }
 
@@ -173,7 +173,7 @@ export const ChatAssistant = () => {
       setMessages((prev) => [...prev, result.message]);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      setMessages((prev) => [...prev, { role: 'assistant', content: `请求异常：${msg}` }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: `请求异常�?{msg}` }]);
     } finally {
       setSending(false);
     }
@@ -193,7 +193,7 @@ export const ChatAssistant = () => {
         setMessages((prev) => [...prev, result.message]);
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        setMessages((prev) => [...prev, { role: 'assistant', content: `请求异常：${msg}` }]);
+        setMessages((prev) => [...prev, { role: 'assistant', content: `请求异常�?{msg}` }]);
       } finally {
         setSending(false);
       }
@@ -274,8 +274,8 @@ export const ChatAssistant = () => {
                   {m.bookBatch?.hasMore && m.bookBatch.pageSize > 0 ? (
                     <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/10 pt-2">
                       <span className="text-[11px] text-white/40">
-                        共 {m.bookBatch.total} 本匹配，已看{' '}
-                        {m.bookBatch.offset + (m.books?.length ?? 0)} 本
+                        �?{m.bookBatch.total} 本匹配，已看{' '}
+                        {m.bookBatch.offset + (m.books?.length ?? 0)} �?
                       </span>
                       <button
                         type="button"
@@ -283,7 +283,7 @@ export const ChatAssistant = () => {
                         onClick={() => void loadMoreBooks(m.bookBatch!)}
                         className="shrink-0 rounded-lg border border-cyan-500/40 bg-cyan-500/10 px-2.5 py-1 text-xs font-medium text-cyan-200 hover:bg-cyan-500/20 disabled:opacity-40"
                       >
-                        换一批
+                        换一�?
                       </button>
                     </div>
                   ) : null}
@@ -291,7 +291,7 @@ export const ChatAssistant = () => {
               ),
             )}
             {sending ? (
-              <div className="mr-4 text-xs text-white/40">正在思考…</div>
+              <div className="mr-4 text-xs text-white/40">正在思考�?/div>
             ) : null}
           </div>
 
@@ -305,7 +305,7 @@ export const ChatAssistant = () => {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="输入问题…"
+              placeholder="输入问题�?
               className="min-w-0 flex-1 rounded-xl border border-white/15 bg-[#2a3f5c] px-3 py-2 text-sm text-white placeholder:text-white/35 focus:border-cyan-500/50 focus:outline-none"
               disabled={sending}
             />
@@ -314,7 +314,7 @@ export const ChatAssistant = () => {
               disabled={sending || !input.trim()}
               className="shrink-0 rounded-xl bg-cyan-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-40"
             >
-              发送
+              发�?
             </button>
           </form>
         </div>
