@@ -300,12 +300,20 @@ export const AdminBorrowings = () => {
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${
                             record.status === 'borrowed'
-                              ? 'bg-cyan-500/20 text-cyan-200'
+                              ? isLightTheme
+                                ? 'bg-cyan-100 text-cyan-900'
+                                : 'bg-cyan-500/20 text-cyan-200'
                               : record.status === 'returned'
-                              ? 'bg-emerald-500/20 text-emerald-200'
-                              : record.status === 'overdue'
-                              ? 'bg-rose-500/20 text-rose-200'
-                              : 'bg-white/10 text-cyan-100'
+                                ? isLightTheme
+                                  ? 'bg-emerald-100 text-emerald-900'
+                                  : 'bg-emerald-500/20 text-emerald-200'
+                                : record.status === 'overdue'
+                                  ? isLightTheme
+                                    ? 'bg-rose-100 text-rose-900'
+                                    : 'bg-rose-500/20 text-rose-200'
+                                  : isLightTheme
+                                    ? 'bg-slate-100 text-slate-700'
+                                    : 'bg-white/10 text-cyan-100'
                           }`}
                         >
                           {record.status === 'borrowed' ? '借阅中' :
