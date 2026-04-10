@@ -2,11 +2,20 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { useBorrowings } from '../hooks/useBorrowings';
+import { useUserThemePreference } from '../hooks/useUserThemePreference';
 import { resolveCoverImageUrl } from '../lib/storageHelper';
 import type { BorrowingRecord } from '../types/borrowing';
 
 // 封面图片组件
-const BorrowingBookCover = ({ coverUrl, title }: { coverUrl?: string | null; title: string }) => {
+const BorrowingBookCover = ({
+  coverUrl,
+  title,
+  isLightTheme,
+}: {
+  coverUrl?: string | null;
+  title: string;
+  isLightTheme: boolean;
+}) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -32,7 +41,13 @@ const BorrowingBookCover = ({ coverUrl, title }: { coverUrl?: string | null; tit
           }}
         />
       ) : null}
-      <div className={`w-16 h-24 bg-slate-800 border border-white/10 rounded flex items-center justify-center text-cyan-100/70 ${imageUrl ? 'hidden' : ''}`}>
+      <div
+        className={`w-16 h-24 rounded flex items-center justify-center ${
+          isLightTheme
+            ? 'bg-stone-100 border border-amber-200/80 text-slate-500'
+            : 'bg-slate-800 border border-white/10 text-cyan-100/70'
+        } ${imageUrl ? 'hidden' : ''}`}
+      >
         📖
       </div>
     </>
@@ -40,6 +55,7 @@ const BorrowingBookCover = ({ coverUrl, title }: { coverUrl?: string | null; tit
 };
 
 export const AdminBorrowings = () => {
+  const { isLightTheme } = useUserThemePreference();
   const { getAllBorrowings, returnBook, loading } = useBorrowings();
   const [borrowings, setBorrowings] = useState<BorrowingRecord[]>([]);
   const [filter, setFilter] = useState<'all' | 'borrowed' | 'returned' | 'overdue'>('all');
@@ -113,44 +129,63 @@ export const AdminBorrowings = () => {
     `px-4 py-2.5 rounded-xl font-medium transition-colors ${
       filter === key
         ? 'bg-gradient-to-r from-cyan-500 to-violet-600 text-white'
-        : 'bg-white/10 text-cyan-100 border border-cyan-300/20 hover:bg-white/20'
+        : isLightTheme
+          ? 'bg-white text-slate-700 border border-amber-200 hover:bg-amber-50'
+          : 'bg-white/10 text-cyan-100 border border-cyan-300/20 hover:bg-white/20'
     }`;
+
+  const statCardClass = isLightTheme
+    ? 'bg-white p-4 rounded-xl border border-amber-200/90 shadow-sm'
+    : 'bg-[#0d142d]/80 p-4 rounded-xl border border-white/10';
+
+  const muted = isLightTheme ? 'text-slate-500' : 'text-cyan-100/70';
+  const heading = isLightTheme ? 'text-slate-900' : 'text-cyan-50';
+  const statNum = isLightTheme ? 'text-slate-900' : 'text-cyan-50';
 
   if (loading && borrowings.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-cyan-100/70">加载中...</p>
+      <div
+        className={`admin-theme min-h-screen transition-colors ${isLightTheme ? 'bg-[#f7f3e8] text-gray-900' : 'bg-[#060a19] text-cyan-50'}`}
+        data-theme={isLightTheme ? 'light' : 'dark'}
+      >
+        <Header />
+        <div className="text-center py-12">
+          <p className={muted}>加载中...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#060a19] text-cyan-50">
+    <div
+      className={`admin-theme min-h-screen transition-colors ${isLightTheme ? 'bg-[#f7f3e8] text-gray-900' : 'bg-[#060a19] text-cyan-50'}`}
+      data-theme={isLightTheme ? 'light' : 'dark'}
+    >
       <Header />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-cyan-50 mb-2">借阅记录管理</h1>
-          <p className="text-cyan-100/70">查看和管理所有用户的借阅记录</p>
+          <h1 className={`text-3xl font-bold mb-2 ${heading}`}>借阅记录管理</h1>
+          <p className={muted}>查看和管理所有用户的借阅记录</p>
         </div>
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-[#0d142d]/80 p-4 rounded-xl border border-white/10">
-          <p className="text-sm text-cyan-100/70 mb-1">总记录数</p>
-          <p className="text-2xl font-bold text-cyan-50">{stats.total}</p>
+        <div className={statCardClass}>
+          <p className={`text-sm ${muted} mb-1`}>总记录数</p>
+          <p className={`text-2xl font-bold ${statNum}`}>{stats.total}</p>
         </div>
-        <div className="bg-[#0d142d]/80 p-4 rounded-xl border border-white/10">
-          <p className="text-sm text-cyan-100/70 mb-1">借阅中</p>
-          <p className="text-2xl font-bold text-cyan-300">{stats.borrowed}</p>
+        <div className={statCardClass}>
+          <p className={`text-sm ${muted} mb-1`}>借阅中</p>
+          <p className={`text-2xl font-bold ${isLightTheme ? 'text-cyan-700' : 'text-cyan-300'}`}>{stats.borrowed}</p>
         </div>
-        <div className="bg-[#0d142d]/80 p-4 rounded-xl border border-white/10">
-          <p className="text-sm text-cyan-100/70 mb-1">已归还</p>
-          <p className="text-2xl font-bold text-emerald-300">{stats.returned}</p>
+        <div className={statCardClass}>
+          <p className={`text-sm ${muted} mb-1`}>已归还</p>
+          <p className={`text-2xl font-bold ${isLightTheme ? 'text-emerald-700' : 'text-emerald-300'}`}>{stats.returned}</p>
         </div>
-        <div className="bg-[#0d142d]/80 p-4 rounded-xl border border-white/10">
-          <p className="text-sm text-cyan-100/70 mb-1">已逾期</p>
-          <p className="text-2xl font-bold text-rose-300">{stats.overdue}</p>
+        <div className={statCardClass}>
+          <p className={`text-sm ${muted} mb-1`}>已逾期</p>
+          <p className={`text-2xl font-bold ${isLightTheme ? 'text-rose-600' : 'text-rose-300'}`}>{stats.overdue}</p>
         </div>
       </div>
 
@@ -162,39 +197,36 @@ export const AdminBorrowings = () => {
             placeholder="搜索图书标题、作者、用户姓名或邮箱..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 px-4 py-2.5 border border-cyan-300/25 bg-white/10 text-cyan-50 placeholder:text-cyan-100/50 rounded-xl focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+            className={
+              isLightTheme
+                ? 'flex-1 px-4 py-2.5 border border-amber-200 bg-white text-slate-900 placeholder:text-slate-400 rounded-xl focus:ring-2 focus:ring-amber-400 focus:border-transparent'
+                : 'flex-1 px-4 py-2.5 border border-cyan-300/25 bg-white/10 text-cyan-50 placeholder:text-cyan-100/50 rounded-xl focus:ring-2 focus:ring-cyan-400 focus:border-transparent'
+            }
           />
           <button
+            type="button"
             onClick={loadBorrowings}
-            className="px-4 py-2.5 bg-white/10 text-cyan-100 border border-cyan-300/20 rounded-xl hover:bg-white/20 font-medium transition-colors"
+            className={
+              isLightTheme
+                ? 'px-4 py-2.5 bg-white text-slate-700 border border-amber-200 rounded-xl hover:bg-amber-50 font-medium transition-colors'
+                : 'px-4 py-2.5 bg-white/10 text-cyan-100 border border-cyan-300/20 rounded-xl hover:bg-white/20 font-medium transition-colors'
+            }
           >
             刷新
           </button>
         </div>
 
-        <div className="flex gap-4">
-          <button
-            onClick={() => setFilter('all')}
-            className={filterBtnClass('all')}
-          >
+        <div className="flex flex-wrap gap-4">
+          <button type="button" onClick={() => setFilter('all')} className={filterBtnClass('all')}>
             全部
           </button>
-          <button
-            onClick={() => setFilter('borrowed')}
-            className={filterBtnClass('borrowed')}
-          >
+          <button type="button" onClick={() => setFilter('borrowed')} className={filterBtnClass('borrowed')}>
             借阅中
           </button>
-          <button
-            onClick={() => setFilter('overdue')}
-            className={filterBtnClass('overdue')}
-          >
+          <button type="button" onClick={() => setFilter('overdue')} className={filterBtnClass('overdue')}>
             已逾期
           </button>
-          <button
-            onClick={() => setFilter('returned')}
-            className={filterBtnClass('returned')}
-          >
+          <button type="button" onClick={() => setFilter('returned')} className={filterBtnClass('returned')}>
             已归还
           </button>
         </div>
@@ -202,14 +234,25 @@ export const AdminBorrowings = () => {
 
       {/* 借阅记录列表 */}
       {filteredBorrowings.length === 0 ? (
-        <div className="text-center py-12 bg-[#0d142d]/80 rounded-xl border border-white/10">
-          <p className="text-cyan-100/70 mb-4">
+        <div
+          className={
+            isLightTheme
+              ? 'text-center py-12 bg-white rounded-xl border border-amber-200/90 shadow-sm'
+              : 'text-center py-12 bg-[#0d142d]/80 rounded-xl border border-white/10'
+          }
+        >
+          <p className={`${muted} mb-4`}>
             {searchTerm ? '没有找到匹配的借阅记录' : '暂无借阅记录'}
           </p>
           {searchTerm && (
             <button
+              type="button"
               onClick={() => setSearchTerm('')}
-              className="text-cyan-300 hover:text-cyan-200 font-medium"
+              className={
+                isLightTheme
+                  ? 'text-amber-700 hover:text-amber-900 font-medium'
+                  : 'text-cyan-300 hover:text-cyan-200 font-medium'
+              }
             >
               清除搜索条件
             </button>
@@ -224,26 +267,33 @@ export const AdminBorrowings = () => {
             return (
               <div
                 key={record.id}
-                className={`bg-[#0d142d]/80 p-6 rounded-xl border border-white/10 hover:border-cyan-300/30 transition-colors ${
-                  isOverdue ? 'border-l-4 border-red-500' : ''
-                }`}
+                className={`p-6 rounded-xl transition-colors ${
+                  isLightTheme
+                    ? 'bg-white border border-amber-200/90 shadow-sm hover:border-amber-300'
+                    : 'bg-[#0d142d]/80 border border-white/10 hover:border-cyan-300/30'
+                } ${isOverdue ? 'border-l-4 border-red-500' : ''}`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex gap-4 flex-1">
-                    <BorrowingBookCover 
-                      coverUrl={record.books?.cover_image_url} 
-                      title={record.books?.title || '未知图书'} 
+                    <BorrowingBookCover
+                      coverUrl={record.books?.cover_image_url}
+                      title={record.books?.title || '未知图书'}
+                      isLightTheme={isLightTheme}
                     />
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-2">
                         <div>
                           <Link
                             to={`/user/books/${record.book_id}`}
-                            className="text-lg font-semibold text-cyan-50 hover:text-cyan-300"
+                            className={
+                              isLightTheme
+                                ? 'text-lg font-semibold text-slate-900 hover:text-amber-800'
+                                : 'text-lg font-semibold text-cyan-50 hover:text-cyan-300'
+                            }
                           >
                             {record.books?.title || '未知图书'}
                           </Link>
-                          <p className="text-cyan-100/70 text-sm mt-1">
+                          <p className={`text-sm mt-1 ${muted}`}>
                             作者：{record.books?.author || '未知'}
                           </p>
                         </div>
@@ -265,37 +315,51 @@ export const AdminBorrowings = () => {
                       </div>
 
                       {/* 用户信息 */}
-                      <div className="bg-white/5 p-3 rounded-lg mt-2 mb-3 border border-white/10">
-                        <p className="text-sm text-cyan-100/90">
+                      <div
+                        className={
+                          isLightTheme
+                            ? 'bg-amber-50/80 p-3 rounded-lg mt-2 mb-3 border border-amber-200/80'
+                            : 'bg-white/5 p-3 rounded-lg mt-2 mb-3 border border-white/10'
+                        }
+                      >
+                        <p className={`text-sm ${isLightTheme ? 'text-slate-800' : 'text-cyan-100/90'}`}>
                           <span className="font-medium">借阅用户：</span>
-                          {record.users?.full_name || '未知用户'} 
-                          <span className="text-cyan-100/60 ml-2">({record.users?.email || '未知邮箱'})</span>
+                          {record.users?.full_name || '未知用户'}
+                          <span className={`${isLightTheme ? 'text-slate-500' : 'text-cyan-100/60'} ml-2`}>
+                            ({record.users?.email || '未知邮箱'})
+                          </span>
                         </p>
                       </div>
 
                       {/* 时间信息 */}
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <p className="text-cyan-100/60">借阅日期</p>
-                          <p className="text-cyan-50 font-medium">
+                          <p className={muted}>借阅日期</p>
+                          <p className={`font-medium ${heading}`}>
                             {new Date(record.borrowed_at).toLocaleString('zh-CN')}
                           </p>
                         </div>
                         {record.status === 'returned' && record.returned_at ? (
                           <div>
-                            <p className="text-cyan-100/60">归还日期</p>
-                            <p className="text-cyan-50 font-medium">
+                            <p className={muted}>归还日期</p>
+                            <p className={`font-medium ${heading}`}>
                               {new Date(record.returned_at).toLocaleString('zh-CN')}
                             </p>
                           </div>
                         ) : (
                           <div>
-                            <p className="text-cyan-100/60">到期日期</p>
-                            <p className={`font-medium ${isOverdue ? 'text-rose-300' : 'text-cyan-50'}`}>
+                            <p className={muted}>到期日期</p>
+                            <p
+                              className={`font-medium ${isOverdue ? 'text-rose-600' : isLightTheme ? 'text-slate-900' : 'text-cyan-50'}`}
+                            >
                               {new Date(record.due_date).toLocaleString('zh-CN')}
                             </p>
                             {!isOverdue && (
-                              <p className="text-emerald-300 text-xs mt-1">
+                              <p
+                                className={
+                                  isLightTheme ? 'text-emerald-700 text-xs mt-1' : 'text-emerald-300 text-xs mt-1'
+                                }
+                              >
                                 剩余 {daysRemaining} 天
                               </p>
                             )}
@@ -304,13 +368,17 @@ export const AdminBorrowings = () => {
                       </div>
 
                       {isOverdue && record.status === 'borrowed' && (
-                        <p className="text-rose-300 text-sm font-medium mt-2">
+                        <p
+                          className={
+                            isLightTheme ? 'text-rose-600 text-sm font-medium mt-2' : 'text-rose-300 text-sm font-medium mt-2'
+                          }
+                        >
                           ⚠️ 已逾期 {Math.abs(daysRemaining)} 天
                         </p>
                       )}
 
                       {record.notes && (
-                        <p className="text-cyan-100/65 text-sm mt-2">
+                        <p className={`text-sm mt-2 ${isLightTheme ? 'text-slate-600' : 'text-cyan-100/65'}`}>
                           备注：{record.notes}
                         </p>
                       )}
@@ -321,6 +389,7 @@ export const AdminBorrowings = () => {
                   <div className="ml-4 flex flex-col gap-2">
                     {(record.status === 'borrowed' || record.status === 'overdue') && (
                       <button
+                        type="button"
                         onClick={() => handleReturn(record.id)}
                         className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-cyan-600 text-white rounded-xl hover:from-emerald-400 hover:to-cyan-500 text-sm font-medium whitespace-nowrap transition-all shadow-[0_10px_24px_-12px_rgba(16,185,129,0.8)]"
                       >
