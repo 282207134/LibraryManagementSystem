@@ -1,3 +1,5 @@
+import { useUserThemePreference } from '../hooks/useUserThemePreference';
+
 type PageItem = number | 'ellipsis';
 
 /** 与常见列表分页一致：靠前时显示 1…10，靠后时显示末段，中间显示当前页邻域 */
@@ -34,14 +36,22 @@ export interface PaginationProps {
   loading?: boolean;
 }
 
-const btnBase =
-  'inline-flex min-h-9 min-w-9 items-center justify-center border border-cyan-300/20 bg-white/10 backdrop-blur-sm px-2 text-sm text-cyan-50 transition-colors hover:bg-cyan-500/20 disabled:pointer-events-none disabled:opacity-40 rounded-lg';
-
 export const Pagination = ({ currentPage, totalPages, onPageChange, loading }: PaginationProps) => {
+  const { isLightTheme } = useUserThemePreference();
+
+  const btnBase = isLightTheme
+    ? 'inline-flex min-h-9 min-w-9 items-center justify-center border border-amber-200 bg-white px-2 text-sm text-slate-800 transition-colors hover:bg-amber-50 disabled:pointer-events-none disabled:opacity-40 rounded-lg'
+    : 'inline-flex min-h-9 min-w-9 items-center justify-center border border-cyan-300/20 bg-white/10 backdrop-blur-sm px-2 text-sm text-cyan-50 transition-colors hover:bg-cyan-500/20 disabled:pointer-events-none disabled:opacity-40 rounded-lg';
+
   if (totalPages <= 1) return null;
 
   const items = buildPageItems(currentPage, totalPages);
   const busy = Boolean(loading);
+  const ellipsisMuted = isLightTheme ? 'text-slate-500 hover:bg-amber-50' : 'text-cyan-100/60 hover:bg-white/10';
+  const ellipsisJump = isLightTheme ? 'text-slate-700' : 'text-cyan-100';
+  const activePage = isLightTheme
+    ? 'border-amber-400 bg-amber-100 text-slate-900 shadow-sm hover:bg-amber-100'
+    : 'border-cyan-300/60 bg-gradient-to-r from-cyan-500/40 to-violet-500/40 text-white shadow-md shadow-cyan-500/20 hover:bg-cyan-500/40';
 
   return (
     <nav className="mt-8 flex flex-wrap items-center justify-center gap-1.5" aria-label="分页">
@@ -61,7 +71,7 @@ export const Pagination = ({ currentPage, totalPages, onPageChange, loading }: P
             <button
               key="ellipsis-last"
               type="button"
-              className={`${btnBase} min-w-[4.25rem] px-2 text-cyan-100`}
+              className={`${btnBase} min-w-[4.25rem] px-2 ${ellipsisJump}`}
               disabled={busy}
               onClick={() => onPageChange(totalPages)}
               aria-label={`第 ${totalPages} 页`}
@@ -77,7 +87,7 @@ export const Pagination = ({ currentPage, totalPages, onPageChange, loading }: P
           return (
             <span
               key={`e-${idx}`}
-              className={`${btnBase} cursor-default text-cyan-100/60 hover:bg-white/10`}
+              className={`${btnBase} cursor-default ${ellipsisMuted}`}
               aria-hidden
             >
               …
@@ -88,11 +98,7 @@ export const Pagination = ({ currentPage, totalPages, onPageChange, loading }: P
           <button
             key={item}
             type="button"
-            className={`${btnBase} ${
-              item === currentPage
-                ? 'border-cyan-300/60 bg-gradient-to-r from-cyan-500/40 to-violet-500/40 text-white shadow-md shadow-cyan-500/20 hover:bg-cyan-500/40'
-                : ''
-            }`}
+            className={`${btnBase} ${item === currentPage ? activePage : ''}`}
             disabled={busy}
             onClick={() => onPageChange(item)}
             aria-current={item === currentPage ? 'page' : undefined}

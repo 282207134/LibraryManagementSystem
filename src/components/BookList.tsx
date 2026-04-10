@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useUserThemePreference } from '../hooks/useUserThemePreference';
 import type { Book } from '../types/book';
+import { resolveCoverImageUrl } from '../lib/storageHelper';
 import { BookCard } from './BookCard';
 import { Pagination } from './Pagination';
-import { resolveCoverImageUrl } from '../lib/storageHelper';
 
 interface BookListProps {
   books: Book[];
@@ -14,7 +15,15 @@ interface BookListProps {
   onPageChange: (page: number) => void | Promise<void>;
 }
 
-const CoverThumbnail = ({ coverUrl, title }: { coverUrl?: string | null; title: string }) => {
+const CoverThumbnail = ({
+  coverUrl,
+  title,
+  isLightTheme,
+}: {
+  coverUrl?: string | null;
+  title: string;
+  isLightTheme: boolean;
+}) => {
   const [failed, setFailed] = useState(false);
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
 
@@ -42,7 +51,13 @@ const CoverThumbnail = ({ coverUrl, title }: { coverUrl?: string | null; title: 
 
   if (!resolvedUrl || failed) {
     return (
-      <div className="w-12 h-16 bg-slate-800 border border-white/10 rounded flex items-center justify-center text-xs text-cyan-100/60">
+      <div
+        className={
+          isLightTheme
+            ? 'w-12 h-16 bg-stone-100 border border-amber-200/80 rounded flex items-center justify-center text-xs text-slate-500'
+            : 'w-12 h-16 bg-slate-800 border border-white/10 rounded flex items-center justify-center text-xs text-cyan-100/60'
+        }
+      >
         无封面
       </div>
     );
@@ -52,7 +67,11 @@ const CoverThumbnail = ({ coverUrl, title }: { coverUrl?: string | null; title: 
     <img
       src={resolvedUrl}
       alt={`${title} 封面`}
-      className="w-12 h-16 object-cover rounded border border-white/10"
+      className={
+        isLightTheme
+          ? 'w-12 h-16 object-cover rounded border border-amber-200/80'
+          : 'w-12 h-16 object-cover rounded border border-white/10'
+      }
       onError={() => setFailed(true)}
     />
   );
@@ -67,10 +86,17 @@ export const BookList = ({
   totalPages,
   onPageChange,
 }: BookListProps) => {
+  const { isLightTheme } = useUserThemePreference();
+
+  const muted = isLightTheme ? 'text-slate-500' : 'text-cyan-100/70';
+  const cell = isLightTheme ? 'text-slate-700' : 'text-cyan-100/75';
+  const titleCell = isLightTheme ? 'text-slate-900' : 'text-cyan-50';
+  const subMuted = isLightTheme ? 'text-slate-500' : 'text-cyan-100/60';
+
   if (loading && books.length === 0) {
     return (
       <div className="text-center py-10">
-        <p className="text-cyan-100/70">加载中...</p>
+        <p className={muted}>加载中...</p>
       </div>
     );
   }
@@ -78,60 +104,67 @@ export const BookList = ({
   if (!loading && books.length === 0) {
     return (
       <div className="text-center py-10">
-        <p className="text-cyan-100/70">暂无图书，请添加新图书。</p>
+        <p className={muted}>暂无图书，请添加新图书。</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="hidden md:block overflow-hidden border border-white/10 rounded-2xl bg-[#0d142c]/85 backdrop-blur-sm">
-        <table className="min-w-full divide-y divide-white/10">
-          <thead className="bg-white/5">
+      <div
+        className={
+          isLightTheme
+            ? 'hidden md:block overflow-hidden border border-amber-200/90 rounded-2xl bg-white shadow-sm'
+            : 'hidden md:block overflow-hidden border border-white/10 rounded-2xl bg-[#0d142c]/85 backdrop-blur-sm'
+        }
+      >
+        <table className={`min-w-full divide-y ${isLightTheme ? 'divide-amber-100' : 'divide-white/10'}`}>
+          <thead className={isLightTheme ? 'bg-amber-50/80' : 'bg-white/5'}>
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-cyan-100/70 uppercase tracking-wider">
+              <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${muted} uppercase tracking-wider`}>
                 封面
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-cyan-100/70 uppercase tracking-wider">
+              <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${muted} uppercase tracking-wider`}>
                 书名
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-cyan-100/70 uppercase tracking-wider">
+              <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${muted} uppercase tracking-wider`}>
                 作者
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-cyan-100/70 uppercase tracking-wider">
+              <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${muted} uppercase tracking-wider`}>
                 ISBN
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-cyan-100/70 uppercase tracking-wider">
+              <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${muted} uppercase tracking-wider`}>
                 分类
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-cyan-100/70 uppercase tracking-wider">
+              <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${muted} uppercase tracking-wider`}>
                 库存
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-cyan-100/70 uppercase tracking-wider">
+              <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${muted} uppercase tracking-wider`}>
                 可借
               </th>
               <th scope="col" className="px-6 py-3" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/10">
+          <tbody className={`divide-y ${isLightTheme ? 'divide-amber-100' : 'divide-white/10'}`}>
             {books.map((book) => (
-              <tr key={book.id} className="hover:bg-white/5 transition-colors">
+              <tr
+                key={book.id}
+                className={isLightTheme ? 'hover:bg-amber-50/50 transition-colors' : 'hover:bg-white/5 transition-colors'}
+              >
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <CoverThumbnail coverUrl={book.cover_image_url} title={book.title} />
+                  <CoverThumbnail coverUrl={book.cover_image_url} title={book.title} isLightTheme={isLightTheme} />
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-cyan-50">
+                <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${titleCell}`}>
                   <div className="flex flex-col">
                     <span>{book.title}</span>
-                    {book.publisher && (
-                      <span className="text-xs text-cyan-100/60">{book.publisher}</span>
-                    )}
+                    {book.publisher && <span className={`text-xs ${subMuted}`}>{book.publisher}</span>}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-cyan-100/75">{book.author}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-cyan-100/75">{book.isbn || '-'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-cyan-100/75">{book.category || '-'}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-cyan-100/75">{book.quantity}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-cyan-100/75">{book.available_quantity}</td>
+                <td className={`px-6 py-4 whitespace-nowrap text-sm ${cell}`}>{book.author}</td>
+                <td className={`px-6 py-4 whitespace-nowrap text-sm ${cell}`}>{book.isbn || '-'}</td>
+                <td className={`px-6 py-4 whitespace-nowrap text-sm ${cell}`}>{book.category || '-'}</td>
+                <td className={`px-6 py-4 whitespace-nowrap text-sm ${cell}`}>{book.quantity}</td>
+                <td className={`px-6 py-4 whitespace-nowrap text-sm ${cell}`}>{book.available_quantity}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex gap-2 justify-end">
                   <button
                     onClick={() => onEdit(book)}
@@ -140,8 +173,13 @@ export const BookList = ({
                     编辑
                   </button>
                   <button
+                    type="button"
                     onClick={() => onDelete(book)}
-                    className="px-4 py-2 text-sm font-medium text-rose-100 rounded-xl border border-rose-300/30 bg-rose-500/15 hover:bg-rose-500/25 transition-colors"
+                    className={
+                      isLightTheme
+                        ? 'px-4 py-2 text-sm font-medium rounded-xl text-rose-700 border border-rose-200 bg-rose-50 hover:bg-rose-100 transition-colors'
+                        : 'px-4 py-2 text-sm font-medium text-rose-100 rounded-xl border border-rose-300/30 bg-rose-500/15 hover:bg-rose-500/25 transition-colors'
+                    }
                   >
                     删除
                   </button>
@@ -159,7 +197,7 @@ export const BookList = ({
       </div>
 
       {loading && books.length > 0 && (
-        <p className="text-center text-sm text-cyan-100/70">加载中...</p>
+        <p className={`text-center text-sm ${muted}`}>加载中...</p>
       )}
 
       <Pagination

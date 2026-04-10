@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useUserThemePreference } from '../hooks/useUserThemePreference';
 import { supabase } from '../lib/supabaseClient';
 import type { Book, BookFormData } from '../types/book';
 import { validateImageFile, resolveCoverImageUrl } from '../lib/storageHelper';
@@ -31,6 +32,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [borrowedCount, setBorrowedCount] = useState<number>(0);
   const [isDragging, setIsDragging] = useState(false);
+  const { isLightTheme } = useUserThemePreference();
 
   useEffect(() => {
     let mounted = true;
@@ -285,15 +287,61 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
     }
   };
 
+  const inputFieldClass = isLightTheme
+    ? 'w-full px-3.5 py-2 border border-amber-200 bg-white text-slate-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400'
+    : 'w-full px-3.5 py-2 border border-cyan-300/25 bg-white/10 text-cyan-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400';
+
+  const labelFieldClass = isLightTheme
+    ? 'block text-sm font-medium text-slate-700 mb-1'
+    : 'block text-sm font-medium text-cyan-100 mb-1';
+
+  const readOnlyFieldClass = isLightTheme
+    ? 'w-full px-3.5 py-2 border border-amber-200 rounded-xl bg-stone-50 text-slate-800'
+    : 'w-full px-3.5 py-2 border border-cyan-300/20 rounded-xl bg-white/5 text-cyan-100';
+
+  const ghostButtonClass = isLightTheme
+    ? 'px-4 py-2 border border-amber-200 text-slate-700 rounded-xl hover:bg-amber-50 disabled:opacity-50 disabled:cursor-not-allowed'
+    : 'px-4 py-2 border border-cyan-300/25 text-cyan-100 rounded-xl hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed';
+
+  const ghostButtonClassWide = isLightTheme
+    ? 'px-5 py-2 border border-amber-200 text-slate-700 rounded-xl hover:bg-amber-50 disabled:opacity-50 disabled:cursor-not-allowed'
+    : 'px-5 py-2 border border-cyan-300/25 text-cyan-100 rounded-xl hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed';
+
+  const clearCoverBtnCompact = isLightTheme
+    ? 'mt-auto w-28 px-3 py-2 border border-amber-200 text-slate-700 rounded-xl hover:bg-amber-50'
+    : 'mt-auto w-28 px-3 py-2 border border-cyan-300/25 text-cyan-100 rounded-xl hover:bg-white/10';
+
+  const clearCoverBtnLoose = isLightTheme
+    ? 'mt-2 w-28 px-3 py-2 border border-amber-200 text-slate-700 rounded-xl hover:bg-amber-50'
+    : 'mt-2 w-28 px-3 py-2 border border-cyan-300/25 text-cyan-100 rounded-xl hover:bg-white/10';
+
+  const panelShellClass = isLightTheme
+    ? 'bg-[#fffdf7] border-amber-200 text-slate-900'
+    : 'bg-[#0d142c] border-white/10 text-cyan-50';
+
+  const subtleHint = isLightTheme ? 'text-slate-500' : 'text-cyan-100/55';
+  const subtleMuted = isLightTheme ? 'text-slate-500' : 'text-cyan-100/60';
+  const previewBorder = isLightTheme ? 'border-amber-200' : 'border-cyan-300/20';
+  const linkPickClass = isLightTheme ? 'text-amber-700 hover:text-amber-800' : 'text-cyan-300 hover:text-cyan-200';
+
+  const previewLabelClass = isLightTheme ? 'text-sm text-slate-700 mb-2' : 'text-sm text-cyan-100 mb-2';
+  const dragActiveClass = isLightTheme ? 'border-amber-500 bg-amber-100/70' : 'border-cyan-400 bg-cyan-500/10';
+  const dragIdleClass = isLightTheme ? 'border-amber-300 hover:border-amber-400 bg-amber-50/40' : 'border-cyan-300/30 hover:border-cyan-300/60 bg-white/5';
+  const dragHintClass = isLightTheme ? 'text-amber-800 font-medium' : 'text-cyan-300 font-medium';
+  const svgMuted = isLightTheme ? 'text-slate-400' : 'text-cyan-100/50';
+  const dropTextClass = isLightTheme ? 'text-sm text-slate-600' : 'text-sm text-cyan-100/75';
+
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-[#0d142c] border border-white/10 rounded-2xl shadow-xl max-w-[38rem] w-full max-h-[90vh] overflow-y-auto text-cyan-50">
+      <div
+        className={`border rounded-2xl shadow-xl max-w-[38rem] w-full max-h-[90vh] overflow-y-auto ${panelShellClass}`}
+      >
         <div className="p-4">
           <h2 className="text-xl font-bold mb-5">{book ? '编辑图书' : '添加图书'}</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-cyan-100 mb-1">
+              <label className={labelFieldClass}>
                 书名 <span className="text-red-500">*</span>
               </label>
               <input
@@ -301,13 +349,13 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                 title="书名"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-3.5 py-2 border border-cyan-300/25 bg-white/10 text-cyan-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                className={inputFieldClass}
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-cyan-100 mb-1">
+              <label className={labelFieldClass}>
                 作者 <span className="text-red-500">*</span>
               </label>
               <input
@@ -315,38 +363,38 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                 title="作者"
                 value={formData.author}
                 onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                className="w-full px-3.5 py-2 border border-cyan-300/25 bg-white/10 text-cyan-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                className={inputFieldClass}
                 required
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-cyan-100 mb-1">ISBN</label>
+                <label className={labelFieldClass}>ISBN</label>
                 <input
                   type="text"
                   value={formData.isbn}
                   onChange={(e) => setFormData({ ...formData, isbn: e.target.value })}
-                  className="w-full px-3.5 py-2 border border-cyan-300/25 bg-white/10 text-cyan-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                  className={inputFieldClass}
                   placeholder="10 或 13 位数字"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-cyan-100 mb-1">出版社</label>
+                <label className={labelFieldClass}>出版社</label>
                 <input
                   type="text"
                   title="出版社"
                   value={formData.publisher}
                   onChange={(e) => setFormData({ ...formData, publisher: e.target.value })}
-                  className="w-full px-3.5 py-2 border border-cyan-300/25 bg-white/10 text-cyan-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                  className={inputFieldClass}
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-cyan-100 mb-1">出版年份</label>
+                <label className={labelFieldClass}>出版年份</label>
                 <input
                   type="number"
                   title="出版年份"
@@ -358,39 +406,39 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                       publication_year: Number.isNaN(parsed) ? undefined : parsed,
                     });
                   }}
-                  className="w-full px-3.5 py-2 border border-cyan-300/25 bg-white/10 text-cyan-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                  className={inputFieldClass}
                   min="1000"
                   max="9999"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-cyan-100 mb-1">分类</label>
+                <label className={labelFieldClass}>分类</label>
                 <input
                   type="text"
                   title="分类"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-3.5 py-2 border border-cyan-300/25 bg-white/10 text-cyan-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                  className={inputFieldClass}
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-cyan-100 mb-1">简介</label>
+              <label className={labelFieldClass}>简介</label>
               <textarea
                 title="简介"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3.5 py-2 border border-cyan-300/25 bg-white/10 text-cyan-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                className={inputFieldClass}
                 rows={2}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-cyan-100 mb-1">
+              <label className={labelFieldClass}>
                 封面图片
-                <span className="text-cyan-100/60 text-xs font-normal ml-2">
+                <span className={`${subtleMuted} text-xs font-normal ml-2`}>
                   (支持点击选择或拖拽上传)
                 </span>
               </label>
@@ -401,18 +449,16 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
                   className={`border-2 border-dashed rounded-xl p-3 transition-colors ${
-                    isDragging
-                      ? 'border-cyan-400 bg-cyan-500/10'
-                      : 'border-cyan-300/30 hover:border-cyan-300/60 bg-white/5'
+                    isDragging ? dragActiveClass : dragIdleClass
                   }`}
                 >
                   <div className="flex flex-col items-center justify-center gap-2">
                     {isDragging ? (
-                      <p className="text-cyan-300 font-medium">松开鼠标以上传图片</p>
+                      <p className={dragHintClass}>松开鼠标以上传图片</p>
                     ) : (
                       <>
                         <svg
-                          className="w-10 h-10 text-cyan-100/50"
+                          className={`w-10 h-10 ${svgMuted}`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -424,9 +470,9 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                             d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                           />
                         </svg>
-                        <p className="text-sm text-cyan-100/75">
+                        <p className={dropTextClass}>
                           拖拽图片到这里，或{' '}
-                          <label className="text-cyan-300 hover:text-cyan-200 cursor-pointer underline">
+                          <label className={`${linkPickClass} cursor-pointer underline`}>
                             点击选择文件
                           </label>
                         </p>
@@ -448,15 +494,15 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                     图片加载失败，请重新选择图片。
                   </div>
                 )}
-                <p className="text-xs text-cyan-100/55">
+                <p className={`text-xs ${subtleHint}`}>
                   支持 JPEG、PNG、GIF 和 WebP 格式，文件大小不超过 5MB。
                 </p>
 
                 {useEditCoverCompactLayout ? (
                   <div className="grid grid-cols-[7rem_minmax(0,1fr)] gap-3 items-stretch min-h-[14.5rem]">
                     <div className="h-full flex flex-col">
-                      <p className="text-sm text-cyan-100 mb-2">预览：</p>
-                      <div className="w-28 h-40 overflow-hidden rounded-lg border border-cyan-300/20">
+                      <p className={previewLabelClass}>预览：</p>
+                      <div className={`w-28 h-40 overflow-hidden rounded-lg border ${previewBorder}`}>
                         <img
                           src={previewUrl}
                           alt={`封面预览 - ${formData.title || '图书'}`}
@@ -467,7 +513,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                       <button
                         type="button"
                         onClick={handleClearCover}
-                        className="mt-auto w-28 px-3 py-2 border border-cyan-300/25 text-cyan-100 rounded-xl hover:bg-white/10"
+                        className={clearCoverBtnCompact}
                       >
                         清除封面
                       </button>
@@ -476,7 +522,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                     <div className="h-full min-h-[12rem] flex flex-col">
                       <div className="space-y-3">
                         <div>
-                          <label className="block text-sm font-medium text-cyan-100 mb-1">
+                          <label className={labelFieldClass}>
                             库存数量 <span className="text-red-500">*</span>
                           </label>
                           <input
@@ -484,20 +530,20 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                             title="库存数量"
                             value={formData.quantity}
                             onChange={(e) => handleQuantityChange(e.target.value)}
-                            className="w-full px-3.5 py-2 border border-cyan-300/25 bg-white/10 text-cyan-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                            className={inputFieldClass}
                             min="0"
                             required
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-cyan-100 mb-1">
-                            可借数量 <span className="text-cyan-100/55 text-xs">(自动计算)</span>
+                          <label className={labelFieldClass}>
+                            可借数量 <span className={`${subtleHint} text-xs`}>(自动计算)</span>
                           </label>
-                          <div className="w-full px-3.5 py-2 border border-cyan-300/20 rounded-xl bg-white/5 text-cyan-100">
+                          <div className={readOnlyFieldClass}>
                             {calculatedAvailableQuantity} / {formData.quantity}
                             {borrowedCount > 0 && (
-                              <span className="text-xs text-cyan-100/55 ml-2">
+                              <span className={`text-xs ${subtleHint} ml-2`}>
                                 (已借出: {borrowedCount})
                               </span>
                             )}
@@ -510,7 +556,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                           type="button"
                           onClick={onCancel}
                           disabled={isSubmitting}
-                          className="px-4 py-2 border border-cyan-300/25 text-cyan-100 rounded-xl hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className={ghostButtonClass}
                         >
                           取消
                         </button>
@@ -528,8 +574,8 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                   <>
                     {previewUrl && !previewError && (
                       <div className="mt-2">
-                        <p className="text-sm text-cyan-100 mb-2">预览：</p>
-                        <div className="w-28 h-40 overflow-hidden rounded-lg border border-cyan-300/20">
+                        <p className={previewLabelClass}>预览：</p>
+                        <div className={`w-28 h-40 overflow-hidden rounded-lg border ${previewBorder}`}>
                           <img
                             src={previewUrl}
                             alt={`封面预览 - ${formData.title || '图书'}`}
@@ -540,7 +586,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                         <button
                           type="button"
                           onClick={handleClearCover}
-                          className="mt-2 w-28 px-3 py-2 border border-cyan-300/25 text-cyan-100 rounded-xl hover:bg-white/10"
+                          className={clearCoverBtnLoose}
                         >
                           清除封面
                         </button>
@@ -554,7 +600,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
             {!useEditCoverCompactLayout && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-cyan-100 mb-1">
+                  <label className={labelFieldClass}>
                     库存数量 <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -562,25 +608,25 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                     title="库存数量"
                     value={formData.quantity}
                     onChange={(e) => handleQuantityChange(e.target.value)}
-                    className="w-full px-3.5 py-2 border border-cyan-300/25 bg-white/10 text-cyan-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    className={inputFieldClass}
                     min="0"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-cyan-100 mb-1">
-                    可借数量 <span className="text-cyan-100/55 text-xs">(自动计算)</span>
+                  <label className={labelFieldClass}>
+                    可借数量 <span className={`${subtleHint} text-xs`}>(自动计算)</span>
                   </label>
-                  <div className="w-full px-3.5 py-2 border border-cyan-300/20 rounded-xl bg-white/5 text-cyan-100">
+                  <div className={readOnlyFieldClass}>
                     {calculatedAvailableQuantity} / {formData.quantity}
                     {borrowedCount > 0 && (
-                      <span className="text-xs text-cyan-100/55 ml-2">
+                      <span className={`text-xs ${subtleHint} ml-2`}>
                         (已借出: {borrowedCount})
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-cyan-100/55 mt-1">
+                  <p className={`text-xs ${subtleHint} mt-1`}>
                     可借数量 = 库存数量 - 已借出数量（由系统自动计算）
                   </p>
                 </div>
@@ -593,7 +639,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                   type="button"
                   onClick={onCancel}
                   disabled={isSubmitting}
-                  className="px-5 py-2 border border-cyan-300/25 text-cyan-100 rounded-xl hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={ghostButtonClassWide}
                 >
                   取消
                 </button>
