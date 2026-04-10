@@ -73,3 +73,42 @@
   border-color: #e2ad3f;
   color: #6a4208 !important;
 }
+
+/* 用户首页：新上架 / 分类浏览 面板（深色类在浅色主题下强制提亮） */
+.user-theme[data-theme='light'] .user-dashboard-section {
+  background-color: #fffdf7 !important;
+  border-color: #f1e3c7 !important;
+  box-shadow: 0 14px 40px -24px rgba(120, 90, 40, 0.22) !important;
+}
+
+.user-theme[data-theme='light'] .user-dashboard-section-header {
+  border-color: #ead8b5 !important;
+}
+
+.user-theme[data-theme='light'] .user-new-book-tile {
+  background-color: #ffffff !important;
+  border-color: #ead8b5 !important;
+  box-shadow: 0 10px 24px -18px rgba(107, 72, 28, 0.28) !important;
+}
+
+.user-theme[data-theme='light'] .user-new-book-tile:hover {
+  border-color: #c4a35a !important;
+  box-shadow: 0 14px 32px -18px rgba(120, 90, 40, 0.35) !important;
+}
+
+.user-theme[data-theme='light'] .user-new-book-cover {
+  background-color: #f5ead6 !important;
+}
+
+.user-theme[data-theme='light'] .user-new-book-tile [class*='text-cyan-200'] {
+  color: #6b7280 !important;
+}
+
+.user-theme[data-theme='light'] .user-category-chip-inactive {
+  background-color: #f3e8cf !important;
+  color: #374151 !important;
+}
+
+.user-theme[data-theme='light'] .user-category-chip-inactive:hover {
+  background-color: #ead6ab !important;
+}

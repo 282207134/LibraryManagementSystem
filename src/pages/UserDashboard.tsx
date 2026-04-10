@@ -96,8 +96,8 @@ export const UserDashboard = () => {
 
         {/* 右侧：新上架图书 */}
         <div className="lg:col-span-2">
-          <div className="rounded-2xl border border-white/10 bg-[#0d142d]/80 shadow-[0_16px_42px_-24px_rgba(0,0,0,0.9)] overflow-hidden h-full flex flex-col">
-            <div className="p-5 border-b border-white/10 flex-shrink-0">
+          <div className="user-dashboard-section rounded-2xl border border-white/10 bg-[#0d142d]/80 shadow-[0_16px_42px_-24px_rgba(0,0,0,0.9)] overflow-hidden h-full flex flex-col">
+            <div className="user-dashboard-section-header p-5 border-b border-white/10 flex-shrink-0">
               <h2 className="text-xl font-bold text-cyan-50">📚 新上架</h2>
             </div>
             <div className="p-5 flex-1">
@@ -109,8 +109,8 @@ export const UserDashboard = () => {
 
       {/* 分类浏览 */}
       {categories.length > 0 && (
-        <div className="rounded-2xl border border-white/10 bg-[#0d142d]/80 shadow-[0_16px_42px_-24px_rgba(0,0,0,0.9)] overflow-hidden">
-          <div className="p-5 border-b border-white/10">
+        <div className="user-dashboard-section rounded-2xl border border-white/10 bg-[#0d142d]/80 shadow-[0_16px_42px_-24px_rgba(0,0,0,0.9)] overflow-hidden">
+          <div className="user-dashboard-section-header p-5 border-b border-white/10">
             <h2 className="text-xl font-bold text-cyan-50">📖 分类浏览</h2>
           </div>
           <div className="p-5">
@@ -118,11 +118,12 @@ export const UserDashboard = () => {
               {categories.map((category) => (
                 <button
                   key={category}
+                  type="button"
                   onClick={() => handleCategoryClick(category)}
-                  className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                  className={`user-category-chip px-3 py-1.5 text-sm rounded-lg transition-colors ${
                     selectedCategory === category
-                      ? 'bg-gradient-to-r from-cyan-500 to-violet-600 text-white'
-                      : 'bg-white/10 text-cyan-100 hover:bg-white/20'
+                      ? 'user-category-chip-active bg-gradient-to-r from-cyan-500 to-violet-600 text-white'
+                      : 'user-category-chip-inactive bg-white/10 text-cyan-100 hover:bg-white/20'
                   }`}
                 >
                   {category}
@@ -192,8 +193,8 @@ const NewBooksGrid = ({ books }: NewBooksGridProps) => {
           to={`/user/books/${book.id}`}
           className="group"
         >
-          <div className="rounded-xl overflow-hidden border border-white/10 bg-[#131d3a] shadow-[0_10px_30px_-18px_rgba(0,0,0,0.9)] hover:border-cyan-300/40 hover:shadow-[0_16px_36px_-18px_rgba(34,211,238,0.45)] transition-all">
-            <div className="aspect-[3/4] bg-slate-800 overflow-hidden">
+          <div className="user-new-book-tile rounded-xl overflow-hidden border border-white/10 bg-[#131d3a] shadow-[0_10px_30px_-18px_rgba(0,0,0,0.9)] hover:border-cyan-300/40 hover:shadow-[0_16px_36px_-18px_rgba(34,211,238,0.45)] transition-all">
+            <div className="user-new-book-cover aspect-[3/4] bg-slate-800 overflow-hidden">
               {coverUrls.get(book.id) ? (
                 <img
                   src={coverUrls.get(book.id)}
