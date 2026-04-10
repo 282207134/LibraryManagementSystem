@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { supabase } from '../../lib/supabaseClient';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { supabase } from "../../lib/supabaseClient";
 
-type ChatRole = 'user' | 'assistant';
+type ChatRole = "user" | "assistant";
 
 type BookBatch = {
   offset: number;
@@ -20,33 +20,31 @@ type ChatMessage = {
 
 function extractAssistantPayload(data: unknown): {
   text: string;
-  books?: ChatMessage['books'];
+  books?: ChatMessage["books"];
   bookBatch?: BookBatch;
 } | null {
-  if (!data || typeof data !== 'object') return null;
+  if (!data || typeof data !== "object") return null;
   const d = data as {
     error?: string;
     detail?: string;
     message?: { content?: string };
-    books?: ChatMessage['books'];
+    books?: ChatMessage["books"];
     bookBatch?: BookBatch;
   };
-  if (typeof d.error === 'string') {
-    return {
-      text: d.detail ? `${d.error}: ${d.detail}` : d.error,
-    };
+  if (typeof d.error === "string") {
+    return { text: d.detail ? `${d.error}: ${d.detail}` : d.error };
   }
   const c = d.message?.content;
-  if (typeof c !== 'string') return null;
+  if (typeof c !== "string") return null;
   return {
     text: c,
     books: Array.isArray(d.books) ? d.books : undefined,
     bookBatch:
       d.bookBatch &&
-      typeof d.bookBatch.offset === 'number' &&
-      typeof d.bookBatch.pageSize === 'number' &&
-      typeof d.bookBatch.total === 'number' &&
-      typeof d.bookBatch.hasMore === 'boolean'
+      typeof d.bookBatch.offset === "number" &&
+      typeof d.bookBatch.pageSize === "number" &&
+      typeof d.bookBatch.total === "number" &&
+      typeof d.bookBatch.hasMore === "boolean"
         ? d.bookBatch
         : undefined,
   };
@@ -57,16 +55,16 @@ async function formatEdgeFunctionFailure(
   response: Response | null | undefined,
 ): Promise<string> {
   if (!response) {
-    return `${message}。请确认已部�?ai-chat，已配置模型与密钥，并已执行 npm run supabase:cloud:secrets。`;
+    return `${message}. Please confirm ai-chat is deployed and secrets are synced.`;
   }
-  let body = '';
+  let body = "";
   try {
     const raw = await response.text();
     if (raw) {
       try {
         const parsed: unknown = JSON.parse(raw);
         body =
-          typeof parsed === 'object' && parsed !== null
+          typeof parsed === "object" && parsed !== null
             ? JSON.stringify(parsed)
             : String(parsed);
       } catch {
@@ -74,10 +72,10 @@ async function formatEdgeFunctionFailure(
       }
     }
   } catch {
-    body = '(无法读取错误详情)';
+    body = "(failed to read details)";
   }
-  const tail = body.length > 480 ? `${body.slice(0, 480)}…` : body;
-  return `${message}（HTTP ${response.status}�?{tail ? `�?{tail}` : ''}`;
+  const tail = body.length > 480 ? `${body.slice(0, 480)}...` : body;
+  return `${message} (HTTP ${response.status})${tail ? `: ${tail}` : ""}`;
 }
 
 function buildInvokeBody(
@@ -85,7 +83,7 @@ function buildInvokeBody(
   bookBatchOffset?: number,
 ): { messages: Array<{ role: string; content: string }>; bookBatchOffset?: number } {
   const messages = history
-    .filter((m) => m.role === 'user' || m.role === 'assistant')
+    .filter((m) => m.role === "user" || m.role === "assistant")
     .map((m) => ({ role: m.role, content: m.content }));
   if (bookBatchOffset != null && bookBatchOffset > 0) {
     return { messages, bookBatchOffset };
@@ -95,13 +93,9 @@ function buildInvokeBody(
 
 export const ChatAssistant = () => {
   const [open, setOpen] = useState(true);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: 'assistant',
-      content:
-        '我是图书馆助手：您想找什么类型的书籍呢？',
-    },
+    { role: "assistant", content: "Library assistant is ready. Tell me what to find." },
   ]);
   const [sending, setSending] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
@@ -113,18 +107,17 @@ export const ChatAssistant = () => {
 
   useEffect(() => {
     if (!open) return;
-    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, open]);
 
   const invokeChat = useCallback(
     async (history: ChatMessage[], bookBatchOffset?: number) => {
-      const { data, error, response } = await supabase.functions.invoke('ai-chat', {
+      const { data, error, response } = await supabase.functions.invoke("ai-chat", {
         body: buildInvokeBody(history, bookBatchOffset),
       });
-
       if (error) {
         const hint = await formatEdgeFunctionFailure(
-          error.message || 'Edge Function 调用失败',
+          error.message || "Edge Function invocation failed",
           response,
         );
         return { ok: false as const, hint };
@@ -134,17 +127,13 @@ export const ChatAssistant = () => {
       if (!payload) {
         return {
           ok: false as const,
-          hint:
-            typeof data === 'object' && data !== null
-              ? JSON.stringify(data)
-              : '未收到有效回�?,
+          hint: typeof data === "object" && data !== null ? JSON.stringify(data) : "Invalid payload",
         };
       }
-
       return {
         ok: true as const,
         message: {
-          role: 'assistant' as const,
+          role: "assistant" as const,
           content: payload.text,
           books: payload.books,
           bookBatch: payload.bookBatch,
@@ -157,23 +146,21 @@ export const ChatAssistant = () => {
   const send = useCallback(async () => {
     const text = input.trim();
     if (!text || sending) return;
-
-    const nextUser: ChatMessage = { role: 'user', content: text };
+    const nextUser: ChatMessage = { role: "user", content: text };
     const history = [...messages, nextUser];
     setMessages(history);
-    setInput('');
+    setInput("");
     setSending(true);
-
     try {
       const result = await invokeChat(history);
       if (!result.ok) {
-        setMessages((prev) => [...prev, { role: 'assistant', content: result.hint }]);
+        setMessages((prev) => [...prev, { role: "assistant", content: result.hint }]);
         return;
       }
       setMessages((prev) => [...prev, result.message]);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      setMessages((prev) => [...prev, { role: 'assistant', content: `请求异常�?{msg}` }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: `Request failed: ${msg}` }]);
     } finally {
       setSending(false);
     }
@@ -187,13 +174,13 @@ export const ChatAssistant = () => {
       try {
         const result = await invokeChat(messagesRef.current, nextOffset);
         if (!result.ok) {
-          setMessages((prev) => [...prev, { role: 'assistant', content: result.hint }]);
+          setMessages((prev) => [...prev, { role: "assistant", content: result.hint }]);
           return;
         }
         setMessages((prev) => [...prev, result.message]);
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
-        setMessages((prev) => [...prev, { role: 'assistant', content: `请求异常�?{msg}` }]);
+        setMessages((prev) => [...prev, { role: "assistant", content: `Request failed: ${msg}` }]);
       } finally {
         setSending(false);
       }
@@ -205,7 +192,7 @@ export const ChatAssistant = () => {
     <>
       <button
         type="button"
-        aria-label={open ? '收起 AI 助手' : '打开 AI 助手'}
+        aria-label={open ? "Collapse AI assistant" : "Open AI assistant"}
         onClick={() => setOpen((v) => !v)}
         className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-violet-600 text-white shadow-lg shadow-cyan-500/25 ring-2 ring-white/20 transition hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
       >
@@ -218,16 +205,16 @@ export const ChatAssistant = () => {
         <div
           className="fixed bottom-24 right-5 z-40 flex w-[min(100vw-2.5rem,20rem)] flex-col overflow-hidden rounded-2xl border border-white/15 bg-[#354f72]/92 shadow-2xl shadow-black/40 backdrop-blur-xl"
           role="dialog"
-          aria-label="AI 助手对话"
+          aria-label="AI assistant dialog"
         >
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-            <span className="text-sm font-semibold text-cyan-200">AI 助手</span>
+            <span className="text-sm font-semibold text-cyan-200">AI Assistant</span>
             <button
               type="button"
               onClick={() => setOpen(false)}
               className="rounded-lg px-2 py-1 text-xs text-white/60 hover:bg-white/10 hover:text-white"
             >
-              收起
+              Close
             </button>
           </div>
 
@@ -236,7 +223,7 @@ export const ChatAssistant = () => {
             className="max-h-[min(55vh,22rem)] space-y-3 overflow-y-auto px-3 py-3 text-sm"
           >
             {messages.map((m, i) =>
-              m.role === 'user' ? (
+              m.role === "user" ? (
                 <div
                   key={`${i}-user`}
                   className="ml-3 rounded-xl rounded-br-sm bg-cyan-600/25 px-3 py-2 text-cyan-50"
@@ -274,25 +261,22 @@ export const ChatAssistant = () => {
                   {m.bookBatch?.hasMore && m.bookBatch.pageSize > 0 ? (
                     <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/10 pt-2">
                       <span className="text-[11px] text-white/40">
-                        �?{m.bookBatch.total} 本匹配，已看{' '}
-                        {m.bookBatch.offset + (m.books?.length ?? 0)} �?
+                        Total {m.bookBatch.total}, shown {m.bookBatch.offset + (m.books?.length ?? 0)}
                       </span>
                       <button
                         type="button"
                         disabled={sending}
-                        onClick={() => void loadMoreBooks(m.bookBatch!)}
+                        onClick={() => m.bookBatch && void loadMoreBooks(m.bookBatch)}
                         className="shrink-0 rounded-lg border border-cyan-500/40 bg-cyan-500/10 px-2.5 py-1 text-xs font-medium text-cyan-200 hover:bg-cyan-500/20 disabled:opacity-40"
                       >
-                        换一�?
+                        Next batch
                       </button>
                     </div>
                   ) : null}
                 </div>
               ),
             )}
-            {sending ? (
-              <div className="mr-4 text-xs text-white/40">正在思考�?/div>
-            ) : null}
+            {sending ? <div className="mr-4 text-xs text-white/40">Thinking...</div> : null}
           </div>
 
           <form
@@ -305,7 +289,7 @@ export const ChatAssistant = () => {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="输入问题�?
+              placeholder="Type a question..."
               className="min-w-0 flex-1 rounded-xl border border-white/15 bg-[#2a3f5c] px-3 py-2 text-sm text-white placeholder:text-white/35 focus:border-cyan-500/50 focus:outline-none"
               disabled={sending}
             />
@@ -314,7 +298,7 @@ export const ChatAssistant = () => {
               disabled={sending || !input.trim()}
               className="shrink-0 rounded-xl bg-cyan-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-40"
             >
-              发�?
+              Send
             </button>
           </form>
         </div>

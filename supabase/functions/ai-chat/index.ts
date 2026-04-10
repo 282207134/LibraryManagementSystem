@@ -35,7 +35,7 @@ type BookBatchMeta = {
 type BookPayload = { id: string; title: string; blurb: string };
 
 const BOOK_INTENT_RE =
-  /书|本|小说|推荐|馆藏|科幻|图书|借阅|作者|分类|册|借|找几|哪些|什么书|书目|读本|看看|热门|人气|排行|有没有|查找|搜索|借书|藏书|図書|蔵書|ありますか|おすすめ|小説|勉強|学習|探し|読みたい|book|books|novel|recommend|library|catalog|author|find/i;
+  /书|本|小说|推荐|馆藏|科幻|图书|借阅|作者|分类|册|借|找几|哪些|什么书|书目|读本|看看|热门|人气|排行|有没有|查找|搜索|借书|藏书|図書|蔵書|ありますか|おすすめ|小説|物語|ミステリー|推理|探偵|勉強|学習|探し|読みたい|book|books|novel|story|mystery|detective|recommend|library|catalog|author|find/i;
 
 function jsonRes(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -74,8 +74,38 @@ function isBookIntent(query: string, batchOffset: number): boolean {
   return BOOK_INTENT_RE.test(query.trim());
 }
 
+function hasRecentBookIntent(dialog: Msg[], windowSize = 4): boolean {
+  const users = dialog.filter((m) => m.role === "user");
+  const recent = users.slice(Math.max(0, users.length - windowSize - 1), -1);
+  return recent.some((m) => BOOK_INTENT_RE.test(m.content.trim()));
+}
+
 function escapeIlike(s: string): string {
   return s.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+}
+
+function expandKeywords(input: string[]): string[] {
+  const out = [...input];
+  const alias: Array<[RegExp, string[]]> = [
+    [/ミステリー|推理小説|探偵小説|mystery|detective/i, ["推理", "悬疑", "侦探", "mystery"]],
+    [/物語|小説|story|novel/i, ["小说", "文学", "故事", "novel"]],
+    [/勉強|学習|study|learn/i, ["学习", "教育", "考试", "study"]],
+    [/歴史|history/i, ["历史", "history"]],
+    [/科学|science/i, ["科学", "科普", "science"]],
+  ];
+  for (const kw of input) {
+    for (const [re, extras] of alias) {
+      if (re.test(kw)) out.push(...extras);
+    }
+  }
+  const seen = new Set<string>();
+  return out.filter((x) => {
+    const k = x.trim().toLowerCase();
+    if (!k) return false;
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
 }
 
 function extractSearchKeywords(raw: string): string[] {
@@ -172,9 +202,10 @@ async function fetchBooksPool(
   const sel =
     "id,title,author,category,publication_year,description,available_quantity,quantity,created_at";
   const keywords = extractSearchKeywords(query);
+  const expanded = expandKeywords(keywords);
   const qFallback = query.trim().replace(/,/g, " ").slice(0, 56).trim();
-  const terms = keywords.length > 0
-    ? keywords.map((x) => x.replace(/,/g, " ").trim().slice(0, 56)).filter((x) =>
+  const terms = expanded.length > 0
+    ? expanded.map((x) => x.replace(/,/g, " ").trim().slice(0, 56)).filter((x) =>
       x.length >= 1
     )
     : (qFallback.length >= 1 ? [qFallback] : []);
@@ -329,6 +360,23 @@ function buildGroundedBookReply(
   return hasMore
     ? `已找到 ${total} 本相关图书，先展示当前 ${pageBooks.length} 本；可点击“换一批”查看后续结果。`
     : `已找到 ${total} 本相关图书，请查看下方卡片。`;
+}
+
+function buildNoResultMessage(query: string, total: number): string {
+  const lang = detectLanguage(query);
+  if (lang === "ja") {
+    return total === 0
+      ? "一致する所蔵が見つかりませんでした。書名・著者名・別キーワードで再検索してください。"
+      : "これ以上の結果はありません。別のキーワードで検索してください。";
+  }
+  if (lang === "en") {
+    return total === 0
+      ? "No matching books were found. Please try title, author, or another keyword."
+      : "No more results for this query. Please try a different keyword.";
+  }
+  return total === 0
+    ? "当前没有符合条件的图书。请尝试书名、作者名或其它关键词。"
+    : "已经没有更多符合当前条件的图书了，请尝试新的关键词。";
 }
 
 async function buildAuthSupabase(
@@ -491,8 +539,9 @@ Deno.serve(async (req) => {
 
   const dialog = messagesForModel(openaiMessages);
   const lastUser = lastUserContent(dialog);
+  const continueBookFlow = hasRecentBookIntent(dialog) && lastUser.trim().length <= 40;
 
-  if (!isBookIntent(lastUser, batchOffset)) {
+  if (!isBookIntent(lastUser, batchOffset) && !continueBookFlow) {
     const system = await generalSystemPrompt(req);
     const llmMessages: Msg[] = [
       { role: "system", content: system },
@@ -558,10 +607,7 @@ Deno.serve(async (req) => {
     return jsonRes({
       message: {
         role: "assistant",
-        content:
-          total === 0
-            ? "当前没有可展示的图书记录，或没有符合您描述的书目。您可以换个关键词试试。"
-            : "已经没有更多符合当前条件的图书了，可以换个说法重新搜索。",
+        content: buildNoResultMessage(lastUser, total),
       },
       books: [],
       bookBatch: batchMeta,
