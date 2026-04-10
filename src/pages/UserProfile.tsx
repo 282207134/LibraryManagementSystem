@@ -218,7 +218,6 @@ export const UserProfile = () => {
               <p className="text-xs text-gray-600 mb-0.5">总借阅数</p>
               <p className="text-lg font-bold text-gray-900">{stats.totalBorrows}</p>
             </div>
-            <div className="text-2xl">📚</div>
           </div>
         </div>
 
@@ -228,7 +227,6 @@ export const UserProfile = () => {
               <p className="text-xs text-gray-600 mb-0.5">当前借阅</p>
               <p className="text-lg font-bold text-blue-600">{stats.currentBorrows}</p>
             </div>
-            <div className="text-2xl">📖</div>
           </div>
         </div>
 
@@ -238,7 +236,6 @@ export const UserProfile = () => {
               <p className="text-xs text-gray-600 mb-0.5">历史借阅</p>
               <p className="text-lg font-bold text-green-600">{stats.historyBorrows}</p>
             </div>
-            <div className="text-2xl">✅</div>
           </div>
         </div>
 
@@ -248,7 +245,6 @@ export const UserProfile = () => {
               <p className="text-xs text-gray-600 mb-0.5">我的收藏</p>
               <p className="text-lg font-bold text-purple-600">{stats.favoritesCount}</p>
             </div>
-            <div className="text-2xl">❤️</div>
           </div>
         </div>
       </div>
