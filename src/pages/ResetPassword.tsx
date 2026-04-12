@@ -2,23 +2,58 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 
+type LinkStatus = 'checking' | 'valid' | 'invalid';
+
 export const ResetPassword = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [linkStatus, setLinkStatus] = useState<LinkStatus>('checking');
   const navigate = useNavigate();
 
   useEffect(() => {
-    // 检查是否有有效的重置令牌
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setError('无效的密码重置链接，请重新申请');
+    // メールリンクの #access_token は非同期でパースされるため、即時 getSession だけだと誤判定しうる
+    let invalidTimer: ReturnType<typeof setTimeout>;
+
+    const markValidIfSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) {
+        clearTimeout(invalidTimer);
+        setLinkStatus('valid');
+        return true;
       }
+      return false;
     };
-    checkSession();
+
+    void markValidIfSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        clearTimeout(invalidTimer);
+        setLinkStatus('valid');
+      }
+    });
+
+    invalidTimer = setTimeout(() => {
+      void (async () => {
+        const ok = await markValidIfSession();
+        if (!ok) {
+          setLinkStatus('invalid');
+          setError('无效的密码重置链接，请重新申请');
+        }
+      })();
+    }, 2500);
+
+    return () => {
+      clearTimeout(invalidTimer);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,6 +122,29 @@ export const ResetPassword = () => {
               您的密码已成功重置，正在跳转到首页...
             </p>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (linkStatus === 'checking') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-8 text-center">
+          <p className="text-gray-600">正在验证重置链接...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (linkStatus === 'invalid') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-8 text-center space-y-4">
+          <div className="p-4 rounded-lg bg-red-100 text-red-800 border border-red-200">
+            {error ?? '无效的密码重置链接，请重新申请'}
+          </div>
+          <p className="text-sm text-gray-500">请返回登录页，通过「忘记密码」重新发送邮件。</p>
         </div>
       </div>
     );
