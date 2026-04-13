@@ -5,10 +5,42 @@ import { BookRanking } from '../components/BookRanking';
 import { UserBookList } from '../components/user/UserBookList';
 import { useHomeData } from '../hooks/useHomeData';
 import { resolveCoverImageUrl } from '../lib/storageHelper';
+import { useLanguage } from '../contexts/LanguageContext';
 import type { Book } from '../types/book';
 import type { BookWithStats } from '../hooks/useHomeData';
 
 export const UserDashboard = () => {
+  const { language } = useLanguage();
+  const textMap = {
+    zh: {
+      loading: '加载中...',
+      featured: '⭐ 精选推荐',
+      ranking: '🔥 人气排行榜',
+      newArrivals: '新上架',
+      browseByCategory: '分类浏览',
+      categoryBooks: '分类图书',
+      noNewBooks: '暂无新上架图书',
+    },
+    en: {
+      loading: 'Loading...',
+      featured: '⭐ Featured Picks',
+      ranking: '🔥 Popular Ranking',
+      newArrivals: 'New Arrivals',
+      browseByCategory: 'Browse by Category',
+      categoryBooks: 'Books in Category',
+      noNewBooks: 'No new arrivals yet',
+    },
+    ja: {
+      loading: '読み込み中...',
+      featured: '⭐ 注目のおすすめ',
+      ranking: '🔥 人気ランキング',
+      newArrivals: '新着',
+      browseByCategory: 'カテゴリで探す',
+      categoryBooks: 'カテゴリの本',
+      noNewBooks: '新着図書はありません',
+    },
+  } as const;
+  const t = textMap[language];
   // 首页聚合数据读取函数
   const { 
     getRecommendedBooks, 
@@ -71,7 +103,7 @@ export const UserDashboard = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-cyan-100/70">加载中...</p>
+        <p className="text-cyan-100/70">{t.loading}</p>
       </div>
     );
   }
@@ -82,7 +114,7 @@ export const UserDashboard = () => {
       {recommendedBooks.length > 0 && (
         <BookCarousel 
           books={recommendedBooks} 
-          title="⭐ 精选推荐" 
+          title={t.featured}
           autoPlay={true}
           interval={5000}
         />
@@ -91,17 +123,17 @@ export const UserDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:items-stretch">
         {/* 左侧：人气排行榜 */}
         <div className="lg:col-span-1">
-          <BookRanking books={popularBooks} title="🔥 人气排行榜" showRank={true} />
+          <BookRanking books={popularBooks} title={t.ranking} showRank={true} />
         </div>
 
         {/* 右侧：新上架图书 */}
         <div className="lg:col-span-2">
           <div className="user-dashboard-section rounded-2xl border border-white/10 bg-[#0d142d]/80 shadow-[0_16px_42px_-24px_rgba(0,0,0,0.9)] overflow-hidden h-full flex flex-col">
             <div className="user-dashboard-section-header p-5 border-b border-white/10 flex-shrink-0">
-              <h2 className="text-xl font-bold text-cyan-50">新上架</h2>
+              <h2 className="text-xl font-bold text-cyan-50">{t.newArrivals}</h2>
             </div>
             <div className="p-5 flex-1">
-              <NewBooksGrid books={newBooks} />
+              <NewBooksGrid books={newBooks} emptyText={t.noNewBooks} />
             </div>
           </div>
         </div>
@@ -111,7 +143,7 @@ export const UserDashboard = () => {
       {categories.length > 0 && (
         <div className="user-dashboard-section rounded-2xl border border-white/10 bg-[#0d142d]/80 shadow-[0_16px_42px_-24px_rgba(0,0,0,0.9)] overflow-hidden">
           <div className="user-dashboard-section-header p-5 border-b border-white/10">
-            <h2 className="text-xl font-bold text-cyan-50">分类浏览</h2>
+            <h2 className="text-xl font-bold text-cyan-50">{t.browseByCategory}</h2>
           </div>
           <div className="p-5">
             <div className="flex flex-wrap gap-2.5 mb-5">
@@ -134,7 +166,7 @@ export const UserDashboard = () => {
             {selectedCategory && categoryBooks.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold text-cyan-50 mb-3">
-                  {selectedCategory} 分类图书
+                  {selectedCategory} {t.categoryBooks}
                 </h3>
                 <UserBookList
                   books={categoryBooks}
@@ -156,9 +188,10 @@ export const UserDashboard = () => {
 // 新上架图书网格组件
 interface NewBooksGridProps {
   books: Book[];
+  emptyText: string;
 }
 
-const NewBooksGrid = ({ books }: NewBooksGridProps) => {
+const NewBooksGrid = ({ books, emptyText }: NewBooksGridProps) => {
   // 缓存封面解析结果，避免重复解析同一 URL
   const [coverUrls, setCoverUrls] = useState<Map<string, string>>(new Map());
 
@@ -182,7 +215,7 @@ const NewBooksGrid = ({ books }: NewBooksGridProps) => {
   }, [books]);
 
   if (books.length === 0) {
-    return <p className="text-cyan-100/70 text-center py-8">暂无新上架图书</p>;
+    return <p className="text-cyan-100/70 text-center py-8">{emptyText}</p>;
   }
 
   return (

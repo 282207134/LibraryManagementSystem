@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { useBorrowings } from '../hooks/useBorrowings';
 import { useUserThemePreference } from '../hooks/useUserThemePreference';
+import { useLanguage } from '../contexts/LanguageContext';
 import { resolveCoverImageUrl } from '../lib/storageHelper';
 import type { BorrowingRecord } from '../types/borrowing';
 
@@ -56,6 +57,109 @@ const BorrowingBookCover = ({
 
 export const AdminBorrowings = () => {
   const { isLightTheme } = useUserThemePreference();
+  const { language } = useLanguage();
+  const textMap = {
+    zh: {
+      confirmReturn: '确定要归还这本书吗？',
+      returnSuccess: '归还成功！',
+      returnFail: '归还失败',
+      loading: '加载中...',
+      title: '借阅记录管理',
+      subtitle: '查看和管理所有用户的借阅记录',
+      total: '总记录数',
+      borrowed: '借阅中',
+      returned: '已归还',
+      overdue: '已逾期',
+      searchPlaceholder: '搜索图书标题、作者、用户姓名或邮箱...',
+      refresh: '刷新',
+      all: '全部',
+      noMatch: '没有找到匹配的借阅记录',
+      noData: '暂无借阅记录',
+      clearSearch: '清除搜索条件',
+      unknownBook: '未知图书',
+      author: '作者',
+      unknownAuthor: '未知',
+      statusOther: '其他',
+      borrowingUser: '借阅用户',
+      unknownUser: '未知用户',
+      unknownEmail: '未知邮箱',
+      borrowedAt: '借阅日期',
+      returnedAt: '归还日期',
+      dueDate: '到期日期',
+      remainingDays: '剩余',
+      day: '天',
+      overdueDays: '已逾期',
+      notes: '备注',
+      returnAction: '归还',
+    },
+    en: {
+      confirmReturn: 'Return this book?',
+      returnSuccess: 'Returned successfully!',
+      returnFail: 'Return failed',
+      loading: 'Loading...',
+      title: 'Borrowing Records',
+      subtitle: 'View and manage all user borrowing records',
+      total: 'Total Records',
+      borrowed: 'Borrowed',
+      returned: 'Returned',
+      overdue: 'Overdue',
+      searchPlaceholder: 'Search by title, author, user name, or email...',
+      refresh: 'Refresh',
+      all: 'All',
+      noMatch: 'No matching records found',
+      noData: 'No borrowing records',
+      clearSearch: 'Clear search',
+      unknownBook: 'Unknown Book',
+      author: 'Author',
+      unknownAuthor: 'Unknown',
+      statusOther: 'Other',
+      borrowingUser: 'Borrower',
+      unknownUser: 'Unknown user',
+      unknownEmail: 'Unknown email',
+      borrowedAt: 'Borrowed At',
+      returnedAt: 'Returned At',
+      dueDate: 'Due Date',
+      remainingDays: 'Remaining',
+      day: 'days',
+      overdueDays: 'Overdue',
+      notes: 'Notes',
+      returnAction: 'Return',
+    },
+    ja: {
+      confirmReturn: 'この本を返却しますか？',
+      returnSuccess: '返却しました！',
+      returnFail: '返却に失敗しました',
+      loading: '読み込み中...',
+      title: '貸出記録管理',
+      subtitle: 'すべてのユーザーの貸出記録を管理します',
+      total: '総件数',
+      borrowed: '貸出中',
+      returned: '返却済み',
+      overdue: '期限超過',
+      searchPlaceholder: '書名・著者・ユーザー名・メールで検索...',
+      refresh: '更新',
+      all: 'すべて',
+      noMatch: '一致する記録がありません',
+      noData: '貸出記録がありません',
+      clearSearch: '検索条件をクリア',
+      unknownBook: '不明な図書',
+      author: '著者',
+      unknownAuthor: '不明',
+      statusOther: 'その他',
+      borrowingUser: '借用ユーザー',
+      unknownUser: '不明なユーザー',
+      unknownEmail: '不明なメール',
+      borrowedAt: '貸出日',
+      returnedAt: '返却日',
+      dueDate: '返却期限',
+      remainingDays: '残り',
+      day: '日',
+      overdueDays: '期限超過',
+      notes: '備考',
+      returnAction: '返却',
+    },
+  } as const;
+  const t = textMap[language];
   const { getAllBorrowings, returnBook, loading } = useBorrowings();
   const [borrowings, setBorrowings] = useState<BorrowingRecord[]>([]);
   const [filter, setFilter] = useState<'all' | 'borrowed' | 'returned' | 'overdue'>('all');
@@ -72,14 +176,14 @@ export const AdminBorrowings = () => {
   };
 
   const handleReturn = async (id: string) => {
-    if (!window.confirm('确定要归还这本书吗？')) return;
+    if (!window.confirm(t.confirmReturn)) return;
 
     const result = await returnBook(id);
     if (result.success) {
-      alert('归还成功！');
+      alert(t.returnSuccess);
       loadBorrowings();
     } else {
-      alert(`归还失败：${result.error}`);
+      alert(`${t.returnFail}: ${result.error}`);
     }
   };
 
@@ -150,7 +254,7 @@ export const AdminBorrowings = () => {
       >
         <Header />
         <div className="text-center py-12">
-          <p className={muted}>加载中...</p>
+          <p className={muted}>{t.loading}</p>
         </div>
       </div>
     );
@@ -165,26 +269,26 @@ export const AdminBorrowings = () => {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className={`text-3xl font-bold mb-2 ${heading}`}>借阅记录管理</h1>
-          <p className={muted}>查看和管理所有用户的借阅记录</p>
+          <h1 className={`text-3xl font-bold mb-2 ${heading}`}>{t.title}</h1>
+          <p className={muted}>{t.subtitle}</p>
         </div>
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className={statCardClass}>
-          <p className={`text-sm ${muted} mb-1`}>总记录数</p>
+          <p className={`text-sm ${muted} mb-1`}>{t.total}</p>
           <p className={`text-2xl font-bold ${statNum}`}>{stats.total}</p>
         </div>
         <div className={statCardClass}>
-          <p className={`text-sm ${muted} mb-1`}>借阅中</p>
+          <p className={`text-sm ${muted} mb-1`}>{t.borrowed}</p>
           <p className={`text-2xl font-bold ${isLightTheme ? 'text-cyan-700' : 'text-cyan-300'}`}>{stats.borrowed}</p>
         </div>
         <div className={statCardClass}>
-          <p className={`text-sm ${muted} mb-1`}>已归还</p>
+          <p className={`text-sm ${muted} mb-1`}>{t.returned}</p>
           <p className={`text-2xl font-bold ${isLightTheme ? 'text-emerald-700' : 'text-emerald-300'}`}>{stats.returned}</p>
         </div>
         <div className={statCardClass}>
-          <p className={`text-sm ${muted} mb-1`}>已逾期</p>
+          <p className={`text-sm ${muted} mb-1`}>{t.overdue}</p>
           <p className={`text-2xl font-bold ${isLightTheme ? 'text-rose-600' : 'text-rose-300'}`}>{stats.overdue}</p>
         </div>
       </div>
@@ -194,7 +298,7 @@ export const AdminBorrowings = () => {
         <div className="flex gap-4">
           <input
             type="text"
-            placeholder="搜索图书标题、作者、用户姓名或邮箱..."
+            placeholder={t.searchPlaceholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={
@@ -212,22 +316,22 @@ export const AdminBorrowings = () => {
                 : 'px-4 py-2.5 bg-white/10 text-cyan-100 border border-cyan-300/20 rounded-xl hover:bg-white/20 font-medium transition-colors'
             }
           >
-            刷新
+            {t.refresh}
           </button>
         </div>
 
         <div className="flex flex-wrap gap-4">
           <button type="button" onClick={() => setFilter('all')} className={filterBtnClass('all')}>
-            全部
+            {t.all}
           </button>
           <button type="button" onClick={() => setFilter('borrowed')} className={filterBtnClass('borrowed')}>
-            借阅中
+            {t.borrowed}
           </button>
           <button type="button" onClick={() => setFilter('overdue')} className={filterBtnClass('overdue')}>
-            已逾期
+            {t.overdue}
           </button>
           <button type="button" onClick={() => setFilter('returned')} className={filterBtnClass('returned')}>
-            已归还
+            {t.returned}
           </button>
         </div>
       </div>
@@ -242,7 +346,7 @@ export const AdminBorrowings = () => {
           }
         >
           <p className={`${muted} mb-4`}>
-            {searchTerm ? '没有找到匹配的借阅记录' : '暂无借阅记录'}
+            {searchTerm ? t.noMatch : t.noData}
           </p>
           {searchTerm && (
             <button
@@ -254,7 +358,7 @@ export const AdminBorrowings = () => {
                   : 'text-cyan-300 hover:text-cyan-200 font-medium'
               }
             >
-              清除搜索条件
+              {t.clearSearch}
             </button>
           )}
         </div>
@@ -277,7 +381,7 @@ export const AdminBorrowings = () => {
                   <div className="flex gap-4 flex-1">
                     <BorrowingBookCover
                       coverUrl={record.books?.cover_image_url}
-                      title={record.books?.title || '未知图书'}
+                      title={record.books?.title || t.unknownBook}
                       isLightTheme={isLightTheme}
                     />
                     <div className="flex-1">
@@ -291,10 +395,10 @@ export const AdminBorrowings = () => {
                                 : 'text-lg font-semibold text-cyan-50 hover:text-cyan-300'
                             }
                           >
-                            {record.books?.title || '未知图书'}
+                            {record.books?.title || t.unknownBook}
                           </Link>
                           <p className={`text-sm mt-1 ${muted}`}>
-                            作者：{record.books?.author || '未知'}
+                            {t.author}: {record.books?.author || t.unknownAuthor}
                           </p>
                         </div>
                         <span
@@ -316,9 +420,9 @@ export const AdminBorrowings = () => {
                                     : 'bg-white/10 text-cyan-100'
                           }`}
                         >
-                          {record.status === 'borrowed' ? '借阅中' :
-                           record.status === 'returned' ? '已归还' :
-                           record.status === 'overdue' ? '已逾期' : '其他'}
+                          {record.status === 'borrowed' ? t.borrowed :
+                           record.status === 'returned' ? t.returned :
+                           record.status === 'overdue' ? t.overdue : t.statusOther}
                         </span>
                       </div>
 
@@ -331,10 +435,10 @@ export const AdminBorrowings = () => {
                         }
                       >
                         <p className={`text-sm ${isLightTheme ? 'text-slate-800' : 'text-cyan-100/90'}`}>
-                          <span className="font-medium">借阅用户：</span>
-                          {record.users?.full_name || '未知用户'}
+                          <span className="font-medium">{t.borrowingUser}:</span>
+                          {record.users?.full_name || t.unknownUser}
                           <span className={`${isLightTheme ? 'text-slate-500' : 'text-cyan-100/60'} ml-2`}>
-                            ({record.users?.email || '未知邮箱'})
+                            ({record.users?.email || t.unknownEmail})
                           </span>
                         </p>
                       </div>
@@ -342,25 +446,25 @@ export const AdminBorrowings = () => {
                       {/* 时间信息 */}
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <p className={muted}>借阅日期</p>
+                          <p className={muted}>{t.borrowedAt}</p>
                           <p className={`font-medium ${heading}`}>
-                            {new Date(record.borrowed_at).toLocaleString('zh-CN')}
+                            {new Date(record.borrowed_at).toLocaleString(language === 'zh' ? 'zh-CN' : language === 'ja' ? 'ja-JP' : 'en-US')}
                           </p>
                         </div>
                         {record.status === 'returned' && record.returned_at ? (
                           <div>
-                            <p className={muted}>归还日期</p>
+                            <p className={muted}>{t.returnedAt}</p>
                             <p className={`font-medium ${heading}`}>
-                              {new Date(record.returned_at).toLocaleString('zh-CN')}
+                              {new Date(record.returned_at).toLocaleString(language === 'zh' ? 'zh-CN' : language === 'ja' ? 'ja-JP' : 'en-US')}
                             </p>
                           </div>
                         ) : (
                           <div>
-                            <p className={muted}>到期日期</p>
+                            <p className={muted}>{t.dueDate}</p>
                             <p
                               className={`font-medium ${isOverdue ? 'text-rose-600' : isLightTheme ? 'text-slate-900' : 'text-cyan-50'}`}
                             >
-                              {new Date(record.due_date).toLocaleString('zh-CN')}
+                              {new Date(record.due_date).toLocaleString(language === 'zh' ? 'zh-CN' : language === 'ja' ? 'ja-JP' : 'en-US')}
                             </p>
                             {!isOverdue && (
                               <p
@@ -368,7 +472,7 @@ export const AdminBorrowings = () => {
                                   isLightTheme ? 'text-emerald-700 text-xs mt-1' : 'text-emerald-300 text-xs mt-1'
                                 }
                               >
-                                剩余 {daysRemaining} 天
+                                {t.remainingDays} {daysRemaining} {t.day}
                               </p>
                             )}
                           </div>
@@ -381,13 +485,13 @@ export const AdminBorrowings = () => {
                             isLightTheme ? 'text-rose-600 text-sm font-medium mt-2' : 'text-rose-300 text-sm font-medium mt-2'
                           }
                         >
-                          ⚠️ 已逾期 {Math.abs(daysRemaining)} 天
+                          ⚠️ {t.overdueDays} {Math.abs(daysRemaining)} {t.day}
                         </p>
                       )}
 
                       {record.notes && (
                         <p className={`text-sm mt-2 ${isLightTheme ? 'text-slate-600' : 'text-cyan-100/65'}`}>
-                          备注：{record.notes}
+                          {t.notes}: {record.notes}
                         </p>
                       )}
                     </div>
@@ -401,7 +505,7 @@ export const AdminBorrowings = () => {
                         onClick={() => handleReturn(record.id)}
                         className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-cyan-600 text-white rounded-xl hover:from-emerald-400 hover:to-cyan-500 text-sm font-medium whitespace-nowrap transition-all shadow-[0_10px_24px_-12px_rgba(16,185,129,0.8)]"
                       >
-                        归还
+                        {t.returnAction}
                       </button>
                     )}
                   </div>

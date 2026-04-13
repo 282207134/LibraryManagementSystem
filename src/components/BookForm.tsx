@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useUserThemePreference } from '../hooks/useUserThemePreference';
+import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../lib/supabaseClient';
 import type { Book, BookFormData } from '../types/book';
 import { validateImageFile, resolveCoverImageUrl } from '../lib/storageHelper';
@@ -26,6 +27,115 @@ const emptyForm: BookFormData = {
 };
 
 export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
+  const { language } = useLanguage();
+  const textMap = {
+    zh: {
+      editBook: '编辑图书',
+      addBook: '添加图书',
+      title: '书名',
+      author: '作者',
+      isbn: 'ISBN',
+      publisher: '出版社',
+      publicationYear: '出版年份',
+      category: '分类',
+      description: '简介',
+      coverImage: '封面图片',
+      coverHint: '(支持点击选择或拖拽上传)',
+      dropHint: '拖拽图片到这里，或',
+      clickPick: '点击选择文件',
+      dropUpload: '松开鼠标以上传图片',
+      imageSupport: '支持 JPEG、PNG、GIF 和 WebP 格式，文件大小不超过 5MB。',
+      preview: '预览：',
+      clearCover: '清除封面',
+      quantity: '库存数量',
+      available: '可借数量',
+      autoCalc: '(自动计算)',
+      borrowed: '已借出',
+      autoCalcDesc: '可借数量 = 库存数量 - 已借出数量（由系统自动计算）',
+      cancel: '取消',
+      saving: '保存中...',
+      update: '更新',
+      saveAdd: '添加',
+      requiredTitleAuthor: '书名和作者为必填项',
+      invalidIsbn: 'ISBN 格式不正确（应为 10 位或 13 位数字）',
+      invalidQuantity: '库存数量不能为负数',
+      invalidYear: '出版年份必须在 1000 到 9999 之间',
+      imageLoadFail: '图片加载失败，请重新选择图片。',
+      isbnPlaceholder: '10 或 13 位数字',
+      bookFallback: '图书',
+    },
+    en: {
+      editBook: 'Edit Book',
+      addBook: 'Add Book',
+      title: 'Title',
+      author: 'Author',
+      isbn: 'ISBN',
+      publisher: 'Publisher',
+      publicationYear: 'Publication Year',
+      category: 'Category',
+      description: 'Description',
+      coverImage: 'Cover Image',
+      coverHint: '(click to select or drag to upload)',
+      dropHint: 'Drag an image here, or',
+      clickPick: 'click to choose file',
+      dropUpload: 'Release to upload image',
+      imageSupport: 'Supports JPEG, PNG, GIF and WebP, up to 5MB.',
+      preview: 'Preview:',
+      clearCover: 'Clear Cover',
+      quantity: 'Stock Quantity',
+      available: 'Available',
+      autoCalc: '(auto)',
+      borrowed: 'Borrowed',
+      autoCalcDesc: 'Available = Stock - Borrowed (calculated automatically)',
+      cancel: 'Cancel',
+      saving: 'Saving...',
+      update: 'Update',
+      saveAdd: 'Add',
+      requiredTitleAuthor: 'Title and author are required',
+      invalidIsbn: 'Invalid ISBN format (must be 10 or 13 digits)',
+      invalidQuantity: 'Stock quantity cannot be negative',
+      invalidYear: 'Publication year must be between 1000 and 9999',
+      imageLoadFail: 'Image failed to load, please choose another one.',
+      isbnPlaceholder: '10 or 13 digits',
+      bookFallback: 'Book',
+    },
+    ja: {
+      editBook: '図書を編集',
+      addBook: '図書を追加',
+      title: '書名',
+      author: '著者',
+      isbn: 'ISBN',
+      publisher: '出版社',
+      publicationYear: '出版年',
+      category: 'カテゴリ',
+      description: '概要',
+      coverImage: '表紙画像',
+      coverHint: '（クリック選択またはドラッグでアップロード）',
+      dropHint: '画像をここにドラッグ、または',
+      clickPick: 'ファイルを選択',
+      dropUpload: 'ドロップしてアップロード',
+      imageSupport: 'JPEG、PNG、GIF、WebP（最大 5MB）に対応。',
+      preview: 'プレビュー：',
+      clearCover: '表紙をクリア',
+      quantity: '在庫数',
+      available: '貸出可能',
+      autoCalc: '（自動計算）',
+      borrowed: '貸出中',
+      autoCalcDesc: '貸出可能 = 在庫数 - 貸出中（自動計算）',
+      cancel: 'キャンセル',
+      saving: '保存中...',
+      update: '更新',
+      saveAdd: '追加',
+      requiredTitleAuthor: '書名と著者は必須です',
+      invalidIsbn: 'ISBN 形式が不正です（10桁または13桁）',
+      invalidQuantity: '在庫数は 0 以上である必要があります',
+      invalidYear: '出版年は 1000〜9999 で入力してください',
+      imageLoadFail: '画像の読み込みに失敗しました。別の画像を選択してください。',
+      isbnPlaceholder: '10桁または13桁',
+      bookFallback: '図書',
+    },
+  } as const;
+  const t = textMap[language];
   const [formData, setFormData] = useState<BookFormData>({ ...emptyForm });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewError, setPreviewError] = useState(false);
@@ -241,17 +351,17 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
     const coverImageUrl = formData.cover_image_url?.trim();
 
     if (!title || !author) {
-      alert('书名和作者为必填项');
+      alert(t.requiredTitleAuthor);
       return;
     }
 
     if (isbn && !/^[0-9]{10}([0-9]{3})?$/.test(isbn)) {
-      alert('ISBN 格式不正确（应为 10 位或 13 位数字）');
+      alert(t.invalidIsbn);
       return;
     }
 
     if (formData.quantity < 0) {
-      alert('库存数量不能为负数');
+      alert(t.invalidQuantity);
       return;
     }
 
@@ -259,7 +369,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
       formData.publication_year &&
       (formData.publication_year < 1000 || formData.publication_year > 9999)
     ) {
-      alert('出版年份必须在 1000 到 9999 之间');
+      alert(t.invalidYear);
       return;
     }
 
@@ -337,12 +447,12 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
         className={`border rounded-2xl shadow-xl max-w-[38rem] w-full max-h-[90vh] overflow-y-auto ${panelShellClass}`}
       >
         <div className="p-4">
-          <h2 className="text-xl font-bold mb-5">{book ? '编辑图书' : '添加图书'}</h2>
+          <h2 className="text-xl font-bold mb-5">{book ? t.editBook : t.addBook}</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className={labelFieldClass}>
-                书名 <span className="text-red-500">*</span>
+                {t.title} <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -356,7 +466,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
 
             <div>
               <label className={labelFieldClass}>
-                作者 <span className="text-red-500">*</span>
+                {t.author} <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -376,12 +486,12 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                   value={formData.isbn}
                   onChange={(e) => setFormData({ ...formData, isbn: e.target.value })}
                   className={inputFieldClass}
-                  placeholder="10 或 13 位数字"
+                  placeholder={t.isbnPlaceholder}
                 />
               </div>
 
               <div>
-                <label className={labelFieldClass}>出版社</label>
+                <label className={labelFieldClass}>{t.publisher}</label>
                 <input
                   type="text"
                   title="出版社"
@@ -394,7 +504,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className={labelFieldClass}>出版年份</label>
+                <label className={labelFieldClass}>{t.publicationYear}</label>
                 <input
                   type="number"
                   title="出版年份"
@@ -413,7 +523,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
               </div>
 
               <div>
-                <label className={labelFieldClass}>分类</label>
+                <label className={labelFieldClass}>{t.category}</label>
                 <input
                   type="text"
                   title="分类"
@@ -425,7 +535,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
             </div>
 
             <div>
-              <label className={labelFieldClass}>简介</label>
+              <label className={labelFieldClass}>{t.description}</label>
               <textarea
                 title="简介"
                 value={formData.description}
@@ -437,9 +547,9 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
 
             <div>
               <label className={labelFieldClass}>
-                封面图片
+                {t.coverImage}
                 <span className={`${subtleMuted} text-xs font-normal ml-2`}>
-                  (支持点击选择或拖拽上传)
+                  {t.coverHint}
                 </span>
               </label>
 
@@ -454,7 +564,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                 >
                   <div className="flex flex-col items-center justify-center gap-2">
                     {isDragging ? (
-                      <p className={dragHintClass}>松开鼠标以上传图片</p>
+                      <p className={dragHintClass}>{t.dropUpload}</p>
                     ) : (
                       <>
                         <svg
@@ -471,9 +581,9 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                           />
                         </svg>
                         <p className={dropTextClass}>
-                          拖拽图片到这里，或{' '}
+                          {t.dropHint}{' '}
                           <label className={`${linkPickClass} cursor-pointer underline`}>
-                            点击选择文件
+                            {t.clickPick}
                           </label>
                         </p>
                       </>
@@ -491,21 +601,21 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
 
                 {previewError && (
                   <div className="text-sm text-red-600">
-                    图片加载失败，请重新选择图片。
+                    {t.imageLoadFail}
                   </div>
                 )}
                 <p className={`text-xs ${subtleHint}`}>
-                  支持 JPEG、PNG、GIF 和 WebP 格式，文件大小不超过 5MB。
+                  {t.imageSupport}
                 </p>
 
                 {useEditCoverCompactLayout ? (
                   <div className="grid grid-cols-[7rem_minmax(0,1fr)] gap-3 items-stretch min-h-[14.5rem]">
                     <div className="h-full flex flex-col">
-                      <p className={previewLabelClass}>预览：</p>
+                      <p className={previewLabelClass}>{t.preview}</p>
                       <div className={`w-28 h-40 overflow-hidden rounded-lg border ${previewBorder}`}>
                         <img
                           src={previewUrl}
-                          alt={`封面预览 - ${formData.title || '图书'}`}
+                          alt={`Cover preview - ${formData.title || t.bookFallback}`}
                           className="w-full h-full object-cover"
                           onError={() => setPreviewError(true)}
                         />
@@ -515,7 +625,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                         onClick={handleClearCover}
                         className={clearCoverBtnCompact}
                       >
-                        清除封面
+                        {t.clearCover}
                       </button>
                     </div>
 
@@ -523,7 +633,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                       <div className="space-y-3">
                         <div>
                           <label className={labelFieldClass}>
-                            库存数量 <span className="text-red-500">*</span>
+                            {t.quantity} <span className="text-red-500">*</span>
                           </label>
                           <input
                             type="number"
@@ -538,13 +648,13 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
 
                         <div>
                           <label className={labelFieldClass}>
-                            可借数量 <span className={`${subtleHint} text-xs`}>(自动计算)</span>
+                            {t.available} <span className={`${subtleHint} text-xs`}>{t.autoCalc}</span>
                           </label>
                           <div className={readOnlyFieldClass}>
                             {calculatedAvailableQuantity} / {formData.quantity}
                             {borrowedCount > 0 && (
                               <span className={`text-xs ${subtleHint} ml-2`}>
-                                (已借出: {borrowedCount})
+                                ({t.borrowed}: {borrowedCount})
                               </span>
                             )}
                           </div>
@@ -558,14 +668,14 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                           disabled={isSubmitting}
                           className={ghostButtonClass}
                         >
-                          取消
+                          {t.cancel}
                         </button>
                         <button
                           type="submit"
                           disabled={isSubmitting}
                           className="px-4 py-2 text-white rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {isSubmitting ? '保存中...' : book ? '更新' : '添加'}
+                          {isSubmitting ? t.saving : book ? t.update : t.saveAdd}
                         </button>
                       </div>
                     </div>
@@ -574,11 +684,11 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                   <>
                     {previewUrl && !previewError && (
                       <div className="mt-2">
-                        <p className={previewLabelClass}>预览：</p>
+                        <p className={previewLabelClass}>{t.preview}</p>
                         <div className={`w-28 h-40 overflow-hidden rounded-lg border ${previewBorder}`}>
                           <img
                             src={previewUrl}
-                            alt={`封面预览 - ${formData.title || '图书'}`}
+                            alt={`Cover preview - ${formData.title || t.bookFallback}`}
                             className="w-full h-full object-cover"
                             onError={() => setPreviewError(true)}
                           />
@@ -588,7 +698,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                           onClick={handleClearCover}
                           className={clearCoverBtnLoose}
                         >
-                          清除封面
+                          {t.clearCover}
                         </button>
                       </div>
                     )}
@@ -601,7 +711,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className={labelFieldClass}>
-                    库存数量 <span className="text-red-500">*</span>
+                    {t.quantity} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
@@ -616,18 +726,18 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
 
                 <div>
                   <label className={labelFieldClass}>
-                    可借数量 <span className={`${subtleHint} text-xs`}>(自动计算)</span>
+                    {t.available} <span className={`${subtleHint} text-xs`}>{t.autoCalc}</span>
                   </label>
                   <div className={readOnlyFieldClass}>
                     {calculatedAvailableQuantity} / {formData.quantity}
                     {borrowedCount > 0 && (
                       <span className={`text-xs ${subtleHint} ml-2`}>
-                        (已借出: {borrowedCount})
+                        ({t.borrowed}: {borrowedCount})
                       </span>
                     )}
                   </div>
                   <p className={`text-xs ${subtleHint} mt-1`}>
-                    可借数量 = 库存数量 - 已借出数量（由系统自动计算）
+                    {t.autoCalcDesc}
                   </p>
                 </div>
               </div>
@@ -641,14 +751,14 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                   disabled={isSubmitting}
                   className={ghostButtonClassWide}
                 >
-                  取消
+                  {t.cancel}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   className="px-5 py-2 text-white rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? '保存中...' : book ? '更新' : '添加'}
+                  {isSubmitting ? t.saving : book ? t.update : t.saveAdd}
                 </button>
               </div>
             )}

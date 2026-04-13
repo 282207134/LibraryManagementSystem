@@ -6,10 +6,48 @@ import { Header } from './components/Header';
 import { SearchBar } from './components/SearchBar';
 import { useBooks } from './hooks/useBooks';
 import { useUserThemePreference } from './hooks/useUserThemePreference';
+import { useLanguage } from './contexts/LanguageContext';
 import { AdminBorrowings } from './pages/AdminBorrowings';
 import type { Book, BookFormData } from './types/book';
 
 const BooksDashboard = () => {
+  const { language } = useLanguage();
+  const textMap = {
+    zh: {
+      confirmDelete: '确定要删除《{title}》吗？',
+      deleteSuccess: '图书删除成功！',
+      deleteFail: '删除失败，请重试。',
+      updateSuccess: '图书更新成功！',
+      updateFail: '更新失败，请重试。',
+      addSuccess: '图书添加成功！',
+      addFail: '添加失败，请重试。',
+      error: '错误',
+      addBook: '添加图书',
+    },
+    en: {
+      confirmDelete: 'Delete "{title}"?',
+      deleteSuccess: 'Book deleted successfully!',
+      deleteFail: 'Delete failed, please retry.',
+      updateSuccess: 'Book updated successfully!',
+      updateFail: 'Update failed, please retry.',
+      addSuccess: 'Book added successfully!',
+      addFail: 'Add failed, please retry.',
+      error: 'Error',
+      addBook: 'Add Book',
+    },
+    ja: {
+      confirmDelete: '「{title}」を削除しますか？',
+      deleteSuccess: '図書を削除しました！',
+      deleteFail: '削除に失敗しました。再試行してください。',
+      updateSuccess: '図書を更新しました！',
+      updateFail: '更新に失敗しました。再試行してください。',
+      addSuccess: '図書を追加しました！',
+      addFail: '追加に失敗しました。再試行してください。',
+      error: 'エラー',
+      addBook: '図書を追加',
+    },
+  } as const;
+  const t = textMap[language];
   const { isLightTheme } = useUserThemePreference();
   const { books, loading, error, searchBooks, page, totalPages, goToPage, addBook, updateBook, deleteBook } =
     useBooks();
@@ -37,15 +75,15 @@ const BooksDashboard = () => {
   };
 
   const handleDeleteBook = async (book: Book) => {
-    if (!window.confirm(`确定要删除《${book.title}》吗？`)) {
+    if (!window.confirm(t.confirmDelete.replace('{title}', book.title))) {
       return;
     }
 
     const success = await deleteBook(book.id);
     if (success) {
-      showNotification('success', '图书删除成功！');
+      showNotification('success', t.deleteSuccess);
     } else {
-      showNotification('error', '删除失败，请重试。');
+      showNotification('error', t.deleteFail);
     }
   };
 
@@ -53,19 +91,19 @@ const BooksDashboard = () => {
     if (editingBook) {
       const result = await updateBook(editingBook.id, bookData);
       if (result) {
-        showNotification('success', '图书更新成功！');
+        showNotification('success', t.updateSuccess);
         setShowForm(false);
         setEditingBook(null);
       } else {
-        showNotification('error', '更新失败，请重试。');
+        showNotification('error', t.updateFail);
       }
     } else {
       const result = await addBook(bookData);
       if (result) {
-        showNotification('success', '图书添加成功！');
+        showNotification('success', t.addSuccess);
         setShowForm(false);
       } else {
-        showNotification('error', '添加失败，请重试。');
+        showNotification('error', t.addFail);
       }
     }
   };
@@ -115,7 +153,7 @@ const BooksDashboard = () => {
                 : 'mb-6 p-4 rounded-xl bg-rose-500/15 text-rose-100 border border-rose-300/30'
             }
           >
-            错误: {error}
+            {t.error}: {error}
           </div>
         )}
 
@@ -132,7 +170,7 @@ const BooksDashboard = () => {
                 : 'px-6 py-2.5 rounded-xl font-medium text-white whitespace-nowrap bg-gradient-to-r from-emerald-500 to-cyan-600 hover:from-emerald-400 hover:to-cyan-500 transition-all shadow-[0_12px_30px_-14px_rgba(16,185,129,0.8)]'
             }
           >
-            添加图书
+            {t.addBook}
           </button>
         </div>
 

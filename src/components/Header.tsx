@@ -1,25 +1,70 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useUserThemePreference } from '../hooks/useUserThemePreference';
+import { useLanguage } from '../contexts/LanguageContext';
 import { BrandLogo } from './BrandLogo';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 export const Header = () => {
   const { user, signOut, userRole } = useAuth();
   const { isLightTheme, toggleTheme } = useUserThemePreference();
+  const { language } = useLanguage();
+  const textMap = {
+    zh: {
+      user: '用户',
+      appTitle: '图书管理系统',
+      appSubtitle: '管理和查看您的图书收藏',
+      booksMgmt: '图书管理',
+      borrowings: '借阅记录',
+      switchToDark: '切换到深色主题',
+      switchToLight: '切换到浅色主题',
+      backToUser: '返回图书浏览',
+      signOut: '退出',
+      signOutConfirm: '确定要退出登录吗？',
+      signOutFailed: '退出登录失败',
+    },
+    en: {
+      user: 'User',
+      appTitle: 'Library Management System',
+      appSubtitle: 'Manage and view your library collection',
+      booksMgmt: 'Books',
+      borrowings: 'Borrowings',
+      switchToDark: 'Switch to dark theme',
+      switchToLight: 'Switch to light theme',
+      backToUser: 'Back to user view',
+      signOut: 'Sign out',
+      signOutConfirm: 'Are you sure you want to sign out?',
+      signOutFailed: 'Failed to sign out',
+    },
+    ja: {
+      user: 'ユーザー',
+      appTitle: '図書管理システム',
+      appSubtitle: '図書コレクションの管理と閲覧',
+      booksMgmt: '図書管理',
+      borrowings: '貸出記録',
+      switchToDark: 'ダークテーマへ切り替え',
+      switchToLight: 'ライトテーマへ切り替え',
+      backToUser: 'ユーザー画面へ戻る',
+      signOut: 'ログアウト',
+      signOutConfirm: 'ログアウトしますか？',
+      signOutFailed: 'ログアウトに失敗しました',
+    },
+  } as const;
+  const t = textMap[language];
 
   const getUserDisplayName = () => {
     if (user?.user_metadata?.name) {
       return user.user_metadata.name;
     }
-    return user?.email?.split('@')[0] || '用户';
+    return user?.email?.split('@')[0] || t.user;
   };
 
   const handleSignOut = async () => {
-    const shouldSignOut = window.confirm('确定要退出登录吗？');
+    const shouldSignOut = window.confirm(t.signOutConfirm);
     if (!shouldSignOut) return;
     const { error } = await signOut();
     if (error) {
-      alert(`退出登录失败：${error.message}`);
+      alert(`${t.signOutFailed}: ${error.message}`);
     }
   };
 
@@ -45,10 +90,10 @@ export const Header = () => {
             <BrandLogo size="sm" className="ring-1 ring-cyan-400/35 flex-shrink-0" />
             <div>
               <h1 className={`text-2xl font-bold ${isLightTheme ? 'text-slate-800' : 'text-cyan-100'}`}>
-                图书管理系统
+                {t.appTitle}
               </h1>
               <p className={`text-sm ${isLightTheme ? 'text-slate-600' : 'text-cyan-100/70'}`}>
-                管理和查看您的图书收藏
+                {t.appSubtitle}
               </p>
             </div>
           </div>
@@ -56,10 +101,10 @@ export const Header = () => {
           {userRole === 'admin' && (
             <nav className="hidden md:flex items-center gap-2">
               <Link to="/admin/dashboard" className={navLinkClass}>
-                图书管理
+                {t.booksMgmt}
               </Link>
               <Link to="/admin/borrowings" className={navLinkClass}>
-                借阅记录
+                {t.borrowings}
               </Link>
             </nav>
           )}
@@ -68,8 +113,8 @@ export const Header = () => {
             <button
               type="button"
               onClick={toggleTheme}
-              title={isLightTheme ? '切换到深色主题' : '切换到浅色主题'}
-              aria-label={isLightTheme ? '切换到深色主题' : '切换到浅色主题'}
+              title={isLightTheme ? t.switchToDark : t.switchToLight}
+              aria-label={isLightTheme ? t.switchToDark : t.switchToLight}
               className={
                 isLightTheme
                   ? 'h-9 w-9 flex items-center justify-center text-base rounded-lg transition-colors border text-slate-700 hover:text-slate-900 hover:bg-amber-100 border-amber-200'
@@ -78,6 +123,7 @@ export const Header = () => {
             >
               {isLightTheme ? '🌙' : '☀️'}
             </button>
+            <LanguageSwitcher light={isLightTheme} />
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-violet-600 rounded-full flex items-center justify-center shadow-md shadow-cyan-500/40">
                 <span className="text-white text-sm font-medium">
@@ -90,7 +136,7 @@ export const Header = () => {
             </div>
             {userRole === 'admin' && (
               <Link to="/user/home" className={secondaryBtnClass}>
-                返回图书浏览
+                {t.backToUser}
               </Link>
             )}
             <button
@@ -102,7 +148,7 @@ export const Header = () => {
                   : 'px-4 py-2 text-sm rounded-xl text-rose-100 border border-rose-300/30 bg-rose-500/15 hover:bg-rose-500/25 transition-colors'
               }
             >
-              退出
+              {t.signOut}
             </button>
           </div>
         </div>

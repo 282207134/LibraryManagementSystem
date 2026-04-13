@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { resolveCoverImageUrl } from '../lib/storageHelper';
 import { StarRating } from './StarRating';
 import { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 import type { BookWithStats } from '../hooks/useHomeData';
 
 interface BookRankingProps {
@@ -11,6 +12,13 @@ interface BookRankingProps {
 }
 
 export const BookRanking = ({ books, title, showRank = true }: BookRankingProps) => {
+  const { language } = useLanguage();
+  const textMap = {
+    zh: { author: '作者', comments: '评论', borrowCount: '借阅', borrowTimes: '次' },
+    en: { author: 'Author', comments: 'reviews', borrowCount: 'Borrowed', borrowTimes: 'times' },
+    ja: { author: '著者', comments: '件のレビュー', borrowCount: '貸出', borrowTimes: '回' },
+  } as const;
+  const t = textMap[language];
   const [coverUrls, setCoverUrls] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
@@ -82,21 +90,21 @@ export const BookRanking = ({ books, title, showRank = true }: BookRankingProps)
                 <h3 className="text-base font-semibold text-gray-900 truncate mb-1">
                   {book.title}
                 </h3>
-                <p className="text-xs text-gray-600 mb-1.5">作者：{book.author}</p>
+                <p className="text-xs text-gray-600 mb-1.5">{t.author}: {book.author}</p>
                 
                 <div className="flex items-center gap-4">
                   {book.average_rating && book.average_rating > 0 && (
                     <div className="flex items-center gap-2">
                       <StarRating rating={book.average_rating} readonly size="sm" />
                       <span className="text-xs text-gray-500">
-                        {book.review_count || 0} 评论
+                        {book.review_count || 0} {t.comments}
                       </span>
                     </div>
                   )}
                   
                   {book.borrow_count !== undefined && (
                     <span className="text-sm text-gray-600">
-                      借阅 {book.borrow_count} 次
+                      {t.borrowCount} {book.borrow_count} {t.borrowTimes}
                     </span>
                   )}
                 </div>

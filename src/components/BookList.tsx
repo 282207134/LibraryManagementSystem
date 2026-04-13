@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useUserThemePreference } from '../hooks/useUserThemePreference';
+import { useLanguage } from '../contexts/LanguageContext';
 import type { Book } from '../types/book';
 import { resolveCoverImageUrl } from '../lib/storageHelper';
 import { BookCard } from './BookCard';
@@ -24,6 +25,13 @@ const CoverThumbnail = ({
   title: string;
   isLightTheme: boolean;
 }) => {
+  const { language } = useLanguage();
+  const coverAltMap = {
+    zh: { noCover: '无封面', cover: '封面' },
+    en: { noCover: 'No cover', cover: 'cover' },
+    ja: { noCover: '表紙なし', cover: '表紙' },
+  } as const;
+  const t = coverAltMap[language];
   const [failed, setFailed] = useState(false);
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
 
@@ -58,7 +66,7 @@ const CoverThumbnail = ({
             : 'w-12 h-16 bg-slate-800 border border-white/10 rounded flex items-center justify-center text-xs text-cyan-100/60'
         }
       >
-        无封面
+        {t.noCover}
       </div>
     );
   }
@@ -66,7 +74,7 @@ const CoverThumbnail = ({
   return (
     <img
       src={resolvedUrl}
-      alt={`${title} 封面`}
+      alt={`${title} ${t.cover}`}
       className={
         isLightTheme
           ? 'w-12 h-16 object-cover rounded border border-amber-200/80'
@@ -87,6 +95,49 @@ export const BookList = ({
   onPageChange,
 }: BookListProps) => {
   const { isLightTheme } = useUserThemePreference();
+  const { language } = useLanguage();
+  const textMap = {
+    zh: {
+      loading: '加载中...',
+      empty: '暂无图书，请添加新图书。',
+      cover: '封面',
+      title: '书名',
+      author: '作者',
+      isbn: 'ISBN',
+      category: '分类',
+      stock: '库存',
+      available: '可借',
+      edit: '编辑',
+      delete: '删除',
+    },
+    en: {
+      loading: 'Loading...',
+      empty: 'No books yet, please add one.',
+      cover: 'Cover',
+      title: 'Title',
+      author: 'Author',
+      isbn: 'ISBN',
+      category: 'Category',
+      stock: 'Stock',
+      available: 'Available',
+      edit: 'Edit',
+      delete: 'Delete',
+    },
+    ja: {
+      loading: '読み込み中...',
+      empty: '図書がありません。追加してください。',
+      cover: '表紙',
+      title: '書名',
+      author: '著者',
+      isbn: 'ISBN',
+      category: 'カテゴリ',
+      stock: '在庫',
+      available: '貸出可',
+      edit: '編集',
+      delete: '削除',
+    },
+  } as const;
+  const t = textMap[language];
 
   const muted = isLightTheme ? 'text-slate-500' : 'text-cyan-100/70';
   const cell = isLightTheme ? 'text-slate-700' : 'text-cyan-100/75';
@@ -96,7 +147,7 @@ export const BookList = ({
   if (loading && books.length === 0) {
     return (
       <div className="text-center py-10">
-        <p className={muted}>加载中...</p>
+        <p className={muted}>{t.loading}</p>
       </div>
     );
   }
@@ -104,7 +155,7 @@ export const BookList = ({
   if (!loading && books.length === 0) {
     return (
       <div className="text-center py-10">
-        <p className={muted}>暂无图书，请添加新图书。</p>
+        <p className={muted}>{t.empty}</p>
       </div>
     );
   }
@@ -122,25 +173,25 @@ export const BookList = ({
           <thead className={isLightTheme ? 'bg-amber-50/80' : 'bg-white/5'}>
             <tr>
               <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${muted} uppercase tracking-wider`}>
-                封面
+                {t.cover}
               </th>
               <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${muted} uppercase tracking-wider`}>
-                书名
+                {t.title}
               </th>
               <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${muted} uppercase tracking-wider`}>
-                作者
+                {t.author}
               </th>
               <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${muted} uppercase tracking-wider`}>
                 ISBN
               </th>
               <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${muted} uppercase tracking-wider`}>
-                分类
+                {t.category}
               </th>
               <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${muted} uppercase tracking-wider`}>
-                库存
+                {t.stock}
               </th>
               <th scope="col" className={`px-6 py-3 text-left text-xs font-medium ${muted} uppercase tracking-wider`}>
-                可借
+                {t.available}
               </th>
               <th scope="col" className="px-6 py-3" />
             </tr>
@@ -170,7 +221,7 @@ export const BookList = ({
                     onClick={() => onEdit(book)}
                     className="px-4 py-2 text-sm font-medium text-white rounded-xl bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 transition-all shadow-[0_10px_20px_-12px_rgba(34,211,238,0.7)]"
                   >
-                    编辑
+                    {t.edit}
                   </button>
                   <button
                     type="button"
@@ -181,7 +232,7 @@ export const BookList = ({
                         : 'px-4 py-2 text-sm font-medium text-rose-100 rounded-xl border border-rose-300/30 bg-rose-500/15 hover:bg-rose-500/25 transition-colors'
                     }
                   >
-                    删除
+                    {t.delete}
                   </button>
                 </td>
               </tr>
@@ -197,7 +248,7 @@ export const BookList = ({
       </div>
 
       {loading && books.length > 0 && (
-        <p className={`text-center text-sm ${muted}`}>加载中...</p>
+        <p className={`text-center text-sm ${muted}`}>{t.loading}</p>
       )}
 
       <Pagination
