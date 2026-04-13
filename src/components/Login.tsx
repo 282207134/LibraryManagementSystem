@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BrandLogo } from './BrandLogo';
@@ -13,6 +13,7 @@ export const Login = ({ onToggleMode }: LoginProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { signIn } = useAuth();
@@ -57,6 +58,15 @@ export const Login = ({ onToggleMode }: LoginProps) => {
     },
   } as const;
   const t = textMap[language];
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const savedNotice = window.sessionStorage.getItem('auth_notice');
+    if (savedNotice) {
+      setNotice(savedNotice);
+      window.sessionStorage.removeItem('auth_notice');
+    }
+  }, []);
 
   if (showForgotPassword) {
     return (
@@ -108,6 +118,11 @@ export const Login = ({ onToggleMode }: LoginProps) => {
         {error && (
           <div className="mb-4 p-4 rounded-xl bg-rose-500/15 text-rose-100 border border-rose-300/30">
             {error}
+          </div>
+        )}
+        {notice && (
+          <div className="mb-4 p-4 rounded-xl bg-emerald-500/15 text-emerald-100 border border-emerald-300/30">
+            {notice}
           </div>
         )}
 

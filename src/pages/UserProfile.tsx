@@ -152,14 +152,21 @@ export const UserProfile = () => {
 
       if (updateError) throw updateError;
 
-      setSuccessMessage('密码修改成功！');
-      setIsChangingPassword(false);
+      setSuccessMessage('密码修改成功！即将跳转到登录页...');
+      // 会话可能被 Supabase 立即刷新/失效，使用跨页面通知兜底。
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem('auth_notice', '密码修改成功，请重新登录。');
+      }
       setPasswordForm({
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
       });
       setPasswordError(null);
+      window.setTimeout(async () => {
+        setIsChangingPassword(false);
+        await supabase.auth.signOut();
+      }, 1500);
     } catch (err) {
       setPasswordError(err instanceof Error ? err.message : '密码修改失败，请重试');
     }
