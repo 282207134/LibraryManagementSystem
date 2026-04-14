@@ -1,261 +1,108 @@
-# 图书管理系统 (Books Management System)
+# 图书管理系统（Library Management System）
 
-一个基于 React + TypeScript + Supabase 的现代化图书管理系统，实现图书的增删改查（CRUD）功能。
-
-## 🚀 快速开始
-
-**👉 首次部署请查看 [部署指南.md](./部署指南.md)**
+一个基于 React + TypeScript + Supabase 的图书管理系统，包含用户端、管理员端、借阅收藏评论、以及 Edge Function AI 助手。
 
 ## 技术栈
 
-- **前端框架**: React 18+ with TypeScript
-- **构建工具**: Vite
-- **UI 框架**: Tailwind CSS
-- **后端服务**: Supabase (PostgreSQL + Real-time API)
-- **状态管理**: React Hooks (useState, useEffect, useCallback)
-- **数据库**: PostgreSQL (通过 Supabase)
+- React 19 + TypeScript 5
+- Vite 7 + Tailwind CSS 4
+- React Router 7
+- Supabase（Auth / PostgreSQL / Storage / Edge Functions）
 
-## 功能特性
+## 已实现能力
 
-- ✅ 用户认证（登录/注册）
-- ✅ 用户权限管理
-- ✅ 图书列表展示（表格视图 + 卡片视图）
-- ✅ 添加新图书
-- ✅ 编辑图书信息
-- ✅ 删除图书（带确认）
-- ✅ 图书封面图片支持
-- ✅ 搜索功能（按书名或作者）
-- ✅ 分页加载
-- ✅ 响应式设计（移动端友好）
-- ✅ 表单验证（ISBN格式、必填字段等）
-- ✅ 实时错误提示和成功通知
+- 认证：登录、注册、忘记密码、重置密码
+- 用户端：仪表盘、图书浏览、图书详情、我的借阅、我的收藏、个人资料
+- 管理端：图书管理（CRUD）、借阅记录管理
+- 业务：借阅/归还 RPC、收藏、评论评分、封面上传
+- 多语言：中文/English/日本語切换
+- AI 助手：`ai-chat` Edge Function + 前端对话卡片 + 书目分页推荐
 
-## 项目结构
+## 路由（当前实现）
 
-```
-src/
-├── components/           # React 组件
-│   ├── BookList.tsx     # 图书列表组件
-│   ├── BookForm.tsx     # 添加/编辑表单组件
-│   ├── BookCard.tsx     # 图书卡片组件
-│   ├── SearchBar.tsx    # 搜索栏组件
-│   ├── Header.tsx       # 头部导航组件
-│   ├── Login.tsx        # 登录组件
-│   └── Register.tsx     # 注册组件
-├── contexts/            # React Context
-│   └── AuthContext.tsx  # 认证上下文
-├── hooks/               # 自定义 Hooks
-│   └── useBooks.ts      # 图书 CRUD 操作 Hook
-├── lib/                 # 工具库
-│   └── supabaseClient.ts # Supabase 客户端配置
-├── types/               # TypeScript 类型定义
-│   └── book.ts          # 图书类型定义
-├── App.tsx              # 主应用组件
-├── main.tsx             # 应用入口
-└── index.css            # 全局样式
-```
+- 未登录：默认显示登录/注册（同一路由内切换），`/reset-password` 可直接访问
+- 已登录用户：
+  - `/user/dashboard`
+  - `/user/home`、`/user/books`
+  - `/user/books/:id`
+  - `/user/my-borrowings`
+  - `/user/my-favorites`
+  - `/user/profile`
+- 管理员专属：
+  - `/admin/dashboard`
+  - `/admin/borrowings`
 
-## 本地开发环境设置
+## 快速开始
 
-### 前置要求
-
-- Node.js >= 16.x
-- npm 或 yarn
-- Supabase 账号（免费）
-
-### 安装步骤
-
-1. **克隆仓库**
-
-```bash
-git clone <repository-url>
-cd <project-directory>
-```
-
-2. **安装依赖**
+1. 安装依赖
 
 ```bash
 npm install
 ```
 
-3. **配置环境变量**
-
-复制 `.env.example` 文件并重命名为 `.env`：
+2. 复制环境变量
 
 ```bash
 cp .env.example .env
 ```
 
-编辑 `.env` 文件，填入你的 Supabase 项目信息：
+3. 在 `.env` 中填写：
 
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key-here
+VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-4. **设置 Supabase 数据库**
+4. 按照 `部署指南.md` 完成数据库/RLS/Storage 配置。
 
-请按照 [部署指南.md](./部署指南.md) 完成 Supabase 配置。
-   
-完成后，你的系统将具备：
-   - ✅ Supabase 项目与数据库
-   - ✅ 用户认证（Email 登录）
-   - ✅ books 表与 RLS 策略
-   - ✅ 可选的封面图片上传功能
-
-5. **启动开发服务器**
+5. 启动开发：
 
 ```bash
 npm run dev
 ```
 
-应用将在 `http://localhost:5173` 启动。
+默认访问：`http://localhost:5173`
 
-## 可用脚本
+## 常用脚本
 
 ```bash
-# 开发模式
 npm run dev
-
-# 构建生产版本
 npm run build
-
-# 预览生产构建
 npm run preview
-
-# 代码检查
 npm run lint
 ```
 
-## 环境变量配置
+### Edge Function（AI 助手）脚本
 
-项目需要以下环境变量：
+```bash
+npm run supabase:functions:serve
+npm run supabase:cloud:secrets
+npm run supabase:functions:deploy
+```
 
-| 变量名 | 说明 | 示例 |
-|--------|------|------|
-| `VITE_SUPABASE_URL` | Supabase 项目 URL | `https://xxxxx.supabase.co` |
-| `VITE_SUPABASE_ANON_KEY` | Supabase 匿名密钥 | `eyJhbGciOiJIUzI1NiIsInR5cCI6...` |
+> 注意：`package.json` 中 `--project-ref` 需与你自己的 Supabase 项目一致。
 
-> **注意**: 所有 Vite 环境变量必须以 `VITE_` 前缀开头才能在客户端代码中访问。
+## 环境变量说明
 
-### 用户认证配置
+| 变量 | 位置 | 用途 |
+|---|---|---|
+| `VITE_SUPABASE_URL` | 根目录 `.env` | 前端连接 Supabase 项目地址 |
+| `VITE_SUPABASE_ANON_KEY` | 根目录 `.env` | 前端匿名 key（可公开） |
+| `CHAT_PROVIDER` | `supabase/functions/.env` | `deepseek` 或 `ollama` |
+| `DEEPSEEK_API_KEY` | `supabase/functions/.env` | DeepSeek 模型密钥（仅函数端） |
+| `OLLAMA_BASE_URL` | `supabase/functions/.env` | Ollama API 地址 |
 
-1. 打开 Supabase 项目控制台，进入 **Authentication → Providers**。
-2. 启用 **Email** 登录方式，并根据需要配置邮件模板。
-3. 在 **Authentication → Policies** 中确保匿名访问被禁用，仅允许已认证用户访问 `books` 表。
+## 安全要点
 
-#### 用户表说明
+- 前端只允许使用 `anon` key，不可放 `service_role`。
+- 模型 API key 只放在 `supabase/functions/.env` 和云端 secrets。
+- 权限控制以 RLS + RPC 为准，前端路由守卫只是体验层。
 
-Supabase Auth 会自动维护 `auth.users` 表用于账号注册和登录，无需手动创建额外的用户表。只需启用 Email 登录（或其他登录方式），即可以 Supabase Auth 提供的用户体系完成基础认证。
+## 相关文档
 
-如果需要扩展用户资料（例如角色、手机号等额外字段），可以创建一个与 `auth.users` 一对一关联的 `users` 扩展表。详细的建表 SQL 和推荐策略请参考 [SUPABASE_TABLES_PROPOSAL.md](./SUPABASE_TABLES_PROPOSAL.md)。
-
-### 图书封面图片上传
-
-本系统支持直接上传图片到 Supabase Storage：
-
-- 创建名为 `book-covers` 的公开存储桶（Storage Bucket）
-- 运行 `STORAGE_SETUP.sql` 脚本设置存储策略
-- 支持的图片格式：JPEG、PNG、GIF、WebP
-- 图片大小限制：最大 5MB
-- 系统会自动管理图片的上传、更新和删除
-
-**设置步骤**：
-
-1. 在 Supabase Dashboard 中进入 Storage
-2. 创建新的 bucket，命名为 `book-covers`，设置为 public
-3. 在 SQL Editor 中运行 `STORAGE_SETUP.sql` 文件中的脚本来设置访问策略
-
-> 详细的存储配置说明请参考 [DEPLOYMENT.md](./DEPLOYMENT.md) 的 "Supabase Storage" 部分
-
-## 数据库设计
-
-### books 表结构
-
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| id | UUID | 主键，自动生成 |
-| title | VARCHAR(255) | 书名（必填） |
-| author | VARCHAR(255) | 作者（必填） |
-| isbn | VARCHAR(13) | ISBN 编号（唯一） |
-| publisher | VARCHAR(255) | 出版社 |
-| publication_year | INTEGER | 出版年份 |
-| category | VARCHAR(100) | 图书分类 |
-| description | TEXT | 图书简介 |
-| quantity | INTEGER | 库存数量 |
-| available_quantity | INTEGER | 可借数量 |
-| cover_image_url | TEXT | 图书封面 URL |
-| created_at | TIMESTAMP | 创建时间 |
-| updated_at | TIMESTAMP | 更新时间 |
-
-详细的数据库设计和 SQL 脚本请参考 [DATABASE.md](./DATABASE.md)。
-
-## 部署
-
-详细的部署指南请参考 [DEPLOYMENT.md](./DEPLOYMENT.md)，包括：
-
-- Supabase 项目设置
-- 数据库表创建
-- RLS (Row Level Security) 配置
-- 前端部署到 Vercel/Netlify
-
-## 表单验证规则
-
-- **书名**: 必填
-- **作者**: 必填
-- **ISBN**: 可选，但如果填写必须是10位或13位数字
-- **出版年份**: 可选，范围 1000-9999
-- **库存数量**: 必填，最小值 0
-- **可借数量**: 必填，不能大于库存数量
-
-## 开发注意事项
-
-1. **TypeScript 类型安全**: 项目使用 TypeScript，确保类型定义正确
-2. **错误处理**: 所有数据库操作都包含错误处理逻辑
-3. **加载状态**: 异步操作显示加载状态，提升用户体验
-4. **响应式设计**: 使用 Tailwind CSS 实现移动端适配
-5. **代码规范**: 遵循 ESLint 配置的代码规范
-
-## 常见问题
-
-### 1. 无法连接到 Supabase
-
-- 检查 `.env` 文件中的 URL 和 API Key 是否正确
-- 确认 Supabase 项目是否已激活
-- 检查网络连接
-
-### 2. 数据库错误
-
-- 确认数据库表已正确创建
-- 检查 RLS (Row Level Security) 策略配置
-- 查看 Supabase Dashboard 的日志
-
-### 3. 搜索功能不工作
-
-- 确认数据库索引已创建
-- 检查搜索关键词是否正确
-
-## 贡献指南
-
-欢迎提交 Issue 和 Pull Request！
-
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
-
-## 许可证
-
-MIT License
-
-## 联系方式
-
-如有问题或建议，请通过 Issue 联系我们。
-
----
-
-## 📚 相关文档
-
-- **[部署指南.md](./部署指南.md)** - 完整的部署教程
-- **[DATABASE.md](./DATABASE.md)** - 数据库设计文档（可选）
+- [部署指南](./部署指南.md)
+- [数据库文档](./DATABASE.md)
+- [Supabase 表与 SQL 方案](./SUPABASE_TABLES_PROPOSAL.md)
+- [项目设计书](./项目设计书.md)
+- [用户界面设计](./USER_INTERFACE_DESIGN.md)
+- [AI 助手说明](./AI_ASSISTANT.md)
