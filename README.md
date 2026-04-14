@@ -2,6 +2,9 @@
 
 一个基于 React + TypeScript + Supabase 的图书管理系统，包含用户端、管理员端、借阅收藏评论、以及 Edge Function AI 助手。
 
+<img width="780" height="404" alt="image" src="https://github.com/user-attachments/assets/e7393e94-733b-4ebf-ae52-fd05937fd017" />
+<img width="709" height="710" alt="image" src="https://github.com/user-attachments/assets/19c42f59-fec2-4063-8509-a50c3400f021" />
+
 ## 技术栈
 
 - React 19 + TypeScript 5
