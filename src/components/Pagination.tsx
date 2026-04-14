@@ -1,4 +1,5 @@
 import { useUserThemePreference } from '../hooks/useUserThemePreference';
+import { useLanguage } from '../contexts/LanguageContext';
 
 type PageItem = number | 'ellipsis';
 
@@ -38,6 +39,13 @@ export interface PaginationProps {
 
 export const Pagination = ({ currentPage, totalPages, onPageChange, loading }: PaginationProps) => {
   const { isLightTheme } = useUserThemePreference();
+  const { language } = useLanguage();
+  const textMap = {
+    zh: { pagination: '分页', prev: '上一页', next: '下一页', page: '第', pageSuffix: '页' },
+    en: { pagination: 'Pagination', prev: 'Previous', next: 'Next', page: 'Page ', pageSuffix: '' },
+    ja: { pagination: 'ページネーション', prev: '前へ', next: '次へ', page: '第', pageSuffix: 'ページ' },
+  } as const;
+  const t = textMap[language];
 
   const btnBase = isLightTheme
     ? 'inline-flex min-h-9 min-w-9 items-center justify-center border border-amber-200 bg-white px-2 text-sm text-slate-800 transition-colors hover:bg-amber-50 disabled:pointer-events-none disabled:opacity-40 rounded-lg'
@@ -54,15 +62,15 @@ export const Pagination = ({ currentPage, totalPages, onPageChange, loading }: P
     : 'border-cyan-300/60 bg-gradient-to-r from-cyan-500/40 to-violet-500/40 text-white shadow-md shadow-cyan-500/20 hover:bg-cyan-500/40';
 
   return (
-    <nav className="mt-8 flex flex-wrap items-center justify-center gap-1.5" aria-label="分页">
+    <nav className="mt-8 flex flex-wrap items-center justify-center gap-1.5" aria-label={t.pagination}>
       <button
         type="button"
         className={`${btnBase} gap-1 px-3`}
         disabled={busy || currentPage <= 1}
         onClick={() => onPageChange(currentPage - 1)}
-        aria-label="上一页"
+        aria-label={t.prev}
       >
-        上一页
+        {t.prev}
       </button>
 
       {items.map((item, idx) => {
@@ -74,7 +82,7 @@ export const Pagination = ({ currentPage, totalPages, onPageChange, loading }: P
               className={`${btnBase} min-w-[4.25rem] px-2 ${ellipsisJump}`}
               disabled={busy}
               onClick={() => onPageChange(totalPages)}
-              aria-label={`第 ${totalPages} 页`}
+              aria-label={`${t.page}${totalPages}${t.pageSuffix}`}
             >
               … {totalPages}
             </button>
@@ -102,7 +110,7 @@ export const Pagination = ({ currentPage, totalPages, onPageChange, loading }: P
             disabled={busy}
             onClick={() => onPageChange(item)}
             aria-current={item === currentPage ? 'page' : undefined}
-            aria-label={`第 ${item} 页`}
+            aria-label={`${t.page}${item}${t.pageSuffix}`}
           >
             {item}
           </button>
@@ -114,9 +122,9 @@ export const Pagination = ({ currentPage, totalPages, onPageChange, loading }: P
         className={`${btnBase} gap-1 px-3`}
         disabled={busy || currentPage >= totalPages}
         onClick={() => onPageChange(currentPage + 1)}
-        aria-label="下一页"
+        aria-label={t.next}
       >
-        下一页
+        {t.next}
       </button>
     </nav>
   );
