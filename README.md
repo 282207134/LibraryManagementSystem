@@ -9,6 +9,14 @@
 <img width="212" height="218" alt="image" src="https://github.com/user-attachments/assets/bbbd99eb-4ce8-4ee9-8b1d-97056b6ee9ce" />
 
 https://library-management-system-chi-lyart.vercel.app/
+
+===测试管理员账号===
+账号：admin@gmail.com
+密码：admin123
+===测试用一般用户账号(也可以选择注册新账号)===
+账号:user@gmail.com
+账号:user123
+
 ## 技术栈
 
 - React 19 + TypeScript 5
