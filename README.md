@@ -5,6 +5,10 @@
 <img width="780" height="404" alt="image" src="https://github.com/user-attachments/assets/e7393e94-733b-4ebf-ae52-fd05937fd017" />
 <img width="709" height="710" alt="image" src="https://github.com/user-attachments/assets/19c42f59-fec2-4063-8509-a50c3400f021" />
 
+## 在线查看
+<img width="212" height="218" alt="image" src="https://github.com/user-attachments/assets/bbbd99eb-4ce8-4ee9-8b1d-97056b6ee9ce" />
+
+https://library-management-system-chi-lyart.vercel.app/
 ## 技术栈
 
 - React 19 + TypeScript 5
