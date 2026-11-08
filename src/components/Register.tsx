@@ -37,7 +37,7 @@ export const Register = ({ onToggleMode }: RegisterProps) => {
       loginNow: '立即登录',
       passwordMismatch: '两次输入的密码不一致',
       passwordTooShort: '密码长度至少为 6 位',
-      registerSuccess: '注册成功！请检查邮箱以验证您的账户。',
+      registerSuccess: '注册申请已提交！请检查邮箱并点击确认链接。验证成功后会返回网站并自动登录。',
       registerFail: '注册失败，请重试',
     },
     en: {
@@ -57,7 +57,7 @@ export const Register = ({ onToggleMode }: RegisterProps) => {
       loginNow: 'Sign in now',
       passwordMismatch: 'Passwords do not match',
       passwordTooShort: 'Password must be at least 6 characters',
-      registerSuccess: 'Registration successful! Please check your email to verify your account.',
+      registerSuccess: 'Registration submitted! Check your email and open the confirmation link. After verification, you will return here and be signed in automatically.',
       registerFail: 'Registration failed, please try again',
     },
     ja: {
@@ -77,7 +77,7 @@ export const Register = ({ onToggleMode }: RegisterProps) => {
       loginNow: '今すぐログイン',
       passwordMismatch: 'パスワードが一致しません',
       passwordTooShort: 'パスワードは6文字以上必要です',
-      registerSuccess: '登録に成功しました。メールを確認してアカウントを認証してください。',
+      registerSuccess: '登録を受け付けました。確認メールのリンクを開いてください。認証後、このサイトに戻り自動的にログインします。',
       registerFail: '登録に失敗しました。再試行してください',
     },
   } as const;

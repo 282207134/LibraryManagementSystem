@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, useRef, type ReactNode } from 'react';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
+import type { AuthChangeEvent, User as SupabaseUser } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import { AuthContext, type AuthContextType } from './AuthContextBase';
 
@@ -9,7 +9,8 @@ export { AuthContext } from './AuthContextBase';
 const createDefaultProfile = (supabaseUser: SupabaseUser) => ({
   id: supabaseUser.id,
   email: supabaseUser.email ?? '',
-  full_name: (supabaseUser.user_metadata?.name as string | undefined) ?? supabaseUser.email ?? '用户',
+  full_name: (supabaseUser.user_metadata?.full_name as string | undefined)
+    || (supabaseUser.user_metadata?.name as string | undefined) || supabaseUser.email || '用户',
   role: 'user' as const,
   phone: null,
   address: null,
@@ -67,11 +68,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const defaultProfile = createDefaultProfile(supabaseUser);
         // users 表不存在记录时自动补一份
-        const { data: insertedProfile, error: insertError } = await supabase
+        const { error: insertError } = await supabase
           .from('users')
-          .insert(defaultProfile)
-          .select()
-          .single();
+          .upsert(defaultProfile, { onConflict: 'id', ignoreDuplicates: true });
 
         if (insertError) {
           console.error('创建用户信息失败', insertError);
@@ -80,6 +79,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
+        // 并发同步时只读取最终资料，避免覆盖已有角色或个人信息。
+        const { data: insertedProfile, error: reloadError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', supabaseUser.id)
+          .single();
+        if (reloadError) throw reloadError;
         setUserProfile(insertedProfile);
         setUserRole(insertedProfile.role ?? 'user');
       } catch (error) {
@@ -102,6 +108,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let isMounted = true;
+    const pendingAuthTasks = new Set<ReturnType<typeof setTimeout>>();
 
     const init = async () => {
       // 首次初始化保护：避免网络慢导致 loading 卡住
@@ -201,9 +208,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // 不处理页面可见性事件，减少切标签导致的额外抖动
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const handleAuthStateChange = async (
+      event: AuthChangeEvent,
+      session: AuthContextType['session']
+    ) => {
       // 后台 token 刷新仅同步 session，不触发页面重算
       if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
         setSession(session);
@@ -280,10 +288,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUserRole(null);
         setLoading(false);
       }
+    };
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // 回调必须立即返回；在下一轮任务中读取资料，避免等待 Auth 内部锁。
+      const task = setTimeout(() => {
+        pendingAuthTasks.delete(task);
+        if (isMounted) void handleAuthStateChange(event, session);
+      }, 0);
+      pendingAuthTasks.add(task);
     });
 
     return () => {
       isMounted = false;
+      pendingAuthTasks.forEach(clearTimeout);
       subscription.unsubscribe();
     };
   }, [loadUserProfile]);
@@ -301,10 +321,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signUp = async (email: string, password: string, name: string) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: new URL('/', window.location.origin).href,
           data: {
             name,
           },
@@ -312,16 +333,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       if (error) throw error;
 
-      const createdUser = data.user;
-      if (createdUser) {
-        // 注册成功后预写 users 资料，减少首次登录额外步骤
-        const defaultProfile = createDefaultProfile(createdUser);
-        defaultProfile.full_name = name;
-        const { error: insertError } = await supabase.from('users').upsert(defaultProfile);
-        if (insertError) {
-          console.error('注册时创建用户信息失败', insertError);
-        }
-      }
+      // 邮箱确认前 session 为空，由数据库触发器创建资料，不能用匿名身份预写 users。
       return { error: null };
     } catch (error) {
       return { error: error as Error };
