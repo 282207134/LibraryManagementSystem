@@ -582,7 +582,7 @@ export const BookForm = ({ book, onSubmit, onCancel }: BookFormProps) => {
                         </svg>
                         <p className={dropTextClass}>
                           {t.dropHint}{' '}
-                          <label className={`${linkPickClass} cursor-pointer underline`}>
+                          <label htmlFor="cover-image-input" className={`${linkPickClass} cursor-pointer underline`}>
                             {t.clickPick}
                           </label>
                         </p>

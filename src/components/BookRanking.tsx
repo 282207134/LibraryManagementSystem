@@ -44,12 +44,12 @@ export const BookRanking = ({ books, title, showRank = true }: BookRankingProps)
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden h-full flex flex-col">
-      <div className="p-5 border-b flex-shrink-0">
+    <div className="user-ranking-panel bg-white rounded-lg shadow-lg overflow-hidden h-full flex flex-col">
+      <div className="user-panel-heading p-5 border-b flex-shrink-0">
         <h2 className="text-xl font-bold text-gray-900">{title}</h2>
       </div>
 
-      <div className="divide-y flex-1">
+      <div className="user-ranking-list divide-y flex-1">
         {books.map((book, index) => (
           <Link
             key={book.id}

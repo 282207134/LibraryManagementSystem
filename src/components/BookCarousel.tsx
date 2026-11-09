@@ -97,8 +97,8 @@ export const BookCarousel = ({ books, title, autoPlay = true, interval = 5000 }:
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-      <div className="p-5 border-b">
+    <div className="user-featured-panel bg-white rounded-lg shadow-lg overflow-hidden">
+      <div className="user-panel-heading p-5 border-b">
         <h2 className="text-xl font-bold text-gray-900">{title}</h2>
       </div>
 
@@ -110,7 +110,7 @@ export const BookCarousel = ({ books, title, autoPlay = true, interval = 5000 }:
             style={{ transform: `translateX(-${currentIndex * 100}%)` }}
           >
             {books.map((book) => (
-              <div key={book.id} className="min-w-full h-full flex items-center bg-gradient-to-r from-blue-50 to-purple-50">
+              <div key={book.id} className="user-featured-slide min-w-full h-full flex items-center bg-gradient-to-r from-blue-50 to-purple-50">
                 <div className="container mx-auto px-6 flex items-center gap-6 h-full">
                   {/* 封面图片 */}
                   <div className="flex-shrink-0 w-52 h-64 shadow-2xl rounded-lg overflow-hidden">
@@ -167,7 +167,7 @@ export const BookCarousel = ({ books, title, autoPlay = true, interval = 5000 }:
           <>
             <button
               onClick={goToPrev}
-              className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-3 shadow-lg transition-all"
+              className="user-carousel-arrow absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-3 shadow-lg transition-all"
               aria-label={t.prev}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,7 +176,7 @@ export const BookCarousel = ({ books, title, autoPlay = true, interval = 5000 }:
             </button>
             <button
               onClick={goToNext}
-              className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-3 shadow-lg transition-all"
+              className="user-carousel-arrow absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-3 shadow-lg transition-all"
               aria-label={t.next}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -193,8 +193,8 @@ export const BookCarousel = ({ books, title, autoPlay = true, interval = 5000 }:
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
-                className={`w-3 h-3 rounded-full transition-all ${
-                  index === currentIndex ? 'bg-blue-600 w-8' : 'bg-white/60 hover:bg-white/80'
+                className={`user-carousel-dot w-3 h-3 rounded-full transition-all ${
+                  index === currentIndex ? 'user-carousel-dot-active bg-blue-600 w-8' : 'bg-white/60 hover:bg-white/80'
                 }`}
                 aria-label={`${t.switchTo} ${index + 1}${t.item}`}
               />

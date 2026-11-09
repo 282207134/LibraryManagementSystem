@@ -1,114 +1,198 @@
 @import "tailwindcss";
 
-.user-theme[data-theme='light'] {
-  color: #1f2937;
+:is(.user-theme, .admin-theme)[data-theme='light'] {
+  --library-page: #f7f5f0;
+  --library-header: #e9e1d1;
+  --library-surface: #ede7da;
+  --library-card: #f4eee2;
+  --library-input: #fdfbf7;
+  --library-hover: #e2d9c8;
+  --library-border: #d6ccb9;
+  --library-ink: #2b2724;
+  --library-muted: #655f55;
+  --library-accent: #8e4a28;
+  background-color: var(--library-page);
+  color: var(--library-ink);
 }
 
-.user-theme[data-theme='light'] main {
-  color: #1f2937;
+:is(.user-theme, .admin-theme)[data-theme='light'] > header {
+  background-color: var(--library-header);
+  border-color: var(--library-border);
+  box-shadow: 0 6px 22px -18px rgb(70 46 26 / 24%);
 }
 
-/* Light mode: keep cards bright and readable on warm background */
-.user-theme[data-theme='light'] main [class*='bg-white'] {
-  background-color: #fffdf7 !important;
+:is(.user-theme, .admin-theme)[data-theme='light'] main {
+  color: var(--library-ink);
 }
 
-.user-theme[data-theme='light'] main [class*='shadow'] {
-  box-shadow: 0 10px 24px -18px rgba(107, 72, 28, 0.35) !important;
+/* Paper-white canvas with warmer, more distinct oat-colored surfaces. */
+:is(.user-theme, .admin-theme)[data-theme='light'] main [class*='bg-white'] {
+  background-color: var(--library-surface) !important;
 }
 
-.user-theme[data-theme='light'] main [class*='text-gray-100'],
-.user-theme[data-theme='light'] main [class*='text-cyan-50'],
-.user-theme[data-theme='light'] main [class*='text-cyan-100'] {
-  color: #111827 !important;
+:is(.user-theme, .admin-theme)[data-theme='light'] main [class*='shadow'] {
+  box-shadow: 0 10px 24px -18px rgb(70 46 26 / 22%) !important;
 }
 
-.user-theme[data-theme='light'] main [class*='text-gray-300'],
-.user-theme[data-theme='light'] main [class*='text-gray-500'],
-.user-theme[data-theme='light'] main [class*='text-gray-600'] {
-  color: #4b5563 !important;
+:is(.user-theme, .admin-theme)[data-theme='light'] main :is(
+  [class*='text-gray-900'], [class*='text-gray-100'],
+  [class*='text-cyan-50'], [class*='text-cyan-100']
+) {
+  color: var(--library-ink) !important;
+}
+
+:is(.user-theme, .admin-theme)[data-theme='light'] main :is(
+  [class*='text-gray-300'], [class*='text-gray-500'], [class*='text-gray-600'],
+  [class*='text-gray-700'], [class*='text-cyan-100/'], [class*='text-cyan-200']
+) {
+  color: var(--library-muted) !important;
+}
+
+:is(.user-theme, .admin-theme)[data-theme='light'] main :is(
+  [class*='border-white'], [class*='border-amber']
+) {
+  border-color: var(--library-border) !important;
+}
+
+:is(.user-theme, .admin-theme)[data-theme='light'] :is(input, textarea, select) {
+  background-color: var(--library-input) !important;
+  border-color: var(--library-border) !important;
+  color: var(--library-ink) !important;
+}
+
+:is(.user-theme, .admin-theme)[data-theme='light'] input::placeholder,
+:is(.user-theme, .admin-theme)[data-theme='light'] textarea::placeholder {
+  color: #797166 !important;
 }
 
 /* User home light surfaces */
 .user-theme[data-theme='light'] .user-home-hero {
-  background-color: #fffdf7 !important;
-  border-color: #f1e3c7 !important;
+  background-color: var(--library-surface) !important;
+  border-color: var(--library-border) !important;
 }
 
 .user-theme[data-theme='light'] .user-book-list {
-  background-color: #fffaf0 !important;
-  border-color: #f1e3c7 !important;
-  box-shadow: 0 14px 40px -24px rgba(120, 90, 40, 0.22) !important;
+  background-color: var(--library-surface) !important;
+  border-color: var(--library-border) !important;
+  box-shadow: 0 14px 40px -24px rgb(70 46 26 / 18%) !important;
 }
 
 .user-theme[data-theme='light'] .user-book-card {
-  background-color: #ffffff !important;
-  border-color: #ead8b5 !important;
+  background-color: var(--library-card) !important;
+  border-color: var(--library-border) !important;
+}
+
+.user-theme[data-theme='light'] .user-book-card > .pointer-events-none {
+  background-image: none;
 }
 
 .user-theme[data-theme='light'] .user-book-card .user-book-cover {
-  background-color: #f5ead6 !important;
+  background-color: var(--library-hover) !important;
 }
 
 .user-theme[data-theme='light'] .user-book-card h3 {
-  color: #111827 !important;
+  color: var(--library-ink) !important;
 }
 
 .user-theme[data-theme='light'] .user-book-card .user-book-meta {
-  color: #4b5563 !important;
+  color: var(--library-muted) !important;
 }
 
 .user-theme[data-theme='light'] .user-book-card .user-fav-btn {
-  background-color: #f3e8cf !important;
-  border: 1px solid #e5cf9d;
-  color: #7c5a1f !important;
+  background-color: var(--library-input) !important;
+  border: 1px solid var(--library-border);
+  color: var(--library-accent) !important;
 }
 
 .user-theme[data-theme='light'] .user-book-card .user-fav-btn:hover {
-  background-color: #ead6ab !important;
+  background-color: var(--library-hover) !important;
 }
 
 .user-theme[data-theme='light'] .user-book-card .user-fav-btn.user-fav-btn-active {
-  background-color: #f6c453 !important;
-  border-color: #e2ad3f;
-  color: #6a4208 !important;
+  background-color: #f9eae1 !important;
+  border-color: #d4ad94;
+  color: var(--library-accent) !important;
 }
 
-/* 用户首页：新上架 / 分类浏览 面板（深色类在浅色主题下强制提亮） */
-.user-theme[data-theme='light'] .user-dashboard-section {
-  background-color: #fffdf7 !important;
-  border-color: #f1e3c7 !important;
-  box-shadow: 0 14px 40px -24px rgba(120, 90, 40, 0.22) !important;
+/* Use the same warm surfaces for recommendations, rankings and catalog panels. */
+.user-theme[data-theme='light'] :is(.user-dashboard-section, .user-featured-panel, .user-ranking-panel) {
+  background-color: var(--library-surface) !important;
+  border: 1px solid var(--library-border);
+  box-shadow: 0 14px 40px -24px rgb(70 46 26 / 18%) !important;
 }
 
-.user-theme[data-theme='light'] .user-dashboard-section-header {
-  border-color: #ead8b5 !important;
+.user-theme[data-theme='light'] :is(.user-dashboard-section-header, .user-panel-heading),
+.user-theme[data-theme='light'] .user-ranking-list > * {
+  border-color: var(--library-border) !important;
+}
+
+.user-theme[data-theme='light'] .user-featured-slide {
+  background-image: none;
+  background-color: var(--library-surface);
+}
+
+.user-theme[data-theme='light'] .user-ranking-list > a:hover {
+  background-color: var(--library-hover);
 }
 
 .user-theme[data-theme='light'] .user-new-book-tile {
-  background-color: #ffffff !important;
-  border-color: #ead8b5 !important;
-  box-shadow: 0 10px 24px -18px rgba(107, 72, 28, 0.28) !important;
+  background-color: var(--library-card) !important;
+  border-color: var(--library-border) !important;
+  box-shadow: 0 10px 24px -18px rgb(70 46 26 / 18%) !important;
 }
 
 .user-theme[data-theme='light'] .user-new-book-tile:hover {
-  border-color: #c4a35a !important;
-  box-shadow: 0 14px 32px -18px rgba(120, 90, 40, 0.35) !important;
+  border-color: #b9a98e !important;
+  box-shadow: 0 14px 32px -18px rgb(70 46 26 / 28%) !important;
 }
 
 .user-theme[data-theme='light'] .user-new-book-cover {
-  background-color: #f5ead6 !important;
+  background-color: var(--library-hover) !important;
 }
 
 .user-theme[data-theme='light'] .user-new-book-tile [class*='text-cyan-200'] {
-  color: #6b7280 !important;
+  color: var(--library-muted) !important;
 }
 
-.user-theme[data-theme='light'] .user-category-chip-inactive {
-  background-color: #f3e8cf !important;
-  color: #374151 !important;
+.user-theme[data-theme='light'] main .user-category-chip-inactive {
+  background-color: var(--library-hover) !important;
+  color: var(--library-muted) !important;
 }
 
-.user-theme[data-theme='light'] .user-category-chip-inactive:hover {
-  background-color: #ead6ab !important;
+.user-theme[data-theme='light'] main .user-category-chip-inactive:hover {
+  background-color: #d6ccb9 !important;
+}
+
+.user-theme[data-theme='light'] main :is(button, a):is([class*='bg-blue-600'], [class*='bg-gradient-to-r']) {
+  background-image: none;
+  background-color: var(--library-ink);
+  color: var(--library-input) !important;
+}
+
+.user-theme[data-theme='light'] main :is(button, a):is([class*='bg-blue-600'], [class*='bg-gradient-to-r']):hover {
+  background-color: var(--library-accent);
+}
+
+.user-theme[data-theme='light'] > header button[type='submit'] {
+  background-color: var(--library-ink);
+}
+
+.user-theme[data-theme='light'] > header button[type='submit']:hover {
+  background-color: var(--library-accent);
+}
+
+.user-theme[data-theme='light'] main .user-carousel-arrow {
+  background-color: var(--library-input) !important;
+}
+
+.user-theme[data-theme='light'] main .user-carousel-dot:not(.user-carousel-dot-active) {
+  background-color: #c8bba3 !important;
+}
+
+.user-theme[data-theme='light'] main [class*='text-emerald-300'] {
+  color: #047857;
+}
+
+.user-theme[data-theme='light'] main [class*='text-rose-300'] {
+  color: #be123c;
 }
