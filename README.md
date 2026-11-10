@@ -62,7 +62,8 @@
 截图保存在 [docs/screenshots](docs/screenshots)，重新采集方法见下方“测试与截图复现”。
 
 ## 在线查看
-<img width="212" height="218" alt="image" src="https://github.com/user-attachments/assets/bbbd99eb-4ce8-4ee9-8b1d-97056b6ee9ce" />
+
+<img src="docs/online-qr-code.png" alt="扫码访问在线图书管理系统" width="212" height="212" />
 
 https://library-management-system-chi-lyart.vercel.app/
 
@@ -76,7 +77,7 @@ https://library-management-system-chi-lyart.vercel.app/
 
 账号:user@gmail.com
 
-账号:user123
+密码:user123
 
 ## 技术栈
 
