@@ -69,7 +69,7 @@ test('admin manual/scanner input validates codes and camera failure has a fallba
   await page.getByLabel('输入 8 位数字码').fill('12345678'); await page.getByLabel('输入 8 位数字码').press('Enter');
   await expect(page.getByRole('alert')).toContainText('未找到对应凭证');
   await page.evaluate(()=>{ Object.defineProperty(navigator.mediaDevices,'getUserMedia',{configurable:true,value:async()=>{throw new DOMException('Denied','NotAllowedError');}}); });
-  await page.getByRole('button',{name:'手机 / 摄像头扫码'}).click();
+  await page.getByRole('button',{name:'摄像头扫码'}).click();
   await expect(page.getByText('无法打开摄像头，请允许摄像头权限，或使用扫码枪、手动输入数字码。')).toBeVisible();
   await page.getByRole('button',{name:'关闭摄像头'}).click(); await expect(page.locator('video')).toHaveCount(0);
 });
@@ -137,7 +137,7 @@ test('camera decoding selects the request and stops scanning before any approval
   await backend.attach(context,ids.admin); await page.goto('/admin/borrowings');
   const {renderToStaticMarkup}=await import('react-dom/server');
   const {createElement}=await import('react'); const {QRCodeSVG}=await import('qrcode.react');
-  await expect(page.getByRole('button',{name:'手机 / 摄像头扫码'})).toBeVisible();
+  await expect(page.getByRole('button',{name:'摄像头扫码'})).toBeVisible();
   const svg=renderToStaticMarkup(createElement(QRCodeSVG,{value:request.pickup_code,size:256,marginSize:4})).replace('<svg','<svg xmlns="http://www.w3.org/2000/svg"');
   await page.evaluate(async(svg)=>{
     const canvas=document.createElement('canvas'); canvas.width=480; canvas.height=480;
@@ -146,7 +146,7 @@ test('camera decoding selects the request and stops scanning before any approval
     window.__testCameraStream=canvas.captureStream(10); window.__drawCodeTimer=setInterval(draw,100);
     Object.defineProperty(navigator.mediaDevices,'getUserMedia',{configurable:true,value:async()=>window.__testCameraStream});
   },svg);
-  await page.getByRole('button',{name:'手机 / 摄像头扫码'}).click();
+  await page.getByRole('button',{name:'摄像头扫码'}).click();
   await expect(page.getByTestId('lookup-result')).toContainText('Test Reader');
   await expect(page.locator('video')).toHaveCount(0);
   expect(await page.evaluate(()=>{clearInterval(window.__drawCodeTimer);return window.__testCameraStream.getTracks().every(track=>track.readyState==='ended');})).toBe(true);

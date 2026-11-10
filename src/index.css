@@ -2,6 +2,8 @@
 
 .loan-panel { border: 1px solid rgb(148 163 184 / 25%); border-radius: 1rem; background: #10182d; }
 .loan-input { padding: .65rem .8rem; border: 1px solid #64748b; border-radius: .65rem; background: #182139; color: inherit; }
+.loan-code-input { padding-left: 2.75rem; }
+.loan-code-input::placeholder { color: #94a3b8; font-family: system-ui, sans-serif; font-size: .875rem; letter-spacing: normal; }
 .loan-primary, .loan-secondary { padding: .6rem 1rem; border-radius: .65rem; font-weight: 500; cursor: pointer; }
 .loan-primary { color: white; background: #2563eb; }
 .loan-primary:hover { background: #1d4ed8; }

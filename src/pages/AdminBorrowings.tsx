@@ -94,10 +94,18 @@ export const AdminBorrowings = () => {
           {[[t.pending, requests.filter(request => requestStatus(request, now) === 'pending').length], [t.current, loans.filter(isCurrentLoan).length], [t.overdue, loans.filter(loan => isOverdueLoan(loan, now)).length], [t.returned, loans.filter(loan => loan.status === 'returned').length]].map(([label, count]) => <div className="loan-panel p-4" key={label}><p className="text-sm opacity-80">{label}</p><p className="text-2xl font-bold mt-1">{count}</p></div>)}
         </div>
         <section className="loan-panel p-4 mb-6" aria-label={t.lookup}>
-          <h2 className="text-lg font-semibold">{t.lookup}</h2><p className="text-sm mt-1 mb-3 opacity-80">{t.lookupHint}</p>
+          <h2 className="text-lg font-semibold mb-3">{t.lookup}</h2>
           <form className="flex flex-wrap gap-2" onSubmit={event => { event.preventDefault(); void lookup(code); }}>
             <label className="sr-only" htmlFor="pickup-code-input">{t.inputCode}</label>
-            <input id="pickup-code-input" className="loan-input min-w-0 flex-1 font-mono tracking-widest" placeholder={t.inputCode} value={code} inputMode="numeric" autoComplete="off" maxLength={32} onChange={event => { setCode(event.target.value); setSelectedId(null); setLookupError(''); }} />
+            <div className="relative min-w-0 w-full sm:w-auto sm:flex-1">
+              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center opacity-60" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" focusable="false">
+                  <path d="M4 5v14m7-14v14m6-14v14m3-14v14" />
+                  <path d="M7 5v14m7-14v14" strokeWidth="2.5" />
+                </svg>
+              </span>
+              <input id="pickup-code-input" className="loan-input loan-code-input w-full font-mono tracking-widest" placeholder={t.lookupHint} value={code} inputMode="numeric" autoComplete="off" maxLength={32} onChange={event => { setCode(event.target.value); setSelectedId(null); setLookupError(''); }} />
+            </div>
             <button type="submit" disabled={loading || busy} className="loan-primary">{t.lookup}</button>
             <button type="button" disabled={busy} className="loan-secondary" onClick={() => setScanning(value => !value)}>{t.camera}</button>
           </form>
