@@ -168,10 +168,10 @@ export const UserHeader = ({ isLightTheme, onToggleTheme }: UserHeaderProps) => 
                 {isLightTheme ? '🌙' : '☀️'}
               </button>
               <LanguageSwitcher light={isLightTheme} />
-              <span className={`hidden sm:inline max-w-40 truncate ${isLightTheme ? 'text-slate-800' : 'text-cyan-50/90'}`}>
-                👤 {getUserDisplayName()}
+              <span className={`hidden sm:inline-flex max-w-40 items-center gap-2 ${isLightTheme ? 'text-slate-800' : 'text-cyan-50/90'}`}>
+                <span className="min-w-0 truncate">👤 {getUserDisplayName()}</span>
                 {userRole === 'admin' && (
-                  <span className={`ml-2 text-xs px-2 py-1 rounded border ${isLightTheme ? 'bg-rose-100 text-rose-700 border-rose-200' : 'bg-rose-500/20 text-rose-200 border-rose-300/30'}`}>
+                  <span className={`shrink-0 whitespace-nowrap text-xs px-2 py-1 rounded border ${isLightTheme ? 'bg-rose-100 text-rose-700 border-rose-200' : 'bg-rose-500/20 text-rose-200 border-rose-300/30'}`}>
                     {t.admin}
                   </span>
                 )}
