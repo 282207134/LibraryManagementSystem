@@ -27,51 +27,17 @@ export const StarRating = ({
     }
   };
 
-  const handleMouseEnter = (_value: number) => {
-    if (!readonly) {
-      // 可以添加悬停效果
-    }
-  };
-
   const stars = [];
   const fullStars = Math.floor(rating);
   const hasHalfStar = rating % 1 >= 0.5;
 
   for (let i = 1; i <= maxRating; i++) {
-    if (i <= fullStars) {
-      stars.push(
-        <span
-          key={i}
-          className={`${readonly ? 'cursor-default' : 'cursor-pointer'} text-yellow-400 hover:text-yellow-500 transition-colors ${sizeClasses[size]}`}
-          onClick={() => handleClick(i)}
-          onMouseEnter={() => handleMouseEnter(i)}
-        >
-          ⭐
-        </span>
-      );
-    } else if (i === fullStars + 1 && hasHalfStar) {
-      stars.push(
-        <span
-          key={i}
-          className={`${readonly ? 'cursor-default' : 'cursor-pointer'} text-yellow-400 hover:text-yellow-500 transition-colors ${sizeClasses[size]}`}
-          onClick={() => handleClick(i)}
-          onMouseEnter={() => handleMouseEnter(i)}
-        >
-          ⭐
-        </span>
-      );
-    } else {
-      stars.push(
-        <span
-          key={i}
-          className={`${readonly ? 'cursor-default' : 'cursor-pointer'} text-gray-300 hover:text-yellow-400 transition-colors ${sizeClasses[size]}`}
-          onClick={() => handleClick(i)}
-          onMouseEnter={() => handleMouseEnter(i)}
-        >
-          ☆
-        </span>
-      );
-    }
+    const filled = i <= fullStars || (i === fullStars + 1 && hasHalfStar);
+    const className = `${filled ? 'text-yellow-400' : 'text-gray-300'} transition-colors ${sizeClasses[size]}`;
+    stars.push(readonly
+      ? <span key={i} className={className}>{filled ? '⭐' : '☆'}</span>
+      : <button type="button" key={i} className={`${className} cursor-pointer hover:text-yellow-500 focus-visible:outline-2 focus-visible:outline-blue-500`}
+          aria-label={`${i} / ${maxRating}`} aria-pressed={i === rating} onClick={() => handleClick(i)}>{filled ? '⭐' : '☆'}</button>);
   }
 
   return (

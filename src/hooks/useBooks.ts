@@ -1,7 +1,8 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { uploadBookCover, deleteBookCover } from '../lib/storageHelper';
 import type { Book, BookFormData } from '../types/book';
+import { errorMessage } from '../lib/borrowing';
 
 const PAGE_SIZE = 10;
 
@@ -18,6 +19,7 @@ export const useBooks = () => {
   const [page, setPage] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [totalCount, setTotalCount] = useState<number | null>(null);
+  const latestRequest = useRef(0);
 
   const totalPages = useMemo(() => {
     if (totalCount === null || totalCount === 0) return 1;
@@ -26,54 +28,45 @@ export const useBooks = () => {
 
   // 核心加载函数：先查总数，再按页拉取数据
   const loadBooks = useCallback(async ({ search, page: pageArg }: LoadOptions): Promise<boolean> => {
+    const requestId = ++latestRequest.current;
     setLoading(true);
     setError(null);
 
-    const safePage = Math.max(pageArg, 1);
-    const from = (safePage - 1) * PAGE_SIZE;
-    const to = from + PAGE_SIZE - 1;
+    let safePage = Math.max(pageArg, 1);
 
     try {
-      // count 查询用于计算分页总页数
-      let countQuery = supabase.from('books').select('*', { count: 'exact', head: true });
-
-      if (search) {
-        countQuery = countQuery.or(`title.ilike.%${search}%,author.ilike.%${search}%`);
+      const fetchPage = (target: number) => {
+        let query = supabase.from('books').select('*', { count: 'exact' })
+          .order('created_at', { ascending: false }).order('id', { ascending: false })
+          .range((target - 1) * PAGE_SIZE, target * PAGE_SIZE - 1);
+        if (search) {
+          // Quote PostgREST values so commas/parentheses in book titles remain text.
+          const pattern = `%${search}%`.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+          query = query.or(`title.ilike."${pattern}",author.ilike."${pattern}"`);
+        }
+        return query;
+      };
+      let result = await fetchPage(safePage);
+      if (requestId !== latestRequest.current) return false;
+      if (result.error && result.error.code !== 'PGRST103') throw result.error;
+      const maxPage = Math.max(1, Math.ceil((result.count ?? 0) / PAGE_SIZE));
+      if (safePage > maxPage) {
+        safePage = maxPage;
+        result = await fetchPage(safePage);
       }
-
-      const { count } = await countQuery;
-
-      const queryCount = typeof count === 'number' ? count : 0;
-      setTotalCount(queryCount);
-
-      // 真实数据查询：按创建时间倒序，保证最新图书优先
-      let query = supabase
-        .from('books')
-        .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false })
-        .order('id', { ascending: false })
-        .range(from, to);
-
-      if (search) {
-        query = query.or(`title.ilike.%${search}%,author.ilike.%${search}%`);
-      }
-
-      const { data, error: queryError } = await query;
-
-      if (queryError) throw queryError;
-
-      if (data) {
-        setBooks(data);
-      } else {
-        setBooks([]);
-      }
+      if (requestId !== latestRequest.current) return false;
+      if (result.error) throw result.error;
+      setBooks(result.data || []);
+      setTotalCount(result.count ?? 0);
+      setPage(safePage);
+      setSearchTerm(search);
       return true;
     } catch (err) {
       console.error('[loadBooks] 错误:', err);
-      setError(err instanceof Error ? err.message : '发生未知错误');
+      if (requestId === latestRequest.current) setError(errorMessage(err));
       return false;
     } finally {
-      setLoading(false);
+      if (requestId === latestRequest.current) setLoading(false);
     }
   }, []);
 
@@ -111,8 +104,7 @@ export const useBooks = () => {
       const maxPage = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
       const clamped = Math.min(Math.max(1, nextPage), maxPage);
       if (clamped === page) return;
-      const ok = await loadBooks({ search: searchTerm, page: clamped });
-      if (ok) setPage(clamped);
+      await loadBooks({ search: searchTerm, page: clamped });
     },
     [loading, totalCount, page, searchTerm, loadBooks]
   );
@@ -163,7 +155,7 @@ export const useBooks = () => {
         if (uploadedCoverPath) {
           await deleteBookCover(uploadedCoverPath);
         }
-        setError(err instanceof Error ? err.message : '添加图书时发生错误');
+        setError(errorMessage(err));
         return null;
       }
     },
@@ -227,7 +219,7 @@ export const useBooks = () => {
         if (uploadedCoverPath) {
           await deleteBookCover(uploadedCoverPath);
         }
-        setError(err instanceof Error ? err.message : '更新图书时发生错误');
+        setError(errorMessage(err));
         return null;
       }
     },
@@ -252,7 +244,7 @@ export const useBooks = () => {
         await refresh();
         return true;
       } catch (err) {
-        setError(err instanceof Error ? err.message : '删除图书时发生错误');
+        setError(errorMessage(err));
         return false;
       }
     },

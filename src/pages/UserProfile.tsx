@@ -239,6 +239,11 @@ export const UserProfile = () => {
   const handleUpdateProfile = async () => {
     if (!user) return;
 
+    if (!profileForm.full_name.trim()) {
+      setError(language === 'zh' ? '姓名不能为空' : language === 'ja' ? '氏名を入力してください' : 'Name is required');
+      return;
+    }
+
     setError(null);
     setSuccessMessage(null);
 

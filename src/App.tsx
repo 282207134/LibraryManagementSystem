@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { Login } from './components/Login';
@@ -6,14 +6,14 @@ import { Register } from './components/Register';
 import { UserLayout } from './components/user/UserLayout';
 import { UserHome } from './pages/UserHome';
 import { UserDashboard } from './pages/UserDashboard';
-import { UserMyBorrowings } from './pages/UserMyBorrowings';
 import { UserFavorites } from './pages/UserFavorites';
 import { UserBookDetail } from './pages/UserBookDetail';
 import { UserProfile } from './pages/UserProfile';
 import { ResetPassword } from './pages/ResetPassword';
 
 // 旧的管理员界面暂时保留
-import AdminApp from './AdminApp';
+const AdminApp = lazy(() => import('./AdminApp'));
+const UserMyBorrowings = lazy(() => import('./pages/UserMyBorrowings').then(module => ({ default: module.UserMyBorrowings })));
 
 function LoadingScreen() {
   return (
@@ -83,7 +83,7 @@ function AuthRoutes() {
 function AppWithRouter() {
   return (
     <BrowserRouter>
-      <AuthRoutes />
+      <Suspense fallback={<LoadingScreen />}><AuthRoutes /></Suspense>
     </BrowserRouter>
   );
 }

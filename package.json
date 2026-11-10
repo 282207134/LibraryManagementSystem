@@ -5,6 +5,8 @@
   "type": "module",
   "description": "A book management CRUD system built with React, TypeScript, and Supabase",
   "scripts": {
+    "test:db": "node --test tests/borrowing-database.test.mjs",
+    "test:ui": "playwright test",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
@@ -16,13 +18,19 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.76.1",
+    "@zxing/browser": "^0.2.1",
+    "jsbarcode": "^3.12.3",
+    "qrcode.react": "^4.2.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.5"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.16",
     "@eslint/js": "^9.36.0",
+    "@playwright/test": "^1.65.0",
     "@tailwindcss/postcss": "^4.1.16",
+    "@types/jsbarcode": "^3.11.4",
     "@types/node": "^24.6.0",
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19.1.9",

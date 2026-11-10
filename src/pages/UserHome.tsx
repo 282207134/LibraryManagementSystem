@@ -18,9 +18,7 @@ export const UserHome = () => {
   // 从 URL 参数获取搜索词
   useEffect(() => {
     const searchTerm = searchParams.get('search');
-    if (searchTerm) {
-      searchBooks(searchTerm);
-    }
+    void searchBooks(searchTerm || '');
   }, [searchParams, searchBooks]);
 
   return (

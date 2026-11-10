@@ -1,301 +1,96 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useBorrowings } from '../hooks/useBorrowings';
-import { resolveCoverImageUrl } from '../lib/storageHelper';
 import { useLanguage } from '../contexts/LanguageContext';
-import type { BorrowingRecord } from '../types/borrowing';
-
-// 封面图片组件
-const BorrowingBookCover = ({ coverUrl, title }: { coverUrl?: string | null; title: string }) => {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (coverUrl) {
-      resolveCoverImageUrl(coverUrl).then(setImageUrl);
-    } else {
-      setImageUrl(null);
-    }
-  }, [coverUrl]);
-
-  return (
-    <>
-      {imageUrl ? (
-        <img
-          src={imageUrl}
-          alt={title}
-          className="w-16 h-24 object-cover rounded"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.style.display = 'none';
-            const placeholder = target.nextElementSibling as HTMLElement;
-            if (placeholder) placeholder.style.display = 'flex';
-          }}
-        />
-      ) : null}
-      <div className={`w-16 h-24 bg-gray-200 rounded flex items-center justify-center ${imageUrl ? 'hidden' : ''}`}>
-        📖
-      </div>
-    </>
-  );
-};
+import { BorrowingTicket } from '../components/BorrowingTicket';
+import { BookCover } from '../components/BookCover';
+import { isCurrentLoan, isOverdueLoan, loanDays, requestStatus } from '../lib/borrowing';
+import { borrowingText } from '../lib/borrowingText';
+import type { BorrowingRecord, BorrowingRequest } from '../types/borrowing';
 
 export const UserMyBorrowings = () => {
   const { user } = useAuth();
   const { language } = useLanguage();
-  const textMap = {
-    zh: {
-      confirmReturn: '确定要归还这本书吗？',
-      returnSuccess: '归还成功！',
-      returnFail: '归还失败',
-      loading: '加载中...',
-      pageTitle: '我的借阅记录',
-      currentCount: '当前借阅',
-      bookUnit: '本',
-      tabCurrent: '当前借阅',
-      tabHistory: '历史记录',
-      tabAll: '全部',
-      noCurrent: '暂无借阅中的图书',
-      noRecords: '暂无借阅记录',
-      goBorrow: '去借阅图书',
-      unknownBook: '未知图书',
-      unknown: '未知',
-      author: '作者',
-      borrowedAt: '借阅日期',
-      returnedAt: '归还日期',
-      dueAt: '到期日期',
-      overdue: '已逾期',
-      remaining: '剩余',
-      day: '天',
-      returnBtn: '归还',
-    },
-    en: {
-      confirmReturn: 'Return this book?',
-      returnSuccess: 'Returned successfully!',
-      returnFail: 'Return failed',
-      loading: 'Loading...',
-      pageTitle: 'My Borrowings',
-      currentCount: 'Current borrowings',
-      bookUnit: '',
-      tabCurrent: 'Current',
-      tabHistory: 'History',
-      tabAll: 'All',
-      noCurrent: 'No current borrowings',
-      noRecords: 'No borrowing records',
-      goBorrow: 'Browse books',
-      unknownBook: 'Unknown book',
-      unknown: 'Unknown',
-      author: 'Author',
-      borrowedAt: 'Borrowed At',
-      returnedAt: 'Returned At',
-      dueAt: 'Due Date',
-      overdue: 'Overdue',
-      remaining: 'Remaining',
-      day: 'days',
-      returnBtn: 'Return',
-    },
-    ja: {
-      confirmReturn: 'この本を返却しますか？',
-      returnSuccess: '返却しました！',
-      returnFail: '返却に失敗しました',
-      loading: '読み込み中...',
-      pageTitle: '貸出履歴',
-      currentCount: '現在の貸出',
-      bookUnit: '冊',
-      tabCurrent: '現在',
-      tabHistory: '履歴',
-      tabAll: 'すべて',
-      noCurrent: '貸出中の本はありません',
-      noRecords: '貸出履歴はありません',
-      goBorrow: '本を借りる',
-      unknownBook: '不明な図書',
-      unknown: '不明',
-      author: '著者',
-      borrowedAt: '貸出日',
-      returnedAt: '返却日',
-      dueAt: '返却期限',
-      overdue: '期限超過',
-      remaining: '残り',
-      day: '日',
-      returnBtn: '返却',
-    },
-  } as const;
-  const t = textMap[language];
-  const { getUserBorrowings, returnBook, loading } = useBorrowings();
-  const [borrowings, setBorrowings] = useState<BorrowingRecord[]>([]);
-  const [filter, setFilter] = useState<'all' | 'current' | 'history'>('current');
-
-  useEffect(() => {
-    if (user) {
-      loadBorrowings();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-
-  const loadBorrowings = async () => {
+  const t = borrowingText[language];
+  const { getUserBorrowings, getRequests, closeRequest, error, loading } = useBorrowings();
+  const [loans, setLoans] = useState<BorrowingRecord[]>([]);
+  const [requests, setRequests] = useState<BorrowingRequest[]>([]);
+  const [filter, setFilter] = useState<'requests' | 'current' | 'history' | 'all'>('requests');
+  const [busy, setBusy] = useState(false);
+  const [now, setNow] = useState(Date.now());
+  const load = useCallback(async () => {
     if (!user) return;
-    const data = await getUserBorrowings(user.id);
-    setBorrowings(data);
+    const [records, applications] = await Promise.all([getUserBorrowings(user.id), getRequests(user.id)]);
+    setLoans(records); setRequests(applications); setNow(Date.now());
+  }, [user, getUserBorrowings, getRequests]);
+  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30000);
+    const onFocus = () => { void load(); };
+    window.addEventListener('focus', onFocus);
+    return () => { clearInterval(timer); window.removeEventListener('focus', onFocus); };
+  }, [load]);
+  const formatDate = (date: string) => new Date(date).toLocaleString(language === 'zh' ? 'zh-CN' : language === 'ja' ? 'ja-JP' : 'en-US');
+  const pendingCount = requests.filter(request => requestStatus(request, now) === 'pending').length;
+  const shownRequests = requests.filter(request => request.status !== 'approved' && (
+    filter === 'all' || (filter === 'requests' ? requestStatus(request, now) === 'pending' : filter === 'history' && requestStatus(request, now) !== 'pending')
+  ));
+  const shownLoans = loans.filter(loan => filter === 'all' || (filter === 'current' ? isCurrentLoan(loan) : filter === 'history' && !isCurrentLoan(loan)));
+  const cancel = async (id: string) => {
+    if (busy || !confirm(t.cancelConfirm)) return;
+    setBusy(true);
+    try { const result = await closeRequest(id, 'cancelled'); if (result.success) await load(); }
+    finally { setBusy(false); }
   };
-
-  const handleReturn = async (id: string) => {
-    if (!window.confirm(t.confirmReturn)) return;
-
-    const result = await returnBook(id);
-    if (result.success) {
-      alert(t.returnSuccess);
-      loadBorrowings();
-    } else {
-      alert(`${t.returnFail}: ${result.error}`);
-    }
-  };
-
-  const filteredBorrowings = borrowings.filter((record) => {
-    if (filter === 'current') {
-      return record.status === 'borrowed' || record.status === 'overdue';
-    }
-    if (filter === 'history') {
-      return record.status === 'returned';
-    }
-    return true;
-  });
-
-  const currentBorrowingsCount = borrowings.filter(
-    (r) => r.status === 'borrowed' || r.status === 'overdue'
-  ).length;
-
-  const getDaysRemaining = (dueDate: string) => {
-    const due = new Date(dueDate);
-    const now = new Date();
-    const diff = due.getTime() - now.getTime();
-    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-    return days;
-  };
-
-  if (loading && borrowings.length === 0) {
-    return <p className="text-center text-gray-500">{t.loading}</p>;
-  }
-
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-write-900 mb-2">{t.pageTitle}</h1>
-        <p className="text-gray-600">
-          {t.currentCount}: {currentBorrowingsCount} {t.bookUnit}
-        </p>
+    <div className="borrowing-page">
+      <div className="flex flex-wrap justify-between items-start gap-4 mb-5">
+        <div><h1 className="text-3xl font-bold">{t.userTitle}</h1><p className="mt-2 text-sm opacity-80">{t.pending}: {pendingCount} · {t.current}: {loans.filter(isCurrentLoan).length}</p></div>
+        <button type="button" disabled={loading || busy} onClick={() => void load()} className="loan-secondary">{loading ? t.loading : t.refresh}</button>
       </div>
-
-      <div className="mb-6 flex gap-4">
-        <button
-          onClick={() => setFilter('current')}
-          className={`px-4 py-2 rounded-lg font-medium ${
-            filter === 'current'
-              ? 'bg-blue-600 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-100'
-          }`}
-        >
-          {t.tabCurrent}
-        </button>
-        <button
-          onClick={() => setFilter('history')}
-          className={`px-4 py-2 rounded-lg font-medium ${
-            filter === 'history'
-              ? 'bg-blue-600 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-100'
-          }`}
-        >
-          {t.tabHistory}
-        </button>
-        <button
-          onClick={() => setFilter('all')}
-          className={`px-4 py-2 rounded-lg font-medium ${
-            filter === 'all'
-              ? 'bg-blue-600 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-100'
-          }`}
-        >
-          {t.tabAll}
-        </button>
+      <p className="mb-5 text-sm opacity-80">{t.requestPolicy}</p>
+      {error && <p role="alert" className="loan-error mb-4">{error}</p>}
+      <div className="flex flex-wrap gap-2 mb-6" role="group" aria-label={t.userTitle}>
+        {(['requests', 'current', 'history', 'all'] as const).map(key => <button type="button" key={key} aria-pressed={filter === key} onClick={() => setFilter(key)} className={filter === key ? 'loan-primary' : 'loan-secondary'}>{t[key]}{key === 'requests' ? ` (${pendingCount})` : ''}</button>)}
       </div>
-
-      {filteredBorrowings.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">
-            {filter === 'current' ? t.noCurrent : t.noRecords}
-          </p>
-          <Link
-            to="/user/home"
-            className="text-blue-600 hover:text-blue-700 font-medium"
-          >
-            {t.goBorrow} →
-          </Link>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {filteredBorrowings.map((record) => {
-            const daysRemaining = getDaysRemaining(record.due_date);
-            const isOverdue = record.status === 'overdue' || daysRemaining < 0;
-
-            return (
-              <div
-                key={record.id}
-                className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex gap-4">
-                    <BorrowingBookCover 
-                      coverUrl={record.books?.cover_image_url} 
-                      title={record.books?.title || t.unknownBook}
-                    />
-                    <div>
-                      <Link
-                        to={`/user/books/${record.book_id}`}
-                        className="text-lg font-semibold text-gray-900 hover:text-blue-600"
-                      >
-                        {record.books?.title || t.unknownBook}
-                      </Link>
-                      <p className="text-gray-600 text-sm mt-1">
-                        {t.author}: {record.books?.author || t.unknown}
-                      </p>
-                      <p className="text-gray-500 text-sm mt-2">
-                        {t.borrowedAt}: {new Date(record.borrowed_at).toLocaleDateString(language === 'zh' ? 'zh-CN' : language === 'ja' ? 'ja-JP' : 'en-US')}
-                      </p>
-                      {record.status === 'returned' && record.returned_at ? (
-                        <p className="text-gray-500 text-sm">
-                          {t.returnedAt}: {new Date(record.returned_at).toLocaleDateString(language === 'zh' ? 'zh-CN' : language === 'ja' ? 'ja-JP' : 'en-US')}
-                        </p>
-                      ) : (
-                        <>
-                          <p className="text-gray-500 text-sm">
-                            {t.dueAt}: {new Date(record.due_date).toLocaleDateString(language === 'zh' ? 'zh-CN' : language === 'ja' ? 'ja-JP' : 'en-US')}
-                          </p>
-                          <p
-                            className={`text-sm font-medium mt-1 ${
-                              isOverdue ? 'text-red-600' : 'text-green-600'
-                            }`}
-                          >
-                            {isOverdue
-                              ? `${t.overdue} ${Math.abs(daysRemaining)} ${t.day}`
-                              : `${t.remaining} ${daysRemaining} ${t.day}`}
-                          </p>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  {(record.status === 'borrowed' || record.status === 'overdue') && (
-                    <button
-                      onClick={() => handleReturn(record.id)}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
-                    >
-                      {t.returnBtn}
-                    </button>
-                  )}
-                </div>
+      <div className="space-y-4" aria-busy={loading}>
+        {shownRequests.map(request => {
+          const status = requestStatus(request, now);
+          return <article key={request.id} className="loan-panel p-4 sm:p-6">
+            <div className="flex gap-4">
+              <BookCover source={request.books?.cover_image_url} title={request.books?.title || t.unknown} />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center justify-between gap-2"><Link to={`/user/books/${request.book_id}`} className="text-lg font-semibold">{request.books?.title || t.unknown}</Link><span className="loan-badge">{t[status]}</span></div>
+                <p className="text-sm mt-1 opacity-80">{request.books?.author}</p>
+                <p className="mt-2 text-sm">{t.requested}: {formatDate(request.created_at)}</p>
+                {status === 'pending' && <p className="text-sm">{t.expires}: {formatDate(request.expires_at)}</p>}
+                {request.review_note && <p className="mt-2 text-sm break-words">{t.note}: {request.review_note}</p>}
               </div>
-            );
-          })}
-        </div>
-      )}
+            </div>
+            {status === 'pending' && <><BorrowingTicket code={request.pickup_code} /><button type="button" disabled={busy} onClick={() => void cancel(request.id)} className="loan-secondary mt-4">{t.cancel}</button></>}
+          </article>;
+        })}
+        {shownLoans.map(loan => {
+          const overdue = isOverdueLoan(loan, now);
+          const ticket = requests.find(request => request.borrowing_id === loan.id);
+          return <article key={loan.id} className="loan-panel p-4 sm:p-6">
+            <div className="flex gap-4">
+              <BookCover source={loan.books?.cover_image_url} title={loan.books?.title || t.unknown} />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap justify-between gap-2"><Link to={`/user/books/${loan.book_id}`} className="text-lg font-semibold">{loan.books?.title || t.unknown}</Link><span className={overdue ? 'loan-badge loan-overdue' : 'loan-badge'}>{t[overdue ? 'overdue' : loan.status]}</span></div>
+                <p className="mt-2 text-sm">{t.borrowedAt}: {formatDate(loan.borrowed_at)}</p>
+                {loan.status === 'returned' && loan.returned_at ? <p className="text-sm">{t.returnedAt}: {formatDate(loan.returned_at)}</p> : isCurrentLoan(loan) && <>
+                  <p className="text-sm">{t.due}: {formatDate(loan.due_date)}</p>
+                  <p className={`text-sm mt-1 ${overdue ? 'text-rose-500' : ''}`}>{overdue ? t.overdueFor : t.remaining} {loanDays(loan, now)} {t.days}</p>
+                </>}
+              </div>
+            </div>
+            {isCurrentLoan(loan) && <><p className="mt-4 text-sm opacity-80">{t.returnHint}</p>{ticket && <BorrowingTicket code={ticket.pickup_code} />}</>}
+          </article>;
+        })}
+        {!loading && !error && !shownRequests.length && !shownLoans.length && <div className="text-center py-12"><p>{t.empty}</p><Link to="/user/home" className="inline-block mt-4 underline">{t.browse} →</Link></div>}
+      </div>
     </div>
   );
 };

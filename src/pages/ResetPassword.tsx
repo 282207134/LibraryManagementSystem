@@ -15,7 +15,6 @@ export const ResetPassword = () => {
 
   useEffect(() => {
     // メールリンクの #access_token は非同期でパースされるため、即時 getSession だけだと誤判定しうる
-    let invalidTimer: ReturnType<typeof setTimeout>;
 
     const markValidIfSession = async () => {
       const {
@@ -40,7 +39,7 @@ export const ResetPassword = () => {
       }
     });
 
-    invalidTimer = setTimeout(() => {
+    const invalidTimer = setTimeout(() => {
       void (async () => {
         const ok = await markValidIfSession();
         if (!ok) {

@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+.loan-panel { border: 1px solid rgb(148 163 184 / 25%); border-radius: 1rem; background: #10182d; }
+.loan-input { padding: .65rem .8rem; border: 1px solid #64748b; border-radius: .65rem; background: #182139; color: inherit; }
+.loan-primary, .loan-secondary { padding: .6rem 1rem; border-radius: .65rem; font-weight: 500; cursor: pointer; }
+.loan-primary { color: white; background: #2563eb; }
+.loan-primary:hover { background: #1d4ed8; }
+.loan-secondary { border: 1px solid #64748b; background: transparent; color: inherit; }
+.loan-secondary:hover { background: rgb(148 163 184 / 15%); }
+.borrowing-page button:disabled { opacity: .5; cursor: not-allowed; }
+.loan-badge { display: inline-block; padding: .25rem .65rem; border-radius: 1rem; background: rgb(148 163 184 / 18%); font-size: .8rem; }
+.loan-error, .loan-overdue { color: #fb7185; }
+.borrowing-page :focus-visible { outline: 2px solid #38bdf8; outline-offset: 3px; }
+:is(.user-theme, .admin-theme)[data-theme='light'] .loan-panel { background: var(--library-card); border-color: var(--library-border); }
+:is(.user-theme, .admin-theme)[data-theme='light'] .loan-primary { background: var(--library-ink); color: #fff !important; }
+:is(.user-theme, .admin-theme)[data-theme='light'] .loan-primary:hover { background: var(--library-accent); }
+:is(.user-theme, .admin-theme)[data-theme='light'] .loan-error { color: #be123c; }
+/* Scanner contrast must stay black on white in either theme. */
+:is(.user-theme, .admin-theme) main .scan-code-paper { background: #fff !important; color: #000 !important; }
+
 :is(.user-theme, .admin-theme)[data-theme='light'] {
   --library-page: #f7f5f0;
   --library-header: #e9e1d1;

@@ -139,7 +139,7 @@ function extractSearchKeywords(raw: string): string[] {
     s = s.split(p).join(" ");
   }
   s = s.replace(
-    /[？?！!，,。.、；;：:""'（）()\[\]【】\s\n\r]+/g,
+    /[？?！!，,。.、；;：:""'（）()[\]【】\s\n\r]+/g,
     " ",
   );
   s = s.replace(/^有(?=[\u4e00-\u9fff])/g, " ");
@@ -151,7 +151,7 @@ function extractSearchKeywords(raw: string): string[] {
   for (const m of s.matchAll(/[\u3040-\u30ff\u31f0-\u31ff\u4e00-\u9fff]{2,30}/g)) {
     out.push(m[0]);
   }
-  for (const m of s.matchAll(/[A-Za-z][A-Za-z\s\-]{2,40}/g)) {
+  for (const m of s.matchAll(/[A-Za-z][A-Za-z\s-]{2,40}/g)) {
     const w = m[0].trim();
     if (w.replace(/\s/g, "").length >= 3) out.push(w);
   }

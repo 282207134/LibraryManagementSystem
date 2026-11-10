@@ -28,7 +28,7 @@ export const useReviews = () => {
           .select('id, email, full_name')
           .in('id', userIds);
 
-        const usersMap = new Map((usersData || []).map((u: any) => [u.id, u]));
+        const usersMap = new Map((usersData || []).map((u) => [u.id, u]));
 
         return data.map((review: Review) => {
           const user = usersMap.get(review.user_id);

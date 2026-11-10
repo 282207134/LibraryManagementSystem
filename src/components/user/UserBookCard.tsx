@@ -7,6 +7,8 @@ import { useReviews } from '../../hooks/useReviews';
 import { resolveCoverImageUrl } from '../../lib/storageHelper';
 import { StarRating } from '../StarRating';
 import type { Book } from '../../types/book';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { borrowingText } from '../../lib/borrowingText';
 
 interface UserBookCardProps {
   book: Book;
@@ -15,24 +17,32 @@ interface UserBookCardProps {
 
 export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
   const { user } = useAuth();
-  const { borrowBook, hasUserBorrowedBook } = useBorrowings();
+  const { borrowBook, getBookBorrowingState, error: borrowingError } = useBorrowings();
+  const { language } = useLanguage();
+  const t = borrowingText[language];
   const { favoriteBook, unfavoriteBook, isBookFavorited } = useFavorites();
   const { getBookRatingStats } = useReviews();
-  const [isBorrowed, setIsBorrowed] = useState(false);
+  const [borrowingState, setBorrowingState] = useState<'pending' | 'borrowed' | null>(null);
+  const [statusError, setStatusError] = useState(false);
+  const isBorrowed = borrowingState !== null;
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [averageRating, setAverageRating] = useState<number | null>(null);
 
   useEffect(() => {
+    let active = true;
     if (user) {
-      hasUserBorrowedBook(user.id, book.id).then(setIsBorrowed);
+      setStatusError(false);
+      getBookBorrowingState(user.id, book.id).then(value => { if (active) setBorrowingState(value); })
+        .catch(() => { if (active) setStatusError(true); });
       isBookFavorited(book.id, user.id).then(setIsFavorite);
     } else {
-      setIsBorrowed(false);
+      setBorrowingState(null);
       setIsFavorite(false);
     }
-  }, [user, book.id, hasUserBorrowedBook, isBookFavorited]);
+    return () => { active = false; };
+  }, [user, book.id, getBookBorrowingState, isBookFavorited]);
 
   // 解析封面图片 URL
   useEffect(() => {
@@ -61,7 +71,7 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
 
     if (
       !window.confirm(
-        `确定借阅《${book.title}》吗？\n确认后将占用您的借阅名额并更新可借数量。`
+        `《${book.title}》\n${t.applyConfirm}`
       )
     ) {
       return;
@@ -69,43 +79,15 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
 
     setLoading(true);
 
-    let dueDate: string | undefined;
-    let borrowSucceeded = false;
-    let errorMessage: string | null = null;
-
     try {
       const result = await borrowBook(book.id, user.id);
-      borrowSucceeded = !!result.success;
-
-      if (result.due_date) {
-        dueDate = result.due_date;
+      if (result.success && result.status === 'pending') {
+        setBorrowingState('pending');
+        alert(t.applied);
+        onBorrowSuccess?.();
       }
-
-      if (!result.success) {
-        errorMessage = result.error || '借阅失败，请稍后重试';
-      }
-    } catch (error) {
-      errorMessage = error instanceof Error ? error.message : '借阅失败，请稍后重试';
-    }
-
-    const actualBorrowStatus = await hasUserBorrowedBook(user.id, book.id);
-    setIsBorrowed(actualBorrowStatus);
-    setLoading(false);
-
-    if (actualBorrowStatus) {
-      const message = dueDate
-        ? `借阅成功！到期日期：${new Date(dueDate).toLocaleDateString()}`
-        : borrowSucceeded
-          ? '借阅成功！'
-          : '借阅成功！可以在"我的借阅"中查看详情。';
-
-      alert(message);
-      onBorrowSuccess?.();
-      return;
-    }
-
-    const finalError = errorMessage || '借阅失败，请稍后重试';
-    alert(`借阅失败：${finalError}`);
+      else alert(result.error || t.failed);
+    } finally { setLoading(false); }
   };
 
   const handleToggleFavorite = async () => {
@@ -175,14 +157,14 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
         <div className="mt-auto pt-2 flex gap-1.5">
           <button
             onClick={handleBorrow}
-            disabled={!isAvailable || isBorrowed || loading}
+            disabled={!isAvailable || isBorrowed || loading || !user || statusError}
             className={`flex-1 px-2.5 py-1.5 rounded text-white text-xs font-medium transition-colors ${
               !isAvailable || isBorrowed
                 ? 'bg-slate-500 cursor-not-allowed'
                 : 'bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500'
             }`}
           >
-            {isBorrowed ? '已借阅' : isAvailable ? '立即借阅' : '库存不足'}
+            {loading ? t.applying : borrowingState ? t[borrowingState] : statusError ? t.failed : isAvailable ? t.apply : '库存不足'}
           </button>
           <button
             onClick={handleToggleFavorite}
@@ -197,6 +179,8 @@ export const UserBookCard = ({ book, onBorrowSuccess }: UserBookCardProps) => {
             <span className="text-xs">{isFavorite ? '⭐' : '☆'}</span>
           </button>
         </div>
+        {borrowingError && <p role="alert" className="mt-2 text-xs text-rose-500">{borrowingError}</p>}
+        {borrowingState === 'pending' && <Link to="/user/my-borrowings" className="mt-2 text-xs underline">{t.code} →</Link>}
       </div>
     </div>
   );

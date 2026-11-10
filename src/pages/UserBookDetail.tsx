@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useBorrowings } from '../hooks/useBorrowings';
@@ -9,18 +9,23 @@ import { supabase } from '../lib/supabaseClient';
 import { StarRating } from '../components/StarRating';
 import type { Book } from '../types/book';
 import type { Review, ReviewWithUser, BookRatingStats } from '../types/review';
+import { useLanguage } from '../contexts/LanguageContext';
+import { borrowingText } from '../lib/borrowingText';
 
 export const UserBookDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { borrowBook, hasUserBorrowedBook } = useBorrowings();
+  const { borrowBook, getBookBorrowingState, error: borrowingError } = useBorrowings();
+  const { language } = useLanguage();
+  const t = borrowingText[language];
   const { favoriteBook, unfavoriteBook, isBookFavorited } = useFavorites();
   const { getReviews, getUserReview, submitReview, deleteReview, getBookRatingStats } = useReviews();
   
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isBorrowed, setIsBorrowed] = useState(false);
+  const [borrowingState, setBorrowingState] = useState<'pending' | 'borrowed' | null>(null);
+  const isBorrowed = borrowingState !== null;
   const [isFavorite, setIsFavorite] = useState(false);
   const [borrowLoading, setBorrowLoading] = useState(false);
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
@@ -34,7 +39,16 @@ export const UserBookDetail = () => {
   const [comment, setComment] = useState('');
   const [showReviewForm, setShowReviewForm] = useState(false);
 
+  const loadReviewsAndStats = useCallback(async (bookId: string) => {
+    setReviewLoading(true);
+    try {
+      const [reviewsData, statsData] = await Promise.all([getReviews(bookId), getBookRatingStats(bookId)]);
+      setReviews(reviewsData); setRatingStats(statsData);
+    } finally { setReviewLoading(false); }
+  }, [getReviews, getBookRatingStats]);
+
   useEffect(() => {
+    let active = true;
     if (!id) {
       setError('图书ID无效');
       setLoading(false);
@@ -44,11 +58,18 @@ export const UserBookDetail = () => {
     const loadBook = async () => {
       try {
         setLoading(true);
+        setError(null);
+        setCoverImageUrl(null);
+        setBorrowingState(null);
+        setUserReview(null); setReviews([]); setRatingStats(null);
+        setSelectedRating(0); setComment(''); setShowReviewForm(false);
         const { data, error: fetchError } = await supabase
           .from('books')
           .select('*')
           .eq('id', id)
           .maybeSingle();
+
+        if (!active) return;
 
         if (fetchError) {
           throw fetchError;
@@ -65,18 +86,21 @@ export const UserBookDetail = () => {
         // 加载封面图片
         if (data.cover_image_url) {
           const resolvedUrl = await resolveCoverImageUrl(data.cover_image_url);
+          if (!active) return;
           setCoverImageUrl(resolvedUrl);
         }
 
         // 检查借阅和收藏状态
         if (user) {
-          const borrowed = await hasUserBorrowedBook(user.id, id);
+          const borrowed = await getBookBorrowingState(user.id, id);
           const favorited = await isBookFavorited(id, user.id);
-          setIsBorrowed(borrowed);
+          if (!active) return;
+          setBorrowingState(borrowed);
           setIsFavorite(favorited);
           
           // 加载用户的评论
           const review = await getUserReview(id, user.id);
+          if (!active) return;
           setUserReview(review);
           if (review) {
             setSelectedRating(review.rating);
@@ -85,24 +109,26 @@ export const UserBookDetail = () => {
         }
         
         // 加载所有评论和评分统计
-        await loadReviewsAndStats(id);
+        const [reviewsData, statsData] = await Promise.all([getReviews(id), getBookRatingStats(id)]);
+        if (active) { setReviews(reviewsData); setRatingStats(statsData); }
       } catch (err) {
         console.error('加载图书详情失败', err);
-        setError(err instanceof Error ? err.message : '加载图书详情失败');
+        if (active) setError(err instanceof Error ? err.message : '加载图书详情失败');
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
 
     loadBook();
-  }, [id, user, hasUserBorrowedBook, isBookFavorited]);
+    return () => { active = false; };
+  }, [id, user, getBookBorrowingState, isBookFavorited, getUserReview, getReviews, getBookRatingStats]);
 
   const handleBorrow = async () => {
     if (!user || !id || !book) return;
 
     if (
       !window.confirm(
-        `确定借阅《${book.title}》吗？`
+        `《${book.title}》\n${t.applyConfirm}`
       )
     ) {
       return;
@@ -112,9 +138,9 @@ export const UserBookDetail = () => {
     const result = await borrowBook(id, user.id);
     setBorrowLoading(false);
 
-    if (result.success) {
-      alert(`借阅成功！到期日期：${result.due_date ? new Date(result.due_date).toLocaleDateString() : '30天后'}`);
-      setIsBorrowed(true);
+    if (result.success && result.status === 'pending') {
+      alert(t.applied);
+      setBorrowingState('pending');
       
       // 重新加载图书信息以更新可借数量
       const { data } = await supabase
@@ -149,22 +175,6 @@ export const UserBookDetail = () => {
     }
     
     setBorrowLoading(false);
-  };
-
-  const loadReviewsAndStats = async (bookId: string) => {
-    setReviewLoading(true);
-    try {
-      const [reviewsData, statsData] = await Promise.all([
-        getReviews(bookId),
-        getBookRatingStats(bookId),
-      ]);
-      setReviews(reviewsData);
-      setRatingStats(statsData);
-    } catch (err) {
-      console.error('加载评论失败:', err);
-    } finally {
-      setReviewLoading(false);
-    }
   };
 
   const handleSubmitReview = async () => {
@@ -317,9 +327,9 @@ export const UserBookDetail = () => {
                 {!user 
                   ? '请先登录' 
                   : isBorrowed 
-                    ? '已借阅' 
+                    ? t[borrowingState!]
                     : isAvailable 
-                      ? '立即借阅' 
+                      ? t.apply
                       : '库存不足'}
               </button>
               
@@ -338,6 +348,9 @@ export const UserBookDetail = () => {
                 </button>
               )}
             </div>
+
+            {borrowingError && <p role="alert" className="text-rose-500 mb-4">{borrowingError}</p>}
+            {borrowingState === 'pending' && <Link to="/user/my-borrowings" className="block underline mb-5">{t.requests} · {t.code} →</Link>}
 
             {/* 图书简介 */}
             {book.description && (

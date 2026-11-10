@@ -184,7 +184,7 @@ export const ChatAssistant = () => {
   } as const;
   const t = textMap[language];
 
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: "assistant", content: t.ready },

@@ -99,16 +99,13 @@ export const useHomeData = () => {
       setError(null);
 
       // 人气榜核心：统计每本书被借阅次数
-      const { data: borrowData, error: borrowError } = await supabase
-        .from('borrowing_records')
-        .select('book_id');
+      const { data: borrowData, error: borrowError } = await supabase.rpc('get_book_borrow_counts');
 
       if (borrowError) throw borrowError;
 
       const borrowCounts = new Map<string, number>();
-      borrowData?.forEach((record) => {
-        const count = borrowCounts.get(record.book_id) || 0;
-        borrowCounts.set(record.book_id, count + 1);
+      borrowData?.forEach((record: { book_id: string; borrow_count: number }) => {
+        borrowCounts.set(record.book_id, Number(record.borrow_count));
       });
 
       // 拉取图书基础信息

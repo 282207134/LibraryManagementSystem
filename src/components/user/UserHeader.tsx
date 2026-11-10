@@ -92,9 +92,7 @@ export const UserHeader = ({ isLightTheme, onToggleTheme }: UserHeaderProps) => 
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchTerm.trim()) {
-      navigate(`/user/home?search=${encodeURIComponent(searchTerm.trim())}`);
-    }
+    navigate(searchTerm.trim() ? `/user/home?search=${encodeURIComponent(searchTerm.trim())}` : '/user/home');
   };
 
   return (
@@ -109,7 +107,7 @@ export const UserHeader = ({ isLightTheme, onToggleTheme }: UserHeaderProps) => 
               <BrandLogo size="sm" className="ring-1 ring-cyan-400/40" />
               <span>{t.appName}</span>
             </Link>
-            <nav className="hidden md:flex items-center space-x-4">
+            <nav className="hidden xl:flex items-center space-x-4">
               <Link
                 to="/user/dashboard"
                 className={`transition-colors text-sm ${isLightTheme ? 'text-slate-700 hover:text-slate-900' : 'text-cyan-50/80 hover:text-cyan-300'}`}
@@ -170,7 +168,7 @@ export const UserHeader = ({ isLightTheme, onToggleTheme }: UserHeaderProps) => 
                 {isLightTheme ? '🌙' : '☀️'}
               </button>
               <LanguageSwitcher light={isLightTheme} />
-              <span className={isLightTheme ? 'text-slate-800' : 'text-cyan-50/90'}>
+              <span className={`hidden sm:inline max-w-40 truncate ${isLightTheme ? 'text-slate-800' : 'text-cyan-50/90'}`}>
                 👤 {getUserDisplayName()}
                 {userRole === 'admin' && (
                   <span className={`ml-2 text-xs px-2 py-1 rounded border ${isLightTheme ? 'bg-rose-100 text-rose-700 border-rose-200' : 'bg-rose-500/20 text-rose-200 border-rose-300/30'}`}>
@@ -195,6 +193,13 @@ export const UserHeader = ({ isLightTheme, onToggleTheme }: UserHeaderProps) => 
             </div>
           </div>
         </div>
+        <nav aria-label={t.appName} className="xl:hidden max-w-[72rem] mx-auto px-3 mt-3 flex gap-4 overflow-x-auto whitespace-nowrap pb-2 text-sm">
+          {[[t.home, '/user/dashboard'], [t.browse, '/user/home'], [t.borrowings, '/user/my-borrowings'], [t.favorites, '/user/my-favorites'], [t.profile, '/user/profile'], ...(userRole === 'admin' ? [[t.adminPanel, '/admin/dashboard']] : [])].map(([label, path]) => <Link className="shrink-0 py-1" key={path} to={path}>{label}</Link>)}
+        </nav>
+        <form onSubmit={handleSearch} className="xl:hidden max-w-[72rem] mx-auto px-3 pb-3 mt-2 flex gap-2">
+          <input aria-label={t.searchPlaceholder} value={searchTerm} onChange={event => setSearchTerm(event.target.value)} placeholder={t.searchPlaceholder} className="min-w-0 flex-1 rounded-lg border border-slate-400/40 px-3 py-2 text-sm bg-transparent" />
+          <button type="submit" className="rounded-lg px-4 py-2 text-sm text-white bg-blue-600">{t.search}</button>
+        </form>
       </header>
   );
 };

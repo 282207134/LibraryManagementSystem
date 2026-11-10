@@ -85,11 +85,11 @@ export const Header = () => {
       }
     >
       <div className="max-w-7xl mx-auto px-4 py-4">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-wrap justify-between items-center gap-3">
           <div className="flex items-center gap-4">
             <BrandLogo size="sm" className="ring-1 ring-cyan-400/35 flex-shrink-0" />
             <div>
-              <h1 className={`text-2xl font-bold ${isLightTheme ? 'text-slate-800' : 'text-cyan-100'}`}>
+              <h1 className={`text-lg sm:text-2xl font-bold ${isLightTheme ? 'text-slate-800' : 'text-cyan-100'}`}>
                 {t.appTitle}
               </h1>
               <p className={`text-sm ${isLightTheme ? 'text-slate-600' : 'text-cyan-100/70'}`}>
@@ -109,7 +109,7 @@ export const Header = () => {
             </nav>
           )}
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <button
               type="button"
               onClick={toggleTheme}
@@ -152,6 +152,10 @@ export const Header = () => {
             </button>
           </div>
         </div>
+        {userRole === 'admin' && <nav className="md:hidden flex flex-wrap gap-2 mt-3" aria-label={t.appTitle}>
+          <Link to="/admin/dashboard" className={navLinkClass}>{t.booksMgmt}</Link>
+          <Link to="/admin/borrowings" className={navLinkClass}>{t.borrowings}</Link>
+        </nav>}
       </div>
     </header>
   );
