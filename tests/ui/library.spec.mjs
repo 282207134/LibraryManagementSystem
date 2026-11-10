@@ -222,8 +222,59 @@ test('admin can reject with a reason on a phone without horizontal overflow',asy
   await page.getByRole('button',{name:'拒绝申请',exact:true}).click();
   await page.getByLabel('拒绝原因（必填，最多 500 字）').fill('图书修复中');
   await page.getByRole('button',{name:'拒绝申请',exact:true}).last().click();
+  await expect(page.getByRole('region',{name:'借阅申请',exact:true}).locator('article')).toHaveCount(0);
+  await page.getByRole('button',{name:'历史记录',exact:true}).click();
   await expect(page.getByText('处理说明: 图书修复中')).toBeVisible();
   expect((await backend.db.query('select * from public.borrowing_records')).rows).toHaveLength(0);
+});
+
+test('admin separates pending requests, outstanding loans and completed history',async({page,context})=>{
+  const book=index=>'20000000-0000-4000-8000-'+String(index).padStart(12,'0');
+  const loanIds={};
+  for(const [index,status,due] of [[2,'borrowed','1 day'],[6,'returned','1 day'],[7,'borrowed','-1 hour'],[8,'lost','-1 day']]) {
+    loanIds[index]=(await backend.db.query("insert into public.borrowing_records(book_id,user_id,status,due_date,returned_at) values($1,$2,$3::text,now()+$4::interval,case when $3::text='returned' then now() end) returning id",[book(index),ids.reader,status,due])).rows[0].id;
+  }
+  for(const [index,status] of [[1,'pending'],[2,'approved'],[3,'cancelled'],[4,'rejected'],[5,'pending'],[6,'approved']]) {
+    await backend.db.query("insert into public.borrowing_requests(book_id,user_id,pickup_code,status,expires_at,borrowing_id) values($1,$2,$3,$4,now()+$5::interval,$6)",[book(index),ids.reader,String(12345670+index),status,index===5?'-1 minute':'1 day',loanIds[index]??null]);
+  }
+  await backend.attach(context,ids.admin); page.on('dialog',dialog=>dialog.accept());
+  await page.goto('/admin/borrowings');
+  const pending=page.getByRole('region',{name:'借阅申请',exact:true});
+  await expect(pending.locator('article')).toHaveCount(1);
+  await expect(pending).toContainText('测试图书（第一册）');
+  await expect(page.getByRole('combobox')).toHaveCount(0);
+
+  await page.getByRole('button',{name:'当前借阅',exact:true}).click();
+  const current=page.getByRole('region',{name:'当前借阅',exact:true});
+  await expect(current.locator('article')).toHaveCount(3);
+  await expect(page.getByRole('combobox').locator('option')).toHaveText(['全部','借阅中','已逾期','已遗失']);
+  for(const [status,title] of [['borrowed','测试图书 2'],['overdue','测试图书 7'],['lost','测试图书 8']]) {
+    await page.getByRole('combobox').selectOption(status);
+    await expect(current.locator('article')).toHaveCount(1);
+    await expect(current).toContainText(title);
+  }
+  await expect(current.getByRole('button',{name:'确认归还',exact:true})).toHaveCount(0);
+
+  await page.getByRole('button',{name:'历史记录',exact:true}).click();
+  const history=page.getByRole('region',{name:'历史记录',exact:true});
+  await expect(history.locator('article')).toHaveCount(6);
+  await expect(page.getByRole('combobox').locator('option')).toHaveText(['全部','已确认借出','已拒绝','已取消','已过期','已归还']);
+  await expect(history.getByRole('button')).toHaveCount(0);
+  for(const [status,count] of [['approved',2],['rejected',1],['cancelled',1],['expired',1],['returned',1]]) {
+    await page.getByRole('combobox').selectOption(status);
+    await expect(history.locator('article')).toHaveCount(count);
+  }
+
+  await page.getByRole('button',{name:'借阅申请',exact:true}).click();
+  await pending.getByRole('button',{name:'确认借出',exact:true}).click();
+  await expect(pending.locator('article')).toHaveCount(0);
+  await page.getByRole('button',{name:'当前借阅',exact:true}).click();
+  await expect(current.locator('article')).toHaveCount(4);
+  await current.locator('article').filter({hasText:'测试图书（第一册）'}).getByRole('button',{name:'确认归还',exact:true}).click();
+  await expect(current.locator('article')).toHaveCount(3);
+  await page.getByRole('button',{name:'历史记录',exact:true}).click();
+  await page.getByRole('combobox').selectOption('returned');
+  await expect(history.locator('article')).toHaveCount(2);
 });
 
 test('login errors, signup confirmation and password reset forms behave correctly without sending mail',async({page,context})=>{

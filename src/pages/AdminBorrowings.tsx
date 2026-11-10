@@ -17,7 +17,7 @@ export const AdminBorrowings = () => {
   const { getAllBorrowings, getRequests, approveRequest, closeRequest, returnBook, loading, error } = useBorrowings();
   const [loans, setLoans] = useState<BorrowingRecord[]>([]);
   const [requests, setRequests] = useState<BorrowingRequest[]>([]);
-  const [tab, setTab] = useState<'requests' | 'all'>('requests');
+  const [tab, setTab] = useState<'requests' | 'current' | 'history'>('requests');
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -70,10 +70,18 @@ export const AdminBorrowings = () => {
   const matching = (record: BorrowingRequest | BorrowingRecord) =>
     [record.books?.title, record.books?.author, record.users?.full_name, record.users?.email,
       'pickup_code' in record ? record.pickup_code : ''].some(value => value?.toLowerCase().includes(search.trim().toLowerCase()));
-  const items = (tab === 'requests'
-    ? requests.filter(request => (filter === 'all' || requestStatus(request, now) === filter) && matching(request))
-    : loans.filter(loan => (filter === 'all' || (filter === 'overdue' ? isOverdueLoan(loan, now) : filter === 'borrowed' ? loan.status === 'borrowed' && !isOverdueLoan(loan, now) : loan.status === filter)) && matching(loan)))
-    .map(record => ({ record, request: 'pickup_code' in record ? record as BorrowingRequest : null }));
+  const currentLoans = loans.filter(loan => isCurrentLoan(loan) || loan.status === 'lost');
+  const shownRequests = requests.filter(request => {
+    const status = requestStatus(request, now);
+    return (tab === 'requests' ? status === 'pending' : tab === 'history' && status !== 'pending')
+      && (filter === 'all' || status === filter) && matching(request);
+  });
+  const shownLoans = (tab === 'current' ? currentLoans : tab === 'history' ? loans.filter(loan => loan.status === 'returned') : [])
+    .filter(loan => (filter === 'all' || (filter === 'overdue' ? isOverdueLoan(loan, now) : filter === 'borrowed' ? loan.status === 'borrowed' && !isOverdueLoan(loan, now) : loan.status === filter)) && matching(loan));
+  const items = [
+    ...shownRequests.map(request => ({ record: request, request, date: request.reviewed_at || (requestStatus(request, now) === 'expired' ? request.expires_at : request.created_at) })),
+    ...shownLoans.map(loan => ({ record: loan, request: null, date: loan.returned_at || loan.borrowed_at })),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   const totalPages = Math.max(1, Math.ceil(items.length / 8));
   const currentPage = Math.min(page, totalPages);
   const requestButtons = (request: BorrowingRequest) => requestStatus(request, now) === 'pending' && <div className="mt-3 flex flex-wrap gap-2">
@@ -91,7 +99,7 @@ export const AdminBorrowings = () => {
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-6">
         <h1 className="text-3xl font-bold">{t.adminTitle}</h1><p className="mt-2 mb-6 opacity-80">{t.adminSubtitle}</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          {[[t.pending, requests.filter(request => requestStatus(request, now) === 'pending').length], [t.current, loans.filter(isCurrentLoan).length], [t.overdue, loans.filter(loan => isOverdueLoan(loan, now)).length], [t.returned, loans.filter(loan => loan.status === 'returned').length]].map(([label, count]) => <div className="loan-panel p-4" key={label}><p className="text-sm opacity-80">{label}</p><p className="text-2xl font-bold mt-1">{count}</p></div>)}
+          {[[t.pending, requests.filter(request => requestStatus(request, now) === 'pending').length], [t.current, currentLoans.length], [t.overdue, loans.filter(loan => isOverdueLoan(loan, now)).length], [t.returned, loans.filter(loan => loan.status === 'returned').length]].map(([label, count]) => <div className="loan-panel p-4" key={label}><p className="text-sm opacity-80">{label}</p><p className="text-2xl font-bold mt-1">{count}</p></div>)}
         </div>
         <section className="loan-panel p-4 mb-6" aria-label={t.lookup}>
           <h2 className="text-lg font-semibold mb-3">{t.lookup}</h2>
@@ -123,16 +131,16 @@ export const AdminBorrowings = () => {
         {notice && <p role="status" className="loan-panel p-3 mb-4">{notice}</p>}
         {error && <p role="alert" className="loan-error mb-4">{error}</p>}
         <div className="flex flex-wrap gap-2 mb-3">
-          {(['requests', 'all'] as const).map(value => <button type="button" key={value} aria-pressed={tab === value} className={tab === value ? 'loan-primary' : 'loan-secondary'} onClick={() => { setTab(value); setFilter('all'); setPage(1); }}>{value === 'requests' ? t.requests : t.current + ' / ' + t.history}</button>)}
+          {(['requests', 'current', 'history'] as const).map(value => <button type="button" key={value} aria-pressed={tab === value} className={tab === value ? 'loan-primary' : 'loan-secondary'} onClick={() => { setTab(value); setFilter('all'); setPage(1); }}>{t[value]}</button>)}
           <button type="button" className="loan-secondary ml-auto" disabled={loading || busy} onClick={() => void load()}>{loading ? t.loading : t.refresh}</button>
         </div>
         <div className="flex flex-wrap gap-2 mb-4">
           <input aria-label={t.lookup} value={search} onChange={event => { setSearch(event.target.value); setPage(1); }} placeholder={language === 'zh' ? '搜索图书、姓名、邮箱或数字码' : language === 'ja' ? '図書・氏名・メール・コードで検索' : 'Search books, readers, email or code'} className="loan-input w-full sm:w-80" />
-          <select aria-label={t.all} className="loan-input" value={filter} onChange={event => { setFilter(event.target.value); setPage(1); }}>
-            {(tab === 'requests' ? ['all','pending','approved','rejected','cancelled','expired'] as const : ['all','borrowed','overdue','returned','lost'] as const).map(value => <option key={value} value={value}>{t[value]}</option>)}
-          </select>
+          {tab !== 'requests' && <select aria-label={t.all} className="loan-input" value={filter} onChange={event => { setFilter(event.target.value); setPage(1); }}>
+            {(tab === 'current' ? ['all','borrowed','overdue','lost'] as const : ['all','approved','rejected','cancelled','expired','returned'] as const).map(value => <option key={value} value={value}>{t[value]}</option>)}
+          </select>}
         </div>
-        <div className="space-y-3" aria-busy={loading}>
+        <section className="space-y-3" aria-label={t[tab]} aria-busy={loading}>
           {items.slice((currentPage - 1) * 8, currentPage * 8).map(({ record, request }) => <article key={record.id} className="loan-panel p-4">
             <div className="flex flex-wrap justify-between items-start gap-3">
               <div className="min-w-0"><Link to={`/user/books/${record.book_id}`} className="font-semibold text-lg">{record.books?.title || t.unknown}</Link><p className="text-sm mt-1 break-words">{t.reader}: {record.users?.full_name || t.unknown} · {record.users?.email || t.unknown}</p></div>
@@ -145,7 +153,7 @@ export const AdminBorrowings = () => {
             </>}
           </article>)}
           {!items.length && !loading && !error && <p className="py-12 text-center">{t.empty}</p>}
-        </div>
+        </section>
         <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} loading={loading} />
       </main>
     </div>
